@@ -53,6 +53,7 @@ export interface Attachment {
   size: number;
   uploadedAt: string;
   description?: string;
+  dataUrl?: string;
 }
 
 export interface Request {
@@ -74,6 +75,15 @@ export interface Request {
 
 export type WorkOrderStatus = "Planejada" | "Atribuída" | "Em execução" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Concluída" | "Cancelada" | "Reaberta";
 
+export interface Material {
+  id: string;
+  description: string;
+  type?: string;
+  unitPrice?: number;
+  quantity: number;
+  total?: number;
+}
+
 export interface WorkOrder {
   id: string;
   number: string;
@@ -91,6 +101,7 @@ export interface WorkOrder {
   deadline?: string;
   status: WorkOrderStatus;
   checklist: ChecklistItem[];
+  materials?: Material[];
   observations: string;
   attachments: Attachment[];
   createdAt: string;
@@ -101,7 +112,19 @@ export interface WorkOrder {
 export interface ChecklistItem {
   id: string;
   description: string;
-  done: boolean;
+  required: boolean;
+  result?: "Conforme" | "Não conforme" | "Não se aplica" | null;
+  observations?: string;
+  evidence?: string;
+}
+
+export interface ChecklistTemplate {
+  id: string;
+  name: string;
+  categoryId: string;
+  description: string;
+  active: boolean;
+  items: Omit<ChecklistItem, "result" | "observations" | "evidence">[];
 }
 
 export interface PreventivePlan {
@@ -118,6 +141,7 @@ export interface PreventivePlan {
   nextExecution: string;
   responsibleId?: string;
   providerId?: string;
+  templateId?: string;
   checklist: ChecklistItem[];
   status: "Ativo" | "Inativo";
   createdAt: string;

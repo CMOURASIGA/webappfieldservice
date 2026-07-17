@@ -16,6 +16,7 @@ export const Preventivas = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("Todos");
 
   useEffect(() => {
     loadData();
@@ -32,8 +33,16 @@ export const Preventivas = () => {
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
   const getProviderName = (pid?: string) => providers.find(p => p.id === pid)?.name || "-";
 
-  const getStatusBadge = (nextExecution: string) => {
+  const getStatus = (nextExecution: string) => {
     if (isPast(parseISO(nextExecution)) && !isToday(parseISO(nextExecution))) {
+      return "Atrasada";
+    }
+    return "Em dia";
+  };
+
+  const getStatusBadge = (nextExecution: string) => {
+    const status = getStatus(nextExecution);
+    if (status === "Atrasada") {
       return <Badge variant="danger">Atrasada</Badge>;
     }
     return <Badge variant="info">Em dia</Badge>;
@@ -64,7 +73,7 @@ export const Preventivas = () => {
           plannedDate: plan.nextExecution,
           deadline: new Date(new Date(plan.nextExecution).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days deadline
           status: "Planejada",
-          checklist: plan.checklist.map(c => ({ id: crypto.randomUUID(), description: c.description, done: false })),
+          checklist: plan.checklist.map(c => ({ id: crypto.randomUUID(), description: c.description, required: c.required })),
           observations: "",
           attachments: [],
           createdAt: new Date().toISOString(),
@@ -102,6 +111,16 @@ export const Preventivas = () => {
     }
   };
 
+  const stats = {
+    total: plans.length,
+    emDia: plans.filter(p => getStatus(p.nextExecution) === "Em dia").length,
+    atrasadas: plans.filter(p => getStatus(p.nextExecution) === "Atrasada").length,
+  };
+
+  const filteredPlans = statusFilter === "Todos"
+    ? plans
+    : plans.filter(p => getStatus(p.nextExecution) === statusFilter);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -117,6 +136,21 @@ export const Preventivas = () => {
             + Novo Plano
           </Button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onClick={() => setStatusFilter("Todos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Todos os Planos</p>
+          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Em dia")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Em dia" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Em dia</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.emDia}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Atrasada")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atrasada" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Atrasadas</p>
+          <p className="text-2xl font-bold text-red-600">{stats.atrasadas}</p>
+        </button>
       </div>
 
       <Card>
@@ -135,7 +169,7 @@ export const Preventivas = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {plans.map(plan => (
+                {filteredPlans.map(plan => (
                   <tr key={plan.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900 flex flex-col">
                       <span>{plan.code}</span>
@@ -149,6 +183,13 @@ export const Preventivas = () => {
                     <td className="px-6 py-4">{getStatusBadge(plan.nextExecution)}</td>
                   </tr>
                 ))}
+                {filteredPlans.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                      Nenhum plano preventivo encontrado para este filtro.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

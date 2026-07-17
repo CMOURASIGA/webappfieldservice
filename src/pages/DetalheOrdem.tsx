@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider } from "../types";
 import { Button } from "../components/ui/Button";
@@ -8,6 +8,8 @@ import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
+import { Input } from "../components/ui/Input";
+import { Paperclip, Plus, Trash2, Printer } from "lucide-react";
 
 export const DetalheOrdem = () => {
   const { id } = useParams();
@@ -27,6 +29,81 @@ export const DetalheOrdem = () => {
   const [assignProvider, setAssignProvider] = useState("");
   const [comment, setComment] = useState("");
   const [trackingComment, setTrackingComment] = useState("");
+
+  const [pauseReason, setPauseReason] = useState("");
+  const [isPausing, setIsPausing] = useState(false);
+
+  
+  const [newMaterial, setNewMaterial] = useState({ description: "", type: "", quantity: 1, unitPrice: 0 });
+  const [uploading, setUploading] = useState(false);
+
+  const handleAddMaterial = () => {
+    if (!order || !currentUser) return;
+    if (!newMaterial.description) return;
+    
+    const orders = storageService.get("gsi_work_orders");
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) {
+      if (!orders[idx].materials) orders[idx].materials = [];
+      orders[idx].materials.push({
+        id: crypto.randomUUID(),
+        ...newMaterial,
+        total: newMaterial.quantity * newMaterial.unitPrice
+      });
+      storageService.set("gsi_work_orders", orders);
+      setNewMaterial({ description: "", type: "", quantity: 1, unitPrice: 0 });
+      loadOrder();
+    }
+  };
+
+  const handleRemoveMaterial = (mId: string) => {
+    if (!order || !currentUser) return;
+    const orders = storageService.get("gsi_work_orders");
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) {
+      orders[idx].materials = orders[idx].materials?.filter(m => m.id !== mId) || [];
+      storageService.set("gsi_work_orders", orders);
+      loadOrder();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !order || !currentUser) return;
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const orders = storageService.get("gsi_work_orders");
+      const idx = orders.findIndex(o => o.id === order.id);
+      if (idx !== -1) {
+        if (!orders[idx].attachments) orders[idx].attachments = [];
+        orders[idx].attachments.push({
+          id: crypto.randomUUID(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          uploadedAt: new Date().toISOString(),
+          dataUrl: event.target?.result as string
+        });
+        storageService.set("gsi_work_orders", orders);
+        loadOrder();
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const PAUSE_REASONS = [
+    "Aguardando acesso ao local",
+    "Aguardando prestador",
+    "Aguardando autorização",
+    "Aguardando material externo",
+    "Indisponibilidade do ativo",
+    "Dependência de outra área",
+    "Necessidade de nova vistoria",
+    "Outro"
+  ];
 
   useEffect(() => {
     loadOrder();
@@ -58,7 +135,72 @@ export const DetalheOrdem = () => {
       storageService.set("gsi_work_orders", orders);
       storageService.logAudit(currentUser.id, logMsg, order.id, "WorkOrder", oldStatus, newStatus);
       setComment("");
+      setPauseReason("");
+      setIsPausing(false);
       loadOrder();
+    }
+  };
+
+  const handlePause = () => {
+    if (!pauseReason) {
+      alert("Selecione um motivo para a pausa.");
+      return;
+    }
+    const reasonText = pauseReason === "Outro" ? `Outro: ${comment}` : pauseReason;
+    const finalComment = comment ? `${reasonText} - ${comment}` : reasonText;
+    
+    if (!order || !currentUser) return;
+    const orders = storageService.get("gsi_work_orders");
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) {
+      orders[idx].status = "Pausada";
+      orders[idx].updatedAt = new Date().toISOString();
+      orders[idx].observations += `\n[${new Date().toLocaleDateString()} - ${currentUser.name}] Pausada motivo: ${finalComment}`;
+      storageService.set("gsi_work_orders", orders);
+      storageService.logAudit(currentUser.id, "Pausou serviço", order.id, "WorkOrder", "Em execução", "Pausada");
+      setComment("");
+      setPauseReason("");
+      setIsPausing(false);
+      loadOrder();
+    }
+  };
+
+  const updateChecklistItem = (itemId: string, field: "result" | "observations", value: any) => {
+    if (!order || !currentUser) return;
+    const orders = storageService.get("gsi_work_orders");
+    const idx = orders.findIndex(o => o.id === order.id);
+    if (idx !== -1) {
+      const cIdx = orders[idx].checklist.findIndex(c => c.id === itemId);
+      if (cIdx !== -1) {
+        orders[idx].checklist[cIdx] = { ...orders[idx].checklist[cIdx], [field]: value };
+        storageService.set("gsi_work_orders", orders);
+        loadOrder();
+        
+        // Auto-generate Corretiva if result is "Não conforme"
+        if (field === "result" && value === "Não conforme") {
+          const itemDescription = orders[idx].checklist[cIdx].description;
+          const requests = storageService.get("gsi_requests");
+          const newReq: any = {
+            id: crypto.randomUUID(),
+            protocol: `DEM-NC-${Math.floor(1000 + Math.random() * 9000)}`,
+            solicitanteId: currentUser.id,
+            unitId: order.unitId,
+            locationId: order.locationId,
+            categoryId: order.categoryId,
+            title: `Não Conformidade: ${itemDescription}`,
+            description: `Gerado automaticamente via checklist da OS ${order.number}. Item: ${itemDescription}.`,
+            suggestedPriority: "Média",
+            status: "Aberta",
+            attachments: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            active: true
+          };
+          requests.push(newReq);
+          storageService.set("gsi_requests", requests);
+          alert(`Demanda corretiva gerada automaticamente: ${newReq.protocol}`);
+        }
+      }
     }
   };
 
@@ -88,6 +230,11 @@ export const DetalheOrdem = () => {
   const getUserName = (uid?: string) => users.find(u => u.id === uid)?.name || "Não atribuído";
   const getProviderName = (pid?: string) => providers.find(p => p.id === pid)?.name || "Não atribuído";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "Nenhum";
+  const getRequestProtocol = (rid?: string) => {
+    if (!rid) return null;
+    const requests = storageService.get("gsi_requests");
+    return requests.find(r => r.id === rid)?.protocol || null;
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -98,6 +245,7 @@ export const DetalheOrdem = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/ordens")}>Voltar</Button>
+          <Link to={`/ordens/${order.id}/imprimir`} target="_blank"><Button variant="outline" className="gap-2"><Printer className="w-4 h-4" /> Imprimir</Button></Link>
         </div>
       </div>
 
@@ -130,6 +278,14 @@ export const DetalheOrdem = () => {
                   <p className="text-xs font-semibold text-slate-500 uppercase">Ativo</p>
                   <p className="text-sm">{getAssetCode(order.assetId)}</p>
                 </div>
+                {order.requestId && (
+                  <div className="col-span-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase">Origem (Demanda)</p>
+                    <p className="text-sm text-brand-600 underline font-medium cursor-pointer" onClick={() => navigate(`/demandas/${order.requestId}`)}>
+                      {getRequestProtocol(order.requestId)}
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div>
@@ -147,7 +303,128 @@ export const DetalheOrdem = () => {
                   </div>
                 </div>
               )}
+
+              {order.checklist && order.checklist.length > 0 && (
+                <div className="pt-4 border-t border-slate-200">
+                  <p className="text-sm font-semibold text-slate-900 mb-3">Checklist de Execução</p>
+                  <div className="space-y-4">
+                    {order.checklist.map((item, i) => (
+                      <div key={item.id} className="border border-slate-200 rounded-md p-4 space-y-3 bg-white">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-slate-800">
+                            {i + 1}. {item.description} {item.required && <span className="text-red-500">*</span>}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => updateChecklistItem(item.id, "result", "Conforme")}
+                              disabled={order.status !== "Em execução"}
+                              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${item.result === "Conforme" ? "bg-green-100 text-green-800 ring-2 ring-green-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50"}`}
+                            >
+                              Conforme
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateChecklistItem(item.id, "result", "Não conforme")}
+                              disabled={order.status !== "Em execução"}
+                              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${item.result === "Não conforme" ? "bg-red-100 text-red-800 ring-2 ring-red-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50"}`}
+                            >
+                              Não conforme
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => updateChecklistItem(item.id, "result", "Não se aplica")}
+                              disabled={order.status !== "Em execução"}
+                              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${item.result === "Não se aplica" ? "bg-amber-100 text-amber-800 ring-2 ring-amber-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50"}`}
+                            >
+                              N/A
+                            </button>
+                          </div>
+                        </div>
+                        {item.result === "Não conforme" && (
+                          <div className="mt-2">
+                            <Input
+                              placeholder="Observações da não conformidade..."
+                              value={item.observations || ""}
+                              disabled={order.status !== "Em execução"}
+                              onChange={e => updateChecklistItem(item.id, "observations", e.target.value)}
+                            />
+                            <p className="text-xs text-red-600 mt-1">* Uma ordem corretiva será ou foi gerada para este item.</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
+              
+              {/* Materials Section */}
+              <div className="pt-4 border-t border-slate-200 mt-6">
+                <p className="text-sm font-semibold text-slate-900 mb-3">Materiais Necessários</p>
+                {order.materials && order.materials.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {order.materials.map(m => (
+                      <div key={m.id} className="flex justify-between items-center p-2 bg-slate-50 border border-slate-200 rounded text-sm">
+                        <div>
+                          <span className="font-medium text-slate-800">{m.description}</span>
+                          <span className="text-slate-500 ml-2">({m.quantity}x - {m.type || "N/A"})</span>
+                        </div>
+                        {order.status === "Em execução" && (
+                          <button onClick={() => handleRemoveMaterial(m.id)} className="text-red-500 hover:text-red-700">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {order.status === "Em execução" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end bg-slate-50 p-3 rounded border border-slate-200">
+                    <div className="sm:col-span-2">
+                      <Input label="Descrição do material" value={newMaterial.description} onChange={e => setNewMaterial({...newMaterial, description: e.target.value})} placeholder="Ex: Parafusos M8" />
+                    </div>
+                    <div>
+                      <Input type="number" label="Quantidade" value={newMaterial.quantity} onChange={e => setNewMaterial({...newMaterial, quantity: Number(e.target.value)})} />
+                    </div>
+                    <div>
+                      <Button onClick={handleAddMaterial} className="w-full" disabled={!newMaterial.description}>Adicionar</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Attachments Section */}
+              <div className="pt-4 border-t border-slate-200 mt-6">
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-sm font-semibold text-slate-900">Anexos / Imagens</p>
+                  <div>
+                    <input type="file" id="file-upload" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf" disabled={uploading} />
+                    <label htmlFor="file-upload" className="cursor-pointer inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700 bg-brand-50 px-3 py-1.5 rounded-md">
+                      <Paperclip className="w-4 h-4" /> {uploading ? "Enviando..." : "Anexar arquivo"}
+                    </label>
+                  </div>
+                </div>
+                {order.attachments && order.attachments.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {order.attachments.map(att => (
+                      <div key={att.id} className="border border-slate-200 rounded p-2 flex flex-col items-center justify-center gap-2 bg-slate-50 relative group">
+                        {att.type.startsWith("image/") && att.dataUrl ? (
+                          <img src={att.dataUrl} alt={att.name} className="w-full h-24 object-cover rounded" />
+                        ) : (
+                          <div className="w-full h-24 flex items-center justify-center bg-slate-100 rounded text-slate-400">
+                            <Paperclip className="w-8 h-8" />
+                          </div>
+                        )}
+                        <p className="text-xs text-slate-600 truncate w-full text-center" title={att.name}>{att.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">Nenhum anexo adicionado.</p>
+                )}
+              </div>
+
               {/* Adicionar Acompanhamento */}
               <div className="pt-4 border-t border-slate-100">
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Adicionar Acompanhamento</p>
@@ -229,9 +506,29 @@ export const DetalheOrdem = () => {
                   )}
                   {order.status === "Em execução" && (
                     <>
-                      <Textarea placeholder="Observações ou motivo..." value={comment} onChange={e => setComment(e.target.value)} />
-                      <Button className="w-full bg-amber-600" onClick={() => updateStatus("Pausada", "Pausou serviço")}>Pausar</Button>
-                      <Button className="w-full bg-green-600" onClick={() => updateStatus("Em validação", "Enviou para validação")}>Concluir Tecnicamente</Button>
+                      {isPausing ? (
+                        <div className="space-y-3 p-3 bg-amber-50 rounded border border-amber-200">
+                          <p className="text-sm font-medium text-amber-900">Motivo da Pausa</p>
+                          <Select
+                            options={[
+                              { value: "", label: "Selecione..." },
+                              ...PAUSE_REASONS.map(r => ({ value: r, label: r }))
+                            ]}
+                            value={pauseReason}
+                            onChange={e => setPauseReason(e.target.value)}
+                          />
+                          <Textarea placeholder="Observações (opcional)..." value={comment} onChange={e => setComment(e.target.value)} />
+                          <div className="flex gap-2">
+                            <Button className="flex-1" variant="secondary" onClick={() => setIsPausing(false)}>Cancelar</Button>
+                            <Button className="flex-1 bg-amber-600" onClick={handlePause}>Confirmar Pausa</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <Button className="w-full bg-amber-600" onClick={() => setIsPausing(true)}>Pausar Serviço</Button>
+                          <Button className="w-full bg-green-600" onClick={() => updateStatus("Em validação", "Enviou para validação")}>Concluir Tecnicamente</Button>
+                        </>
+                      )}
                     </>
                   )}
                   {order.status === "Pausada" && (

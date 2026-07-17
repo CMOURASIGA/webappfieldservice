@@ -1,4 +1,4 @@
-import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category } from "../types";
+import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate } from "../types";
 
 const VERSION = "1.0.0";
 
@@ -14,6 +14,7 @@ interface DB {
   gsi_documents: Document[];
   gsi_providers: Provider[];
   gsi_categories: Category[];
+  gsi_checklist_templates: ChecklistTemplate[];
   gsi_audit_log: AuditLog[];
 }
 
@@ -77,6 +78,22 @@ export const storageService = {
       { id: "cat-4", name: "Alvará", type: "Documento", active: true },
     ];
     this.set("gsi_categories", categories);
+
+    const checklistTemplates: ChecklistTemplate[] = [
+      {
+        id: "chk-1",
+        name: "Checklist de ar-condicionado",
+        categoryId: "cat-1",
+        description: "Inspeção preventiva padrão",
+        active: true,
+        items: [
+          { id: "ci-1", description: "Verificar filtros", required: true },
+          { id: "ci-2", description: "Verificar nível de gás", required: true },
+          { id: "ci-3", description: "Limpeza da condensadora", required: false },
+        ]
+      }
+    ];
+    this.set("gsi_checklist_templates", checklistTemplates);
 
     const assets: Asset[] = [
       { id: "ast-1", code: "AC-DF-001", name: "Ar Condicionado Central", category: "cat-1", unitId: "u-df", locationId: "loc-2", criticality: "Alta", status: "Ativo", active: true },

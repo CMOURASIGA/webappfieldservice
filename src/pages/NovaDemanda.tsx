@@ -138,31 +138,35 @@ export const NovaDemanda = () => {
                 />
               </div>
               <Select
-                label="Ativo (Opcional)"
-                value={formData.assetId}
-                onChange={e => setFormData({ ...formData, assetId: e.target.value })}
-                options={filteredAssets.map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))}
-                disabled={!formData.unitId}
-              />
-              <Select
                 label="Categoria"
                 required
                 value={formData.categoryId}
                 onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                 options={categories.map(c => ({ value: c.id, label: c.name }))}
               />
-              <Select
-                label="Prioridade Sugerida"
-                required
-                value={formData.priority}
-                onChange={e => setFormData({ ...formData, priority: e.target.value as Priority })}
-                options={[
-                  { value: "Baixa", label: "Baixa" },
-                  { value: "Média", label: "Média" },
-                  { value: "Alta", label: "Alta" },
-                  { value: "Urgente", label: "Urgente" },
-                ]}
-              />
+              {currentUser?.role !== "Solicitante" && (
+                <>
+                  <Select
+                    label="Ativo (Opcional)"
+                    value={formData.assetId}
+                    onChange={e => setFormData({ ...formData, assetId: e.target.value })}
+                    options={filteredAssets.map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))}
+                    disabled={!formData.unitId}
+                  />
+                  <Select
+                    label="Prioridade Sugerida"
+                    required
+                    value={formData.priority}
+                    onChange={e => setFormData({ ...formData, priority: e.target.value as Priority })}
+                    options={[
+                      { value: "Baixa", label: "Baixa" },
+                      { value: "Média", label: "Média" },
+                      { value: "Alta", label: "Alta" },
+                      { value: "Urgente", label: "Urgente" },
+                    ]}
+                  />
+                </>
+              )}
             </div>
 
             <Input

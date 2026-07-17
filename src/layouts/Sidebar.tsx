@@ -1,11 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History } from "lucide-react";
+import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History, CalendarDays } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Visão Geral", href: "/" },
+  { icon: CalendarDays, label: "Agenda", href: "/agenda" },
   { icon: Inbox, label: "Demandas", href: "/demandas" },
   { icon: ClipboardList, label: "Ordens de Serviço", href: "/ordens" },
   { icon: CalendarClock, label: "Preventivas", href: "/preventivas" },

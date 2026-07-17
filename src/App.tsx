@@ -19,14 +19,18 @@ import { EditarPrestador } from "./pages/EditarPrestador";
 import { DetalhePrestador } from "./pages/DetalhePrestador";
 import { Admin } from "./pages/Admin";
 import { Auditoria } from "./pages/Auditoria";
+import { Agenda } from "./pages/Agenda";
+import { ImprimirOrdem } from "./pages/ImprimirOrdem";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/ordens/:id/imprimir" element={<ImprimirOrdem />} />
           <Route path="/" element={<MainLayout />}>
             <Route index element={<VisaoGeral />} />
+            <Route path="agenda" element={<Agenda />} />
             <Route path="demandas" element={<Demandas />} />
             <Route path="demandas/nova" element={<NovaDemanda />} />
             <Route path="demandas/:id" element={<DetalheDemanda />} />
