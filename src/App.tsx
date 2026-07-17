@@ -10,7 +10,11 @@ import { Ordens } from "./pages/Ordens";
 import { NovaOrdem } from "./pages/NovaOrdem";
 import { DetalheOrdem } from "./pages/DetalheOrdem";
 import { Documentos } from "./pages/Documentos";
+import { NovoDocumento } from "./pages/NovoDocumento";
+import { DetalheDocumento } from "./pages/DetalheDocumento";
+import { EditarDocumento } from "./pages/EditarDocumento";
 import { Ativos } from "./pages/Ativos";
+import { DetalheAtivo } from "./pages/DetalheAtivo";
 import { Preventivas } from "./pages/Preventivas";
 import { NovaPreventiva } from "./pages/NovaPreventiva";
 import { Prestadores } from "./pages/Prestadores";
@@ -42,7 +46,11 @@ export default function App() {
             <Route path="preventivas" element={<Preventivas />} />
             <Route path="preventivas/nova" element={<NovaPreventiva />} />
             <Route path="ativos" element={<Ativos />} />
+            <Route path="ativos/:id" element={<DetalheAtivo />} />
             <Route path="documentos" element={<Documentos />} />
+            <Route path="documentos/novo" element={<NovoDocumento />} />
+            <Route path="documentos/:id" element={<DetalheDocumento />} />
+            <Route path="documentos/:id/editar" element={<EditarDocumento />} />
             <Route path="admin" element={<Admin />} />
             <Route path="auditoria" element={<Auditoria />} />
             

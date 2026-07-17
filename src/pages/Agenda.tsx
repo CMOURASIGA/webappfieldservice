@@ -58,7 +58,7 @@ export const Agenda = () => {
 
         agendaItems.push({
           id: p.id,
-          title: `Preventiva: ${p.title}`,
+          title: `Preventiva: ${p.description}`,
           date: p.nextExecution,
           type: "Preventiva",
           status: isPast(parseISO(p.nextExecution)) ? "Atrasada" : "Planejada",
@@ -77,7 +77,7 @@ export const Agenda = () => {
 
         agendaItems.push({
           id: d.id,
-          title: `Documento: ${d.name}`,
+          title: `Documento: ${d.title}`,
           date: d.expirationDate,
           type: "Documento",
           status: d.status,

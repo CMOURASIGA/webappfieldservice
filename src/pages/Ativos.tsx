@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
 import { Asset, Unit, Location } from "../types";
@@ -140,6 +141,7 @@ export const Ativos = () => {
                     <td className="px-6 py-4 text-slate-600">{getLocationName(asset.locationId)}</td>
                     <td className="px-6 py-4">{getStatusBadge(asset.status)}</td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      <Link to={`/ativos/${asset.id}`} className="text-blue-600 hover:text-blue-700 font-medium text-sm mr-2">Ver</Link>
                       <button 
                         onClick={() => handleOpenEdit(asset)}
                         className="text-brand-600 hover:text-brand-700 font-medium text-sm"

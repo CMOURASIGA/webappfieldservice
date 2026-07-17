@@ -132,6 +132,41 @@ export const DetalheOrdem = () => {
       if (comment) {
         orders[idx].observations += `\n[${new Date().toLocaleDateString()} - ${currentUser.name}]: ${comment}`;
       }
+      
+      // se foi concluída e tem plano preventivo vinculado, atualizar o plano
+      if (newStatus === "Concluída" && orders[idx].preventivePlanId) {
+        const plans = storageService.get("gsi_preventive_plans");
+        const pIdx = plans.findIndex(p => p.id === orders[idx].preventivePlanId);
+        if (pIdx !== -1) {
+          const plan = plans[pIdx];
+          const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+          const addMonths = (date, months) => {
+            const d = new Date(date);
+            d.setMonth(d.getMonth() + months);
+            return d;
+          };
+          const addYears = (date, years) => {
+            const d = new Date(date);
+            d.setFullYear(d.getFullYear() + years);
+            return d;
+          };
+          
+          let nextDate = new Date(plan.nextExecution);
+          if (plan.periodicity === "diaria") nextDate = addDays(nextDate, 1);
+          else if (plan.periodicity === "semanal") nextDate = addDays(nextDate, 7);
+          else if (plan.periodicity === "mensal") nextDate = addMonths(nextDate, 1);
+          else if (plan.periodicity === "trimestral") nextDate = addMonths(nextDate, 3);
+          else if (plan.periodicity === "semestral") nextDate = addMonths(nextDate, 6);
+          else if (plan.periodicity === "anual") nextDate = addYears(nextDate, 1);
+
+          plans[pIdx].lastExecution = new Date().toISOString();
+          plans[pIdx].nextExecution = nextDate.toISOString();
+          plans[pIdx].updatedAt = new Date().toISOString();
+          
+          storageService.set("gsi_preventive_plans", plans);
+        }
+      }
+
       storageService.set("gsi_work_orders", orders);
       storageService.logAudit(currentUser.id, logMsg, order.id, "WorkOrder", oldStatus, newStatus);
       setComment("");
@@ -173,15 +208,17 @@ export const DetalheOrdem = () => {
       const cIdx = orders[idx].checklist.findIndex(c => c.id === itemId);
       if (cIdx !== -1) {
         orders[idx].checklist[cIdx] = { ...orders[idx].checklist[cIdx], [field]: value };
-        storageService.set("gsi_work_orders", orders);
-        loadOrder();
         
-        // Auto-generate Corretiva if result is "Não conforme"
-        if (field === "result" && value === "Não conforme") {
+        // Auto-generate Corretiva if result is "Não conforme" and it doesn't exist yet
+        if (field === "result" && value === "Não conforme" && !orders[idx].checklist[cIdx].correctiveRequestId) {
           const itemDescription = orders[idx].checklist[cIdx].description;
           const requests = storageService.get("gsi_requests");
+          
+          // Generate a simple ID since uuid might not be imported here
+          const newId = 'req-' + Math.random().toString(36).substring(2, 15);
+          
           const newReq: any = {
-            id: crypto.randomUUID(),
+            id: newId,
             protocol: `DEM-NC-${Math.floor(1000 + Math.random() * 9000)}`,
             solicitanteId: currentUser.id,
             unitId: order.unitId,
@@ -198,8 +235,13 @@ export const DetalheOrdem = () => {
           };
           requests.push(newReq);
           storageService.set("gsi_requests", requests);
+          
+          orders[idx].checklist[cIdx].correctiveRequestId = newId;
           alert(`Demanda corretiva gerada automaticamente: ${newReq.protocol}`);
         }
+
+        storageService.set("gsi_work_orders", orders);
+        loadOrder();
       }
     }
   };
@@ -349,7 +391,14 @@ export const DetalheOrdem = () => {
                               disabled={order.status !== "Em execução"}
                               onChange={e => updateChecklistItem(item.id, "observations", e.target.value)}
                             />
-                            <p className="text-xs text-red-600 mt-1">* Uma ordem corretiva será ou foi gerada para este item.</p>
+                            {item.correctiveRequestId ? (
+  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+    * Demanda corretiva gerada. 
+    <Link to={`/demandas/${item.correctiveRequestId}`} className="underline hover:text-red-800">Ver Demanda</Link>
+  </p>
+) : (
+  <p className="text-xs text-red-600 mt-1">* Uma demanda corretiva será gerada para este item.</p>
+)}
                           </div>
                         )}
                       </div>

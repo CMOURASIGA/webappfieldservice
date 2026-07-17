@@ -116,6 +116,7 @@ export interface ChecklistItem {
   result?: "Conforme" | "Não conforme" | "Não se aplica" | null;
   observations?: string;
   evidence?: string;
+  correctiveRequestId?: string;
 }
 
 export interface ChecklistTemplate {
@@ -149,7 +150,16 @@ export interface PreventivePlan {
   active: boolean;
 }
 
-export type DocumentStatus = "Válido" | "A vencer" | "Vencido" | "Sem validade definida";
+export type DocumentStatus = "Vigente" | "Atenção" | "Crítico" | "Vencido" | "Sem validade definida";
+
+export interface DocumentVersion {
+  id: string;
+  version: string;
+  date: string;
+  observations: string;
+  userId?: string;
+  attachmentId?: string;
+}
 
 export interface Document {
   id: string;
@@ -169,6 +179,12 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   active: boolean;
+  periodicity?: string;
+  regulatoryBody?: string;
+  requiresART?: boolean;
+  versions?: DocumentVersion[];
+  alertDaysAttention?: number;
+  alertDaysCritical?: number;
 }
 
 export interface Provider {
