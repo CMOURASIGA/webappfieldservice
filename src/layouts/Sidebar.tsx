@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History, CalendarDays, X } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -21,9 +21,14 @@ const adminItems = [
   { icon: History, label: "Auditoria", href: "/auditoria" },
 ];
 
-export const Sidebar = () => {
+export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?: boolean, setMobileMenuOpen?: (v: boolean) => void }) => {
   const location = useLocation();
   const { currentUser } = useAuth();
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    if (setMobileMenuOpen) setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const renderLink = (item: any) => {
     const isActive = location.pathname === item.href || (item.href !== "/" && location.pathname.startsWith(item.href));
@@ -45,30 +50,50 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-[240px] bg-brand-900 flex flex-col z-20">
-      <div className="h-16 flex items-center px-6 mb-4 mt-2">
-        <div className="text-white font-bold text-xl tracking-tight">GSI / CNC</div>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-20 md:hidden" 
+          onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
+        />
+      )}
       
-      <nav className="flex-1 overflow-y-auto">
-        <div className="flex flex-col">
-          {navItems.map(item => {
-            if (item.href === "/prestadores" && currentUser?.role === "Solicitante") {
-              return null;
-            }
-            return renderLink(item);
-          })}
-
-          {(currentUser?.role === "Administrador" || currentUser?.role === "Gestor GSI") && (
-            <>
-              <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-white/65 uppercase tracking-wider">
-                Configurações
-              </div>
-              {adminItems.map(renderLink)}
-            </>
-          )}
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed top-0 left-0 h-screen w-[240px] bg-brand-900 flex flex-col z-30 transition-transform duration-300 md:translate-x-0",
+        mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="h-16 flex items-center justify-between px-6 mb-4 mt-2">
+          <div className="text-white font-bold text-xl tracking-tight">GSI / CNC</div>
+          <button 
+            className="md:hidden text-white/80 hover:text-white p-1"
+            onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </nav>
-    </aside>
+        
+        <nav className="flex-1 overflow-y-auto pb-4">
+          <div className="flex flex-col">
+            {navItems.map(item => {
+              if (item.href === "/prestadores" && currentUser?.role === "Solicitante") {
+                return null;
+              }
+              return renderLink(item);
+            })}
+            
+            {(currentUser?.role === "Administrador" || currentUser?.role === "Gestor GSI") && (
+              <>
+                <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-white/65 uppercase tracking-wider">
+                  Configurações
+                </div>
+                {adminItems.map(renderLink)}
+              </>
+            )}
+          </div>
+        </nav>
+      </aside>
+    </>
   );
 };

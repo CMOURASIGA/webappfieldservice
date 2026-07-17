@@ -164,7 +164,7 @@ export const NovaPreventiva = () => {
                 onChange={e => setFormData({ ...formData, providerId: e.target.value })}
                 options={providers.map(p => ({ value: p.id, label: p.name }))}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Select
                   label="Periodicidade"
                   required

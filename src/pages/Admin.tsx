@@ -133,7 +133,7 @@ export const Admin = () => {
             <Button type="submit" disabled={!newCatName.trim()}>Adicionar</Button>
           </form>
 
-          <div className="border border-slate-200 rounded-md overflow-hidden">
+          <div className="border border-slate-200 rounded-md overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>

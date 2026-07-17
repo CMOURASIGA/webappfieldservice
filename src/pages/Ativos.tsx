@@ -360,7 +360,7 @@ export const Ativos = () => {
             options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
             disabled={!formData.unitId}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Fabricante"
               value={formData.manufacturer || ""}
@@ -377,7 +377,7 @@ export const Ativos = () => {
             value={formData.patrimonyNumber || ""}
             onChange={e => setFormData({ ...formData, patrimonyNumber: e.target.value })}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Criticidade"
               required
