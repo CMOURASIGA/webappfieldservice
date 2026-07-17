@@ -1,30 +1,105 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { PreventivePlan, Unit, Asset, Provider } from "../types";
+import { PreventivePlan, Unit, Asset, Provider, WorkOrder } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import { format, parseISO, isPast } from "date-fns";
+import { Button } from "../components/ui/Button";
+import { format, parseISO, isPast, isToday, addDays, addMonths, addYears } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
 
 export const Preventivas = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  
   const [plans, setPlans] = useState<PreventivePlan[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
 
   useEffect(() => {
-    setPlans(storageService.get("gsi_preventive_plans"));
+    loadData();
+  }, []);
+
+  const loadData = () => {
+    setPlans(storageService.get("gsi_preventive_plans").filter(p => p.active));
     setUnits(storageService.get("gsi_units"));
     setAssets(storageService.get("gsi_assets"));
     setProviders(storageService.get("gsi_providers"));
-  }, []);
+  };
 
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
   const getProviderName = (pid?: string) => providers.find(p => p.id === pid)?.name || "-";
 
   const getStatusBadge = (nextExecution: string) => {
-    if (isPast(parseISO(nextExecution))) return <Badge variant="danger">Atrasada</Badge>;
+    if (isPast(parseISO(nextExecution)) && !isToday(parseISO(nextExecution))) {
+      return <Badge variant="danger">Atrasada</Badge>;
+    }
     return <Badge variant="info">Em dia</Badge>;
+  };
+
+  const handleGenerateOrders = () => {
+    if (!currentUser) return;
+    
+    let generatedCount = 0;
+    const allPlans = storageService.get("gsi_preventive_plans");
+    const allOrders = storageService.get("gsi_work_orders");
+
+    const updatedPlans = allPlans.map(plan => {
+      // Check if plan is due (nextExecution is today or past)
+      if (plan.active && plan.status === "Ativo" && (isPast(parseISO(plan.nextExecution)) || isToday(parseISO(plan.nextExecution)))) {
+        // Create new Work Order
+        const newOrder: WorkOrder = {
+          id: crypto.randomUUID(),
+          number: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+          unitId: plan.unitId,
+          locationId: plan.locationId || "",
+          assetId: plan.assetId,
+          type: "Preventiva",
+          categoryId: plan.categoryId,
+          priority: "Média", // Default for preventives
+          providerId: plan.providerId,
+          technicalDescription: `[Gerada via Plano: ${plan.code}] ${plan.description}`,
+          plannedDate: plan.nextExecution,
+          deadline: new Date(new Date(plan.nextExecution).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days deadline
+          status: "Planejada",
+          checklist: plan.checklist.map(c => ({ id: crypto.randomUUID(), description: c.description, done: false })),
+          observations: "",
+          attachments: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          active: true,
+        };
+        
+        allOrders.push(newOrder);
+        storageService.logAudit(currentUser.id, "Ordem Preventiva Gerada", newOrder.id, "WorkOrder");
+        generatedCount++;
+
+        // Calculate next execution date based on periodicity
+        let nextDate = parseISO(plan.nextExecution);
+        if (plan.periodicity === "diaria") nextDate = addDays(nextDate, 1);
+        else if (plan.periodicity === "semanal") nextDate = addDays(nextDate, 7);
+        else if (plan.periodicity === "mensal") nextDate = addMonths(nextDate, 1);
+        else if (plan.periodicity === "trimestral") nextDate = addMonths(nextDate, 3);
+        else if (plan.periodicity === "semestral") nextDate = addMonths(nextDate, 6);
+        else if (plan.periodicity === "anual") nextDate = addYears(nextDate, 1);
+
+        plan.lastExecution = new Date().toISOString();
+        plan.nextExecution = nextDate.toISOString();
+        plan.updatedAt = new Date().toISOString();
+      }
+      return plan;
+    });
+
+    if (generatedCount > 0) {
+      storageService.set("gsi_preventive_plans", updatedPlans);
+      storageService.set("gsi_work_orders", allOrders);
+      alert(`${generatedCount} nova(s) Ordem(ns) de Serviço gerada(s) com sucesso!`);
+      loadData();
+    } else {
+      alert("Não há planos preventivos com data de execução vencida ou para hoje.");
+    }
   };
 
   return (
@@ -32,7 +107,15 @@ export const Preventivas = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Planos Preventivos</h1>
-          <p className="text-sm text-slate-500">Gestão de manutenções recorrentes.</p>
+          <p className="text-sm text-slate-500">Gestão de manutenções recorrentes e verificação de ordens.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleGenerateOrders}>
+            Verificar & Gerar Ordens
+          </Button>
+          <Button onClick={() => navigate("/preventivas/nova")}>
+            + Novo Plano
+          </Button>
         </div>
       </div>
 

@@ -26,6 +26,7 @@ export const DetalheOrdem = () => {
   const [assignUser, setAssignUser] = useState("");
   const [assignProvider, setAssignProvider] = useState("");
   const [comment, setComment] = useState("");
+  const [trackingComment, setTrackingComment] = useState("");
 
   useEffect(() => {
     loadOrder();
@@ -34,7 +35,7 @@ export const DetalheOrdem = () => {
     setCategories(storageService.get("gsi_categories"));
     setUsers(storageService.get("gsi_users"));
     setAssets(storageService.get("gsi_assets"));
-    setProviders(storageService.get("gsi_providers"));
+    setProviders(storageService.get("gsi_providers").filter(p => p.status === "Ativo" && p.active !== false));
   }, [id]);
 
   const loadOrder = () => {
@@ -146,6 +147,41 @@ export const DetalheOrdem = () => {
                   </div>
                 </div>
               )}
+              
+              {/* Adicionar Acompanhamento */}
+              <div className="pt-4 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Adicionar Acompanhamento</p>
+                <div className="space-y-2">
+                  <Textarea 
+                    placeholder="Digite uma nova observação ou andamento do serviço..." 
+                    value={trackingComment} 
+                    onChange={e => setTrackingComment(e.target.value)} 
+                    rows={3}
+                  />
+                  <div className="flex justify-end">
+                    <Button 
+                      size="sm" 
+                      disabled={!trackingComment.trim()} 
+                      onClick={() => {
+                        if (!order || !currentUser || !trackingComment.trim()) return;
+                        const orders = storageService.get("gsi_work_orders");
+                        const idx = orders.findIndex(o => o.id === order.id);
+                        if (idx !== -1) {
+                          const separator = orders[idx].observations ? "\n\n" : "";
+                          orders[idx].observations += `${separator}[${new Date().toLocaleString()} - ${currentUser.name}]: ${trackingComment}`;
+                          orders[idx].updatedAt = new Date().toISOString();
+                          storageService.set("gsi_work_orders", orders);
+                          storageService.logAudit(currentUser.id, "Adicionou acompanhamento", order.id, "WorkOrder", "", trackingComment);
+                          setTrackingComment("");
+                          loadOrder();
+                        }
+                      }}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -184,17 +220,24 @@ export const DetalheOrdem = () => {
                 </div>
               )}
 
-              {/* Execução - Técnicos */}
-              {(currentUser?.role === "Executor/Técnico" && order.responsibleId === currentUser.id) && (
+              {/* Execução */}
+              {((currentUser?.role === "Executor/Técnico" && order.responsibleId === currentUser.id) || 
+                currentUser?.role === "Gestor GSI" || currentUser?.role === "Operador GSI" || currentUser?.role === "Administrador") && (
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   {order.status === "Atribuída" && (
                     <Button className="w-full bg-blue-600" onClick={() => updateStatus("Em execução", "Iniciou execução")}>Iniciar Serviço</Button>
                   )}
                   {order.status === "Em execução" && (
                     <>
-                      <Textarea placeholder="Observações de conclusão..." value={comment} onChange={e => setComment(e.target.value)} />
+                      <Textarea placeholder="Observações ou motivo..." value={comment} onChange={e => setComment(e.target.value)} />
                       <Button className="w-full bg-amber-600" onClick={() => updateStatus("Pausada", "Pausou serviço")}>Pausar</Button>
                       <Button className="w-full bg-green-600" onClick={() => updateStatus("Em validação", "Enviou para validação")}>Concluir Tecnicamente</Button>
+                    </>
+                  )}
+                  {order.status === "Pausada" && (
+                    <>
+                      <Textarea placeholder="Observações da retomada..." value={comment} onChange={e => setComment(e.target.value)} />
+                      <Button className="w-full bg-blue-600" onClick={() => updateStatus("Em execução", "Retomou serviço")}>Retomar Serviço</Button>
                     </>
                   )}
                 </div>

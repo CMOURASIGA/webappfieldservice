@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { Unit, Location, Category, Request, Priority } from "../types";
+import { Unit, Location, Category, Request, Priority, Asset } from "../types";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Drawer } from "../components/ui/Drawer";
 import { useAuth } from "../contexts/AuthContext";
 
 export const NovaDemanda = () => {
@@ -16,23 +17,30 @@ export const NovaDemanda = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
 
   const [formData, setFormData] = useState({
     unitId: currentUser?.unitId || "",
     locationId: "",
     categoryId: "",
+    assetId: "",
     title: "",
     description: "",
     priority: "Média" as Priority,
   });
 
+  const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
+  const [newLocationData, setNewLocationData] = useState({ name: "", type: "Ambiente" });
+
   useEffect(() => {
     setUnits(storageService.get("gsi_units").filter(u => u.active));
     setLocations(storageService.get("gsi_locations").filter(l => l.active));
-    setCategories(storageService.get("gsi_categories").filter(c => c.type === "Demanda" && c.active));
+    setCategories(storageService.get("gsi_categories").filter(c => c.active !== false));
+    setAssets(storageService.get("gsi_assets").filter(a => a.status === "Ativo" && a.active));
   }, []);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
+  const filteredAssets = assets.filter(a => (!formData.locationId || a.locationId === formData.locationId) && a.unitId === formData.unitId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +52,7 @@ export const NovaDemanda = () => {
       solicitanteId: currentUser.id,
       unitId: formData.unitId,
       locationId: formData.locationId,
+      assetId: formData.assetId || undefined,
       categoryId: formData.categoryId,
       title: formData.title,
       description: formData.description,
@@ -64,6 +73,29 @@ export const NovaDemanda = () => {
     navigate("/demandas");
   };
 
+  const handleSaveNewLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLocationData.name || !formData.unitId) return;
+
+    const newLocation: Location = {
+      id: crypto.randomUUID(),
+      unitId: formData.unitId,
+      type: newLocationData.type,
+      name: newLocationData.name,
+      code: `LOC-${Math.floor(1000 + Math.random() * 9000)}`,
+      active: true
+    };
+    
+    const locs = storageService.get("gsi_locations");
+    locs.push(newLocation);
+    storageService.set("gsi_locations", locs);
+    
+    setLocations([...locations, newLocation]);
+    setFormData({ ...formData, locationId: newLocation.id, assetId: "" });
+    setIsLocationDrawerOpen(false);
+    setNewLocationData({ name: "", type: "Ambiente" });
+  };
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
@@ -82,15 +114,34 @@ export const NovaDemanda = () => {
                 label="Unidade"
                 required
                 value={formData.unitId}
-                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "" })}
+                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetId: "" })}
                 options={units.map(u => ({ value: u.id, label: u.name }))}
               />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700">Local/Ambiente</label>
+                  <button 
+                    type="button" 
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium disabled:text-slate-400 disabled:cursor-not-allowed"
+                    disabled={!formData.unitId}
+                    onClick={() => setIsLocationDrawerOpen(true)}
+                  >
+                    + Novo local
+                  </button>
+                </div>
+                <Select
+                  required
+                  value={formData.locationId}
+                  onChange={e => setFormData({ ...formData, locationId: e.target.value, assetId: "" })}
+                  options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
+                  disabled={!formData.unitId}
+                />
+              </div>
               <Select
-                label="Local/Ambiente"
-                required
-                value={formData.locationId}
-                onChange={e => setFormData({ ...formData, locationId: e.target.value })}
-                options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
+                label="Ativo (Opcional)"
+                value={formData.assetId}
+                onChange={e => setFormData({ ...formData, assetId: e.target.value })}
+                options={filteredAssets.map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))}
                 disabled={!formData.unitId}
               />
               <Select
@@ -141,6 +192,39 @@ export const NovaDemanda = () => {
           </form>
         </CardContent>
       </Card>
+
+      <Drawer
+        isOpen={isLocationDrawerOpen}
+        onClose={() => setIsLocationDrawerOpen(false)}
+        title="Novo Local/Ambiente"
+      >
+        <form onSubmit={handleSaveNewLocation} className="space-y-4">
+          <Input
+            label="Nome do Local"
+            required
+            value={newLocationData.name}
+            onChange={e => setNewLocationData({ ...newLocationData, name: e.target.value })}
+            placeholder="Ex: Sala de Reuniões 01"
+          />
+          <Select
+            label="Tipo"
+            required
+            value={newLocationData.type}
+            onChange={e => setNewLocationData({ ...newLocationData, type: e.target.value })}
+            options={[
+              { value: "Ambiente", label: "Ambiente" },
+              { value: "Andar", label: "Andar" },
+              { value: "Área Externa", label: "Área Externa" },
+              { value: "Edifício", label: "Edifício" }
+            ]}
+          />
+          <div className="pt-4 flex justify-end gap-2 border-t border-slate-200 mt-6">
+            <Button type="button" variant="secondary" onClick={() => setIsLocationDrawerOpen(false)}>Cancelar</Button>
+            <Button type="submit">Salvar Local</Button>
+          </div>
+        </form>
+      </Drawer>
     </div>
   );
 };
+

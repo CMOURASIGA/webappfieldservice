@@ -7,6 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Drawer } from "../components/ui/Drawer";
 import { useAuth } from "../contexts/AuthContext";
 
 export const NovaOrdem = () => {
@@ -33,13 +34,16 @@ export const NovaOrdem = () => {
     deadline: "",
   });
 
+  const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
+  const [newLocationData, setNewLocationData] = useState({ name: "", type: "Ambiente" });
+
   useEffect(() => {
     setUnits(storageService.get("gsi_units").filter(u => u.active));
     setLocations(storageService.get("gsi_locations").filter(l => l.active));
-    setAssets(storageService.get("gsi_assets").filter(a => a.active));
+    setAssets(storageService.get("gsi_assets").filter(a => a.status === "Ativo" && a.active !== false));
     setCategories(storageService.get("gsi_categories").filter(c => c.active));
     setUsers(storageService.get("gsi_users").filter(u => u.active));
-    setProviders(storageService.get("gsi_providers").filter(p => p.active));
+    setProviders(storageService.get("gsi_providers").filter(p => p.status === "Ativo" && p.active !== false));
   }, []);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
@@ -80,6 +84,29 @@ export const NovaOrdem = () => {
     navigate("/ordens");
   };
 
+  const handleSaveNewLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLocationData.name || !formData.unitId) return;
+
+    const newLocation: Location = {
+      id: crypto.randomUUID(),
+      unitId: formData.unitId,
+      type: newLocationData.type,
+      name: newLocationData.name,
+      code: `LOC-${Math.floor(1000 + Math.random() * 9000)}`,
+      active: true
+    };
+    
+    const locs = storageService.get("gsi_locations");
+    locs.push(newLocation);
+    storageService.set("gsi_locations", locs);
+    
+    setLocations([...locations, newLocation]);
+    setFormData({ ...formData, locationId: newLocation.id, assetId: "" });
+    setIsLocationDrawerOpen(false);
+    setNewLocationData({ name: "", type: "Ambiente" });
+  };
+
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
@@ -101,14 +128,26 @@ export const NovaOrdem = () => {
                 onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetId: "" })}
                 options={units.map(u => ({ value: u.id, label: u.name }))}
               />
-              <Select
-                label="Local/Ambiente"
-                required
-                value={formData.locationId}
-                onChange={e => setFormData({ ...formData, locationId: e.target.value, assetId: "" })}
-                options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
-                disabled={!formData.unitId}
-              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700">Local/Ambiente</label>
+                  <button 
+                    type="button" 
+                    className="text-xs text-brand-600 hover:text-brand-700 font-medium disabled:text-slate-400 disabled:cursor-not-allowed"
+                    disabled={!formData.unitId}
+                    onClick={() => setIsLocationDrawerOpen(true)}
+                  >
+                    + Novo local
+                  </button>
+                </div>
+                <Select
+                  required
+                  value={formData.locationId}
+                  onChange={e => setFormData({ ...formData, locationId: e.target.value, assetId: "" })}
+                  options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
+                  disabled={!formData.unitId}
+                />
+              </div>
               <Select
                 label="Ativo (Opcional)"
                 value={formData.assetId}
@@ -184,6 +223,38 @@ export const NovaOrdem = () => {
           </form>
         </CardContent>
       </Card>
+
+      <Drawer
+        isOpen={isLocationDrawerOpen}
+        onClose={() => setIsLocationDrawerOpen(false)}
+        title="Novo Local/Ambiente"
+      >
+        <form onSubmit={handleSaveNewLocation} className="space-y-4">
+          <Input
+            label="Nome do Local"
+            required
+            value={newLocationData.name}
+            onChange={e => setNewLocationData({ ...newLocationData, name: e.target.value })}
+            placeholder="Ex: Sala de Reuniões 01"
+          />
+          <Select
+            label="Tipo"
+            required
+            value={newLocationData.type}
+            onChange={e => setNewLocationData({ ...newLocationData, type: e.target.value })}
+            options={[
+              { value: "Ambiente", label: "Ambiente" },
+              { value: "Andar", label: "Andar" },
+              { value: "Área Externa", label: "Área Externa" },
+              { value: "Edifício", label: "Edifício" }
+            ]}
+          />
+          <div className="pt-4 flex justify-end gap-2 border-t border-slate-200 mt-6">
+            <Button type="button" variant="secondary" onClick={() => setIsLocationDrawerOpen(false)}>Cancelar</Button>
+            <Button type="submit">Salvar Local</Button>
+          </div>
+        </form>
+      </Drawer>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../components/ui/Card";
 import { storageService } from "../services/storageService";
 import { Request, WorkOrder, PreventivePlan, Document } from "../types";
@@ -6,6 +7,7 @@ import { Inbox, ClipboardList, Clock, FileText, AlertTriangle } from "lucide-rea
 import { isPast, parseISO, differenceInDays } from "date-fns";
 
 export const VisaoGeral = () => {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState({
     demandasAbertas: 0,
     demandasTriagem: 0,
@@ -41,8 +43,8 @@ export const VisaoGeral = () => {
     });
   }, []);
 
-  const StatCard = ({ title, value, icon: Icon, colorClass }: any) => (
-    <Card>
+  const StatCard = ({ title, value, icon: Icon, colorClass, link }: any) => (
+    <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(link)}>
       <CardContent className="p-6 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
@@ -63,14 +65,14 @@ export const VisaoGeral = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Demandas Abertas" value={metrics.demandasAbertas} icon={Inbox} colorClass="text-brand-700" />
-        <StatCard title="Demandas em Triagem" value={metrics.demandasTriagem} icon={Inbox} colorClass="text-amber-600" />
-        <StatCard title="OS em Execução" value={metrics.osEmExecucao} icon={ClipboardList} colorClass="text-blue-600" />
-        <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" />
+        <StatCard title="Demandas Abertas" value={metrics.demandasAbertas} icon={Inbox} colorClass="text-brand-700" link="/demandas" />
+        <StatCard title="Demandas em Triagem" value={metrics.demandasTriagem} icon={Inbox} colorClass="text-amber-600" link="/demandas" />
+        <StatCard title="OS em Execução" value={metrics.osEmExecucao} icon={ClipboardList} colorClass="text-blue-600" link="/ordens" />
+        <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
         
-        <StatCard title="Preventivas Atrasadas" value={metrics.prevAtrasadas} icon={AlertTriangle} colorClass="text-red-600" />
-        <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" />
-        <StatCard title="Documentos a Vencer (30d)" value={metrics.docAVencer} icon={FileText} colorClass="text-amber-600" />
+        <StatCard title="Preventivas Atrasadas" value={metrics.prevAtrasadas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
+        <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
+        <StatCard title="Documentos a Vencer (30d)" value={metrics.docAVencer} icon={FileText} colorClass="text-amber-600" link="/documentos" />
       </div>
     </div>
   );

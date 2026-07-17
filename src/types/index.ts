@@ -177,6 +177,6 @@ export interface AuditLog {
 export interface Category {
   id: string;
   name: string;
-  type: "Demanda" | "Serviço" | "Documento";
+  type: "Demanda" | "Serviço" | "Documento" | "Preventiva";
   active: boolean;
 }
