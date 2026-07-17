@@ -6,7 +6,7 @@ import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 
 export const DetalhePrestador = () => {
   const { id } = useParams();
@@ -53,7 +53,7 @@ export const DetalhePrestador = () => {
   const completedOrders = orders.filter(o => o.status === "Concluída").length;
   const delayedOrders = orders.filter(o => o.status !== "Concluída" && o.status !== "Cancelada" && o.deadline && new Date(o.deadline) < new Date()).length;
   const completedOrdersList = orders.filter(o => o.status === "Concluída").sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  const lastService = completedOrdersList.length > 0 ? format(parseISO(completedOrdersList[0].updatedAt), "dd/MM/yyyy") : "-";
+  const lastService = completedOrdersList.length > 0 ? (isValid(parseISO(completedOrdersList[0].updatedAt)) ? format(parseISO(completedOrdersList[0].updatedAt), "dd/MM/yyyy") : 'Data Inválida') : "-";
 
   const StatCard = ({ title, value, colorClass }: any) => (
     <Card>
@@ -157,7 +157,7 @@ export const DetalhePrestador = () => {
                     <td className="px-6 py-4 font-medium text-slate-900">{os.number}</td>
                     <td className="px-6 py-4 text-slate-600">{getUnitName(os.unitId)}</td>
                     <td className="px-6 py-4 text-slate-600">{os.priority}</td>
-                    <td className="px-6 py-4 text-slate-600">{os.deadline ? format(parseISO(os.deadline), 'dd/MM/yyyy') : '-'}</td>
+                    <td className="px-6 py-4 text-slate-600">{os.deadline ? (isValid(parseISO(os.deadline)) ? format(parseISO(os.deadline), 'dd/MM/yyyy') : 'Data Inválida') : '-'}</td>
                     <td className="px-6 py-4">{getOrderStatusBadge(os.status)}</td>
                     <td className="px-6 py-4 text-right">
                       <Link to={`/ordens/${os.id}`}>
@@ -201,7 +201,7 @@ export const DetalhePrestador = () => {
                     <td className="px-6 py-4 font-medium text-slate-900">{plan.code}</td>
                     <td className="px-6 py-4 text-slate-600">{getUnitName(plan.unitId)}</td>
                     <td className="px-6 py-4 text-slate-600 capitalize">{plan.periodicity}</td>
-                    <td className="px-6 py-4 text-slate-600">{format(parseISO(plan.nextExecution), 'dd/MM/yyyy')}</td>
+                    <td className="px-6 py-4 text-slate-600">{(isValid(parseISO(plan.nextExecution)) ? format(parseISO(plan.nextExecution), 'dd/MM/yyyy') : 'Data Inválida')}</td>
                     <td className="px-6 py-4">
                       <Badge variant={plan.status === "Ativo" ? "success" : "default"}>{plan.status}</Badge>
                     </td>

@@ -8,7 +8,7 @@ import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
-import { format, addDays } from "date-fns";
+import { format, isValid, addDays } from "date-fns";
 
 export const NovaPreventiva = () => {
   const navigate = useNavigate();

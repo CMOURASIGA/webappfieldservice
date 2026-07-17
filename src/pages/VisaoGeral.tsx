@@ -44,16 +44,16 @@ export const VisaoGeral = () => {
       minhasDemandas: requests.filter(r => r.solicitanteId === userId && r.status !== "Atendida" && r.status !== "Cancelada").length,
       
       osEmExecucao: orders.filter(o => o.status === "Em execução").length,
-      osSemResponsavel: orders.filter(o => o.status === "Aberta" && !o.providerId && !o.assignedToId).length,
+      osSemResponsavel: orders.filter(o => o.status === "Aberta" && !o.providerId && !o.responsibleId).length,
       osAtrasadas: orders.filter(o => {
         if (o.status === "Concluída" || o.status === "Cancelada") return false;
         if (!o.deadline) return false;
         return isPast(parseISO(o.deadline));
       }).length,
       
-      minhasOs: orders.filter(o => (o.assignedToId === userId) && o.status !== "Concluída" && o.status !== "Cancelada").length,
+      minhasOs: orders.filter(o => (o.responsibleId === userId) && o.status !== "Concluída" && o.status !== "Cancelada").length,
       minhasOsAtrasadas: orders.filter(o => {
-        if (o.assignedToId !== userId) return false;
+        if (o.responsibleId !== userId) return false;
         if (o.status === "Concluída" || o.status === "Cancelada") return false;
         if (!o.deadline) return false;
         return isPast(parseISO(o.deadline));

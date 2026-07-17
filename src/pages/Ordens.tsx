@@ -5,7 +5,7 @@ import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../t
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { LayoutList, Kanban as KanbanIcon, Printer } from "lucide-react";
 import { Drawer } from "../components/ui/Drawer";
 import { Textarea } from "../components/ui/Textarea";

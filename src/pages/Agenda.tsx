@@ -5,7 +5,7 @@ import { WorkOrder, PreventivePlan, Document } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Calendar as CalendarIcon, ClipboardList, AlertTriangle, FileText } from "lucide-react";
-import { format, parseISO, isPast, isToday, isTomorrow, addDays, differenceInDays } from "date-fns";
+import { format, isValid, parseISO, isPast, isToday, isTomorrow, addDays, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 type AgendaItem = {
@@ -152,7 +152,7 @@ export const Agenda = () => {
                 <CalendarIcon className="w-4 h-4 text-brand-600" />
                 {formatGroupDate(dateKey)}
                 <span className="text-xs font-normal text-slate-500 ml-2">
-                  {format(parseISO(dateKey), "dd/MM/yyyy")}
+                  {(isValid(parseISO(dateKey)) ? format(parseISO(dateKey), "dd/MM/yyyy") : 'Data Inválida')}
                 </span>
               </h2>
               <div className="grid gap-3">

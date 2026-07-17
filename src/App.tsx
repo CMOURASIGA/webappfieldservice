@@ -14,6 +14,7 @@ import { NovoDocumento } from "./pages/NovoDocumento";
 import { DetalheDocumento } from "./pages/DetalheDocumento";
 import { EditarDocumento } from "./pages/EditarDocumento";
 import { Ativos } from "./pages/Ativos";
+import { DetalheLocal } from "./pages/DetalheLocal";
 import { DetalheAtivo } from "./pages/DetalheAtivo";
 import { Preventivas } from "./pages/Preventivas";
 import { NovaPreventiva } from "./pages/NovaPreventiva";
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="preventivas/nova" element={<NovaPreventiva />} />
             <Route path="ativos" element={<Ativos />} />
             <Route path="ativos/:id" element={<DetalheAtivo />} />
+            <Route path="locais/:id" element={<DetalheLocal />} />
             <Route path="documentos" element={<Documentos />} />
             <Route path="documentos/novo" element={<NovoDocumento />} />
             <Route path="documentos/:id" element={<DetalheDocumento />} />

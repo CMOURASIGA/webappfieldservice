@@ -5,7 +5,7 @@ import { Request, Unit, Location, Category } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 
 export const Demandas = () => {
   const [requests, setRequests] = useState<Request[]>([]);
@@ -124,7 +124,7 @@ export const Demandas = () => {
                     <td className="px-6 py-4 text-slate-600">{getLocationName(req.locationId)}</td>
                     <td className="px-6 py-4 text-slate-600">{getCategoryName(req.categoryId)}</td>
                     <td className="px-6 py-4 text-slate-900 truncate max-w-[200px]" title={req.title}>{req.title}</td>
-                    <td className="px-6 py-4 text-slate-600">{format(parseISO(req.createdAt), 'dd/MM/yyyy')}</td>
+                    <td className="px-6 py-4 text-slate-600">{(isValid(parseISO(req.createdAt)) ? format(parseISO(req.createdAt), 'dd/MM/yyyy') : 'Data Inválida')}</td>
                     <td className="px-6 py-4">{getStatusBadge(req.status)}</td>
                     <td className="px-6 py-4 text-right">
                       <Link to={`/demandas/${req.id}`}>

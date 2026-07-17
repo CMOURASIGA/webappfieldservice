@@ -24,6 +24,9 @@ export interface Location {
   name: string;
   code: string;
   description?: string;
+  area?: string;
+  floor?: string;
+  environment?: string;
   active: boolean;
 }
 
@@ -60,6 +63,7 @@ export interface Request {
   id: string;
   protocol: string;
   solicitanteId: string;
+  assetId?: string;
   unitId: string;
   locationId: string;
   categoryId: string;
@@ -88,6 +92,7 @@ export interface WorkOrder {
   id: string;
   number: string;
   requestId?: string;
+  preventivePlanId?: string;
   unitId: string;
   locationId: string;
   assetId?: string;
@@ -150,7 +155,7 @@ export interface PreventivePlan {
   active: boolean;
 }
 
-export type DocumentStatus = "Vigente" | "Atenção" | "Crítico" | "Vencido" | "Sem validade definida";
+export type DocumentStatus = "Vigente" | "Atenção" | "Crítico" | "Vencido" | "A vencer" | "Sem validade definida";
 
 export interface DocumentVersion {
   id: string;

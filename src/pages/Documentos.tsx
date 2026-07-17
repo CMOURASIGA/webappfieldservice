@@ -7,14 +7,26 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { format, isValid, parseISO, differenceInDays } from "date-fns";
 import { Search, Plus, FileText, AlertTriangle, CheckCircle, ShieldAlert, Clock } from "lucide-react";
 
 export const Documentos = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [search, setSearch] = useState("");
+  
   const [statusFilter, setStatusFilter] = useState("Todos");
+  const [unitFilter, setUnitFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [responsibleFilter, setResponsibleFilter] = useState("");
+  const [bodyFilter, setBodyFilter] = useState("");
+  
+  const [users, setUsers] = useState<any[]>([]);
+  
+  useEffect(() => {
+    setUsers(storageService.get("gsi_users") || []);
+  }, []);
+
 
   useEffect(() => {
     loadData();
@@ -77,13 +89,23 @@ export const Documentos = () => {
     vencido: documents.filter(d => d.status === "Vencido").length,
   };
 
+  
   const filteredDocs = documents.filter(doc => {
-    const matchesSearch = doc.title.toLowerCase().includes(search.toLowerCase()) || 
-                          doc.number.toLowerCase().includes(search.toLowerCase()) ||
-                          (doc.regulatoryBody && doc.regulatoryBody.toLowerCase().includes(search.toLowerCase()));
+    const matchesSearch = ((doc.title || "").toString().toLowerCase()).includes(search.toLowerCase()) || 
+                          ((doc.number || "").toString().toLowerCase()).includes(search.toLowerCase()) ||
+                          ((doc.regulatoryBody || "").toString().toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = statusFilter === "Todos" || doc.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesUnit = !unitFilter || doc.unitId === unitFilter;
+    const matchesType = !typeFilter || doc.type === typeFilter;
+    const matchesResponsible = !responsibleFilter || doc.responsibleId === responsibleFilter;
+    const matchesBody = !bodyFilter || (doc.regulatoryBody || doc.issuer) === bodyFilter;
+    
+    return matchesSearch && matchesStatus && matchesUnit && matchesType && matchesResponsible && matchesBody;
   });
+  
+  const allTypes = Array.from(new Set(documents.map(d => d.type).filter(Boolean)));
+  const allBodies = Array.from(new Set(documents.map(d => d.regulatoryBody || d.issuer).filter(Boolean)));
+
 
   return (
     <div className="space-y-6">
@@ -146,26 +168,46 @@ export const Documentos = () => {
         </Card>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-4">
-        <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-          <Input 
-            placeholder="Buscar por título, número ou órgão..." 
-            className="pl-9"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="w-full md:w-48">
-          <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-            <option value="Todos">Todos os Status</option>
-            <option value="Vigente">Vigentes</option>
-            <option value="Atenção">Atenção</option>
-            <option value="Crítico">Crítico</option>
-            <option value="Vencido">Vencidos</option>
-          </Select>
-        </div>
-      </div>
+      
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="lg:col-span-2 relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Input 
+                placeholder="Buscar por título, número ou órgão..." 
+                className="pl-9"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="Todos">Todos os Status</option>
+              <option value="Vigente">Vigentes</option>
+              <option value="Atenção">Atenção</option>
+              <option value="Crítico">Crítico</option>
+              <option value="Vencido">Vencidos</option>
+            </Select>
+            <Select value={unitFilter} onChange={e => setUnitFilter(e.target.value)}>
+              <option value="">Todas as Unidades</option>
+              {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </Select>
+            <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+              <option value="">Qualquer tipo</option>
+              {allTypes.map(t => <option key={t as string} value={t as string}>{t as string}</option>)}
+            </Select>
+            <Select value={bodyFilter} onChange={e => setBodyFilter(e.target.value)}>
+              <option value="">Qualquer Órgão/Emissor</option>
+              {allBodies.map(b => <option key={b as string} value={b as string}>{b as string}</option>)}
+            </Select>
+            <Select value={responsibleFilter} onChange={e => setResponsibleFilter(e.target.value)}>
+              <option value="">Qualquer Responsável</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardContent className="p-0">
@@ -197,7 +239,7 @@ export const Documentos = () => {
                     </td>
                     <td className="px-6 py-4 text-slate-600">{doc.regulatoryBody || doc.issuer || '-'}</td>
                     <td className="px-6 py-4 text-slate-600">{getUnitName(doc.unitId)}</td>
-                    <td className="px-6 py-4 text-slate-900">{doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : '-'}</td>
+                    <td className="px-6 py-4 text-slate-900">{doc.expirationDate ? (isValid(parseISO(doc.expirationDate)) ? (isValid(parseISO(doc.expirationDate)) ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : '-'}</td>
                     <td className="px-6 py-4">{getDaysRemaining(doc)}</td>
                     <td className="px-6 py-4 text-slate-600">{doc.periodicity || "Único"}</td>
                     <td className="px-6 py-4">{getStatusBadge(doc.status)}</td>

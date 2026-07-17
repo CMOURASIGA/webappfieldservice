@@ -174,7 +174,7 @@ export const storageService = {
         description: "Limpeza de filtros e verificação de gás",
         periodicity: "mensal",
         nextExecution: new Date(Date.now() + 86400000 * 5).toISOString(),
-        checklist: [{ id: "c1", description: "Limpar filtros", done: false }],
+        checklist: [{ id: "c1", description: "Limpar filtros", required: false }],
         status: "Ativo",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

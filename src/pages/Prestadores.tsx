@@ -8,7 +8,7 @@ import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { useAuth } from "../contexts/AuthContext";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 
 const specialties = [
   "Climatização", "Elétrica", "Civil", "Hidráulica", "Elevadores",
@@ -46,7 +46,7 @@ export const Prestadores = () => {
     const providerOrders = orders.filter(o => o.providerId === providerId);
     const activeOrders = providerOrders.filter(o => o.status !== "Concluída" && o.status !== "Cancelada").length;
     const completedOrders = providerOrders.filter(o => o.status === "Concluída").sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    const lastService = completedOrders.length > 0 ? format(parseISO(completedOrders[0].updatedAt), "dd/MM/yyyy") : "-";
+    const lastService = completedOrders.length > 0 ? (isValid(parseISO(completedOrders[0].updatedAt)) ? format(parseISO(completedOrders[0].updatedAt), "dd/MM/yyyy") : 'Data Inválida') : "-";
     return { activeOrders, lastService };
   };
 

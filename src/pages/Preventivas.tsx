@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
-import { format, parseISO, isPast, isToday, addDays, addMonths, addYears, differenceInDays } from "date-fns";
+import { format, isValid, parseISO, isPast, isToday, addDays, addMonths, addYears, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Search, AlertTriangle, CheckCircle, Clock, CalendarX } from "lucide-react";
@@ -139,7 +139,7 @@ export const Preventivas = () => {
     const sStatus = getStatus(p.nextExecution);
     if (statusFilter !== "Todos" && sStatus !== statusFilter) return false;
     
-    if (search && !p.code.toLowerCase().includes(search.toLowerCase()) && !p.description.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !((p.code || "").toString().toLowerCase()).includes(search.toLowerCase()) && !((p.description || "").toString().toLowerCase()).includes(search.toLowerCase())) return false;
     if (unitFilter && p.unitId !== unitFilter) return false;
     if (assetFilter && p.assetId !== assetFilter) return false;
     if (providerFilter && p.providerId !== providerFilter) return false;
@@ -280,7 +280,7 @@ export const Preventivas = () => {
                       {plan.responsibleId && <span>👤 {getUserName(plan.responsibleId)}</span>}
                       {!plan.providerId && !plan.responsibleId && "-"}
                     </td>
-                    <td className="px-6 py-4 text-slate-900">{plan.nextExecution ? format(parseISO(plan.nextExecution), 'dd/MM/yyyy') : '-'}</td>
+                    <td className="px-6 py-4 text-slate-900">{plan.nextExecution ? (isValid(parseISO(plan.nextExecution)) ? (isValid(parseISO(plan.nextExecution)) ? format(parseISO(plan.nextExecution), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : '-'}</td>
                     <td className="px-6 py-4">{getStatusBadge(plan.nextExecution)}</td>
                   </tr>
                 ))}

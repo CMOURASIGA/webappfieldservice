@@ -7,8 +7,8 @@ import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Drawer } from "../components/ui/Drawer";
 import { Textarea } from "../components/ui/Textarea";
-import { format, parseISO, differenceInDays } from "date-fns";
-import { ArrowLeft, FileText, Upload, Download, Clock, Pencil, History, ShieldAlert } from "lucide-react";
+import { format, isValid, parseISO, differenceInDays } from "date-fns";
+import { ArrowLeft, FileText, Upload, X, Download, Clock, Pencil, History, ShieldAlert } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -21,7 +21,92 @@ export const DetalheDocumento = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   
+  
   const [versionModalOpen, setVersionModalOpen] = useState(false);
+  const [renewModalOpen, setRenewModalOpen] = useState(false);
+  const [newExpiration, setNewExpiration] = useState("");
+  const [newIssue, setNewIssue] = useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !doc || !currentUser) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      const newAttachment = {
+        id: crypto.randomUUID(),
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        uploadedAt: new Date().toISOString(),
+        dataUrl
+      };
+      
+      const allDocs = storageService.get("gsi_documents");
+      const idx = allDocs.findIndex(d => d.id === doc.id);
+      if (idx !== -1) {
+        allDocs[idx].attachments = [...allDocs[idx].attachments, newAttachment];
+        storageService.set("gsi_documents", allDocs);
+        setDoc(allDocs[idx]);
+        storageService.logAudit(currentUser.id, "Upload de Anexo no Documento", doc.id, "Document");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleDownload = (att: any) => {
+    if (!att.dataUrl) {
+      alert("Arquivo não possui dados salvos (mock).");
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = att.dataUrl;
+    a.download = att.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  
+  const handleDeleteAttachment = (attId: string) => {
+    if (!confirm("Remover este anexo?")) return;
+    const allDocs = storageService.get("gsi_documents");
+    const idx = allDocs.findIndex(d => d.id === doc.id);
+    if (idx !== -1 && currentUser) {
+      allDocs[idx].attachments = allDocs[idx].attachments.filter(a => a.id !== attId);
+      storageService.set("gsi_documents", allDocs);
+      setDoc(allDocs[idx]);
+      storageService.logAudit(currentUser.id, "Removeu Anexo do Documento", doc.id, "Document");
+    }
+  };
+  
+  const handleRenew = () => {
+    if (!newExpiration || !doc || !currentUser) return;
+    
+    const allDocs = storageService.get("gsi_documents");
+    const idx = allDocs.findIndex(d => d.id === doc.id);
+    if (idx !== -1) {
+      // Create version from current state
+      const oldVersion = {
+        id: crypto.randomUUID(),
+        version: `Renovação (${(isValid(parseISO(doc.expirationDate || '')) ? format(parseISO(doc.expirationDate || ''), 'dd/MM/yyyy') : 'Sem data')})`,
+        date: new Date().toISOString(),
+        observations: "Renovação de documento recorrente.",
+        userId: currentUser.id
+      };
+      
+      allDocs[idx].versions = [...(allDocs[idx].versions || []), oldVersion];
+      allDocs[idx].expirationDate = new Date(newExpiration).toISOString();
+      if (newIssue) allDocs[idx].issueDate = new Date(newIssue).toISOString();
+      
+      storageService.set("gsi_documents", allDocs);
+      setDoc(allDocs[idx]);
+      storageService.logAudit(currentUser.id, "Renovou Documento", doc.id, "Document");
+      setRenewModalOpen(false);
+    }
+  };
+
   const [newVersion, setNewVersion] = useState({ version: "", observations: "" });
 
   useEffect(() => {
@@ -120,11 +205,11 @@ export const DetalheDocumento = () => {
                 </div>
                 <div>
                   <p className="text-slate-500 mb-1">Data de Emissão</p>
-                  <p className="font-medium text-slate-900">{doc.issueDate ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : '-'}</p>
+                  <p className="font-medium text-slate-900">{doc.issueDate ? (isValid(parseISO(doc.issueDate)) ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : 'Data Inválida') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 mb-1">Data de Vencimento</p>
-                  <p className="font-medium text-slate-900">{doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : '-'}</p>
+                  <p className="font-medium text-slate-900">{doc.expirationDate ? (isValid(parseISO(doc.expirationDate)) ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Data Inválida') : '-'}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 mb-1">Periodicidade</p>
@@ -161,7 +246,7 @@ export const DetalheDocumento = () => {
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                           <div className="flex justify-between items-start mb-1">
                             <span className="font-semibold text-sm text-slate-900">Versão {v.version}</span>
-                            <span className="text-xs text-slate-500">{format(parseISO(v.date), 'dd/MM/yyyy HH:mm')}</span>
+                            <span className="text-xs text-slate-500">{(isValid(parseISO(v.date)) ? format(parseISO(v.date), 'dd/MM/yyyy HH:mm') : 'Data Inválida')}</span>
                           </div>
                           <p className="text-xs text-slate-600">{v.observations}</p>
                           {v.userId && <p className="text-xs text-slate-400 mt-2">Por: {getUserName(v.userId)}</p>}
@@ -221,12 +306,17 @@ export const DetalheDocumento = () => {
                       <FileText className="w-5 h-5 text-brand-600 flex-shrink-0" />
                       <div className="truncate">
                         <p className="text-sm font-medium text-slate-900 truncate">{att.name}</p>
-                        <p className="text-xs text-slate-500">{format(parseISO(att.uploadedAt), 'dd/MM/yyyy')} • {(att.size / 1024).toFixed(1)} KB</p>
+                        <p className="text-xs text-slate-500">{(isValid(parseISO(att.uploadedAt)) ? format(parseISO(att.uploadedAt), 'dd/MM/yyyy') : 'Data Inválida')} • {(att.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="p-2 flex-shrink-0">
-                      <Download className="w-4 h-4 text-slate-500" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="p-2 flex-shrink-0 text-brand-600" onClick={() => handleDownload(att)}>
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="p-2 flex-shrink-0 text-red-600" onClick={() => handleDeleteAttachment(att.id)}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 {doc.attachments.length === 0 && (
@@ -234,7 +324,8 @@ export const DetalheDocumento = () => {
                     Nenhum arquivo anexado.
                   </div>
                 )}
-                <Button variant="secondary" className="w-full mt-2"><Upload className="w-4 h-4 mr-2"/> Fazer Upload</Button>
+                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+                <Button variant="secondary" className="w-full mt-2" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4 mr-2"/> Fazer Upload</Button>
               </div>
             </CardContent>
           </Card>
@@ -269,6 +360,34 @@ export const DetalheDocumento = () => {
           </div>
         </div>
       </Drawer>
+    
+      <Drawer
+        isOpen={renewModalOpen}
+        onClose={() => setRenewModalOpen(false)}
+        title="Renovar Documento"
+      >
+        <div className="space-y-4">
+          <Input 
+            label="Nova Data de Emissão" 
+            type="date" 
+            value={newIssue}
+            onChange={e => setNewIssue(e.target.value)}
+          />
+          <Input 
+            label="Nova Data de Vencimento" 
+            type="date" 
+            required
+            value={newExpiration}
+            onChange={e => setNewExpiration(e.target.value)}
+          />
+          <p className="text-xs text-slate-500">Ao renovar, o vencimento atual será salvo no histórico de versões do documento.</p>
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+            <Button variant="secondary" onClick={() => setRenewModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleRenew} disabled={!newExpiration}>Confirmar Renovação</Button>
+          </div>
+        </div>
+      </Drawer>
+
     </div>
   );
 };

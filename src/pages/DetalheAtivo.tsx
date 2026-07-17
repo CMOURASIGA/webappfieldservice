@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { ArrowLeft, Wrench, Activity, FileText, AlertTriangle, Clock, MapPin, Tag } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 
 export const DetalheAtivo = () => {
   const { id } = useParams();
@@ -74,7 +74,7 @@ export const DetalheAtivo = () => {
               <Wrench className="w-5 h-5" />
             </div>
             <p className="text-xs text-slate-500 font-medium">Última Intervenção</p>
-            <p className="font-semibold text-sm">{lastOrder ? format(parseISO(lastOrder.updatedAt), 'dd/MM/yyyy') : 'Nenhuma'}</p>
+            <p className="font-semibold text-sm">{lastOrder ? (isValid(parseISO(lastOrder.updatedAt)) ? (isValid(parseISO(lastOrder.updatedAt)) ? format(parseISO(lastOrder.updatedAt), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : 'Nenhuma'}</p>
           </CardContent>
         </Card>
         
@@ -84,7 +84,7 @@ export const DetalheAtivo = () => {
               <Clock className="w-5 h-5" />
             </div>
             <p className="text-xs text-slate-500 font-medium">Próxima Preventiva</p>
-            <p className="font-semibold text-sm">{nextPlan ? format(parseISO(nextPlan.nextExecution), 'dd/MM/yyyy') : 'Não programada'}</p>
+            <p className="font-semibold text-sm">{nextPlan ? (isValid(parseISO(nextPlan.nextExecution)) ? (isValid(parseISO(nextPlan.nextExecution)) ? format(parseISO(nextPlan.nextExecution), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : 'Não programada'}</p>
           </CardContent>
         </Card>
 
@@ -124,7 +124,7 @@ export const DetalheAtivo = () => {
                       <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-semibold text-sm text-slate-900">{evt.type}</span>
-                          <span className="text-xs text-slate-500">{format(parseISO(evt.date), 'dd/MM/yyyy HH:mm')}</span>
+                          <span className="text-xs text-slate-500">{(isValid(parseISO(evt.date)) ? (isValid(parseISO(evt.date)) ? format(parseISO(evt.date), 'dd/MM/yyyy HH:mm') : 'Data Inválida') : 'Data Inválida')}</span>
                         </div>
                         <p className="text-sm text-slate-700 line-clamp-2">{evt.title}</p>
                         <div className="flex justify-between items-end mt-3">
@@ -182,7 +182,7 @@ export const DetalheAtivo = () => {
                       <p className="text-xs text-slate-500 mt-1">{p.description}</p>
                       <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
                         <span className="text-[10px] uppercase text-slate-500 font-semibold">{p.periodicity}</span>
-                        <span className="text-xs text-slate-700">Prox: {format(parseISO(p.nextExecution), 'dd/MM/yyyy')}</span>
+                        <span className="text-xs text-slate-700">Prox: {(isValid(parseISO(p.nextExecution)) ? (isValid(parseISO(p.nextExecution)) ? format(parseISO(p.nextExecution), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida')}</span>
                       </div>
                     </li>
                   ))}
