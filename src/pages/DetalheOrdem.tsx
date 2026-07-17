@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus } from "../types";
+import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
@@ -20,9 +20,11 @@ export const DetalheOrdem = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
 
   // Action states
   const [assignUser, setAssignUser] = useState("");
+  const [assignProvider, setAssignProvider] = useState("");
   const [comment, setComment] = useState("");
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export const DetalheOrdem = () => {
     setCategories(storageService.get("gsi_categories"));
     setUsers(storageService.get("gsi_users"));
     setAssets(storageService.get("gsi_assets"));
+    setProviders(storageService.get("gsi_providers"));
   }, [id]);
 
   const loadOrder = () => {
@@ -59,15 +62,19 @@ export const DetalheOrdem = () => {
   };
 
   const handleAssign = () => {
-    if (!order || !currentUser || !assignUser) return;
+    if (!order || !currentUser) return;
+    if (!assignUser && !assignProvider) return;
+
     const orders = storageService.get("gsi_work_orders");
     const idx = orders.findIndex(o => o.id === order.id);
     if (idx !== -1) {
-      orders[idx].responsibleId = assignUser;
+      if (assignUser) orders[idx].responsibleId = assignUser;
+      if (assignProvider) orders[idx].providerId = assignProvider;
+      
       orders[idx].status = "Atribuída";
       orders[idx].updatedAt = new Date().toISOString();
       storageService.set("gsi_work_orders", orders);
-      storageService.logAudit(currentUser.id, "Atribuída OS", order.id, "WorkOrder", "", assignUser);
+      storageService.logAudit(currentUser.id, "Atribuída OS", order.id, "WorkOrder", "", `Técnico: ${assignUser || '-'}, Prestador: ${assignProvider || '-'}`);
       loadOrder();
     }
   };
@@ -78,6 +85,7 @@ export const DetalheOrdem = () => {
   const getLocationName = (lid: string) => locations.find(l => l.id === lid)?.name || "N/A";
   const getCategoryName = (cid: string) => categories.find(c => c.id === cid)?.name || "N/A";
   const getUserName = (uid?: string) => users.find(u => u.id === uid)?.name || "Não atribuído";
+  const getProviderName = (pid?: string) => providers.find(p => p.id === pid)?.name || "Não atribuído";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "Nenhum";
 
   return (
@@ -149,19 +157,30 @@ export const DetalheOrdem = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">Responsável Atual</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase">Responsável Interno</p>
                 <p className="text-sm font-medium">{getUserName(order.responsibleId)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase">Prestador Externo</p>
+                <p className="text-sm font-medium">{getProviderName(order.providerId)}</p>
               </div>
 
               {/* Atribuição - Gestores/Operadores */}
               {(currentUser?.role === "Gestor GSI" || currentUser?.role === "Operador GSI" || currentUser?.role === "Administrador") && (order.status === "Planejada" || order.status === "Atribuída") && (
-                <div className="pt-4 border-t border-slate-100 space-y-2">
+                <div className="pt-4 border-t border-slate-100 space-y-3">
                   <Select
-                    options={users.filter(u => u.role === "Executor/Técnico").map(u => ({ value: u.id, label: u.name }))}
+                    label="Técnico Interno"
+                    options={[{ value: "", label: "Nenhum" }, ...users.filter(u => u.role === "Executor/Técnico").map(u => ({ value: u.id, label: u.name }))]}
                     value={assignUser}
                     onChange={(e) => setAssignUser(e.target.value)}
                   />
-                  <Button className="w-full" onClick={handleAssign} disabled={!assignUser}>Atribuir Técnico</Button>
+                  <Select
+                    label="Prestador Externo"
+                    options={[{ value: "", label: "Nenhum" }, ...providers.filter(p => p.active && (!p.unitId || p.unitId === order.unitId)).map(p => ({ value: p.id, label: p.name }))]}
+                    value={assignProvider}
+                    onChange={(e) => setAssignProvider(e.target.value)}
+                  />
+                  <Button className="w-full" onClick={handleAssign} disabled={!assignUser && !assignProvider}>Atribuir</Button>
                 </div>
               )}
 

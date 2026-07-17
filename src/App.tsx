@@ -12,6 +12,10 @@ import { DetalheOrdem } from "./pages/DetalheOrdem";
 import { Documentos } from "./pages/Documentos";
 import { Ativos } from "./pages/Ativos";
 import { Preventivas } from "./pages/Preventivas";
+import { Prestadores } from "./pages/Prestadores";
+import { NovoPrestador } from "./pages/NovoPrestador";
+import { EditarPrestador } from "./pages/EditarPrestador";
+import { DetalhePrestador } from "./pages/DetalhePrestador";
 import { Admin } from "./pages/Admin";
 import { Auditoria } from "./pages/Auditoria";
 
@@ -36,8 +40,12 @@ export default function App() {
             <Route path="admin" element={<Admin />} />
             <Route path="auditoria" element={<Auditoria />} />
             
+            <Route path="prestadores" element={<Prestadores />} />
+            <Route path="prestadores/novo" element={<NovoPrestador />} />
+            <Route path="prestadores/:id/editar" element={<EditarPrestador />} />
+            <Route path="prestadores/:id" element={<DetalhePrestador />} />
+            
             {/* Fallbacks for now */}
-            <Route path="prestadores" element={<div className="p-6">Prestadores (Em breve)</div>} />
             <Route path="relatorios" element={<div className="p-6">Relatórios (Em breve)</div>} />
             
             <Route path="*" element={<Navigate to="/" replace />} />

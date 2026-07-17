@@ -51,7 +51,12 @@ export const Sidebar = () => {
       
       <nav className="flex-1 overflow-y-auto">
         <div className="flex flex-col">
-          {navItems.map(renderLink)}
+          {navItems.map(item => {
+            if (item.href === "/prestadores" && currentUser?.role === "Solicitante") {
+              return null;
+            }
+            return renderLink(item);
+          })}
 
           {(currentUser?.role === "Administrador" || currentUser?.role === "Gestor GSI") && (
             <>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
-import { PreventivePlan, Unit, Asset } from "../types";
+import { PreventivePlan, Unit, Asset, Provider } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { format, parseISO, isPast } from "date-fns";
@@ -9,15 +9,18 @@ export const Preventivas = () => {
   const [plans, setPlans] = useState<PreventivePlan[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans"));
     setUnits(storageService.get("gsi_units"));
     setAssets(storageService.get("gsi_assets"));
+    setProviders(storageService.get("gsi_providers"));
   }, []);
 
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
+  const getProviderName = (pid?: string) => providers.find(p => p.id === pid)?.name || "-";
 
   const getStatusBadge = (nextExecution: string) => {
     if (isPast(parseISO(nextExecution))) return <Badge variant="danger">Atrasada</Badge>;
@@ -43,6 +46,7 @@ export const Preventivas = () => {
                   <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
                   <th className="px-6 py-4 border-b border-slate-200">Ativo</th>
                   <th className="px-6 py-4 border-b border-slate-200">Periodicidade</th>
+                  <th className="px-6 py-4 border-b border-slate-200">Prestador</th>
                   <th className="px-6 py-4 border-b border-slate-200">Próxima Execução</th>
                   <th className="px-6 py-4 border-b border-slate-200">Status</th>
                 </tr>
@@ -57,6 +61,7 @@ export const Preventivas = () => {
                     <td className="px-6 py-4 text-slate-600">{getUnitName(plan.unitId)}</td>
                     <td className="px-6 py-4 text-slate-600">{getAssetCode(plan.assetId)}</td>
                     <td className="px-6 py-4 text-slate-900 capitalize">{plan.periodicity}</td>
+                    <td className="px-6 py-4 text-slate-600">{getProviderName(plan.providerId)}</td>
                     <td className="px-6 py-4 text-slate-900">{format(parseISO(plan.nextExecution), 'dd/MM/yyyy')}</td>
                     <td className="px-6 py-4">{getStatusBadge(plan.nextExecution)}</td>
                   </tr>

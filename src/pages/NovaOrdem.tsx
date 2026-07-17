@@ -146,10 +146,16 @@ export const NovaOrdem = () => {
                 ]}
               />
               <Select
-                label="Responsável (Opcional)"
+                label="Responsável Interno (Opcional)"
                 value={formData.responsibleId}
                 onChange={e => setFormData({ ...formData, responsibleId: e.target.value })}
                 options={users.map(u => ({ value: u.id, label: u.name }))}
+              />
+              <Select
+                label="Prestador Externo (Opcional)"
+                value={formData.providerId}
+                onChange={e => setFormData({ ...formData, providerId: e.target.value })}
+                options={[{ value: "", label: "Nenhum" }, ...providers.map(p => ({ value: p.id, label: `${p.name} (${p.specialty})` }))]}
               />
               <Input
                 label="Prazo"

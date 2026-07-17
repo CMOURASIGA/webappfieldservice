@@ -166,6 +166,61 @@ export const storageService = {
     ];
     this.set("gsi_preventive_plans", plans);
 
+    const providers: Provider[] = [
+      {
+        id: "prov-1",
+        name: "Clima Técnica Brasília",
+        contactName: "João Silva",
+        phone: "(61) 99999-1111",
+        email: "contato@climatecnica.com.br",
+        specialty: "Climatização",
+        unitId: "u-df",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-2",
+        name: "Elevadores Capital",
+        contactName: "Maria Souza",
+        phone: "(61) 98888-2222",
+        email: "atendimento@elevadorescapital.com.br",
+        specialty: "Elevadores",
+        status: "Ativo", // undefined unitId means "Todas"
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-3",
+        name: "Soluções Elétricas RJ",
+        contactName: "Carlos Pereira",
+        phone: "(21) 97777-3333",
+        email: "contato@eletricarj.com.br",
+        specialty: "Elétrica",
+        unitId: "u-rj",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-4",
+        name: "Manutenção Predial Alfa",
+        contactName: "Ana Paula",
+        phone: "(61) 96666-4444",
+        email: "alfa@manutencao.com.br",
+        specialty: "Civil",
+        unitId: "u-df",
+        status: "Inativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      }
+    ];
+    this.set("gsi_providers", providers);
+
     this.logAudit("usr-5", "Sistema restaurado para padrões");
   },
 
