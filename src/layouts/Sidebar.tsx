@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History, CalendarDays, X } from "lucide-react";
+import { LayoutDashboard, Inbox, ClipboardList, CalendarClock, Building2, FileText, Users, BarChart3, Settings, History, CalendarDays, PackageSearch, X } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -11,6 +11,7 @@ const navItems = [
   { icon: ClipboardList, label: "Ordens de Serviço", href: "/ordens" },
   { icon: CalendarClock, label: "Preventivas", href: "/preventivas" },
   { icon: Building2, label: "Ativos e Locais", href: "/ativos" },
+  { icon: PackageSearch, label: "Estoque", href: "/estoque" },
   { icon: FileText, label: "Documentos", href: "/documentos" },
   { icon: Users, label: "Prestadores", href: "/prestadores" },
   { icon: BarChart3, label: "Relatórios", href: "/relatorios" },

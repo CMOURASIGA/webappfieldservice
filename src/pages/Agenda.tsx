@@ -40,7 +40,7 @@ export const Agenda = () => {
 
         agendaItems.push({
           id: o.id,
-          title: `OS: ${o.title}`,
+          title: `OS: ${o.number}`,
           date: o.deadline,
           type: "Ordem",
           status: o.status,

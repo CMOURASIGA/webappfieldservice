@@ -39,12 +39,12 @@ export const VisaoGeral = () => {
     setMetrics({
       demandasAbertas: requests.filter(r => r.status === "Aberta").length,
       demandasTriagem: requests.filter(r => r.status === "Em triagem").length,
-      demandasAguardando: requests.filter(r => r.status === "Aguardando informações").length,
-      demandasConcluidasRecentes: requests.filter(r => r.status === "Atendida" || r.status === "Cancelada").length, // Simplification
-      minhasDemandas: requests.filter(r => r.solicitanteId === userId && r.status !== "Atendida" && r.status !== "Cancelada").length,
+      demandasAguardando: requests.filter(r => r.status === "Aguardando informação").length,
+      demandasConcluidasRecentes: requests.filter(r => r.status === "Convertida em ordem" ).length, // Simplification
+      minhasDemandas: requests.filter(r => r.solicitanteId === userId && r.status !== "Convertida em ordem").length,
       
       osEmExecucao: orders.filter(o => o.status === "Em execução").length,
-      osSemResponsavel: orders.filter(o => o.status === "Aberta" && !o.providerId && !o.responsibleId).length,
+      osSemResponsavel: orders.filter(o => o.status === "Planejada" && !o.providerId && !o.responsibleId).length,
       osAtrasadas: orders.filter(o => {
         if (o.status === "Concluída" || o.status === "Cancelada") return false;
         if (!o.deadline) return false;

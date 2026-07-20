@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Document, Unit, Location, User, DocumentVersion, Attachment } from "../types";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Drawer } from "../components/ui/Drawer";

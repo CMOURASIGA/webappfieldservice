@@ -77,7 +77,18 @@ export const Ordens = () => {
     : statusFilter === "Pausadas" ? orders.filter(o => o.status === "Pausada" || o.status === "Aguardando terceiro")
     : orders.filter(o => o.status === "Concluída" || o.status === "Em validação");
 
-  const KANBAN_COLUMNS: WorkOrderStatus[] = ["Planejada", "Em execução", "Pausada", "Em validação", "Concluída"];
+  
+  const KANBAN_COLUMNS: WorkOrderStatus[] = [
+    "Planejada", // Consideraremos Nova/Em Planejamento aqui
+    "Aguardando estoque",
+    "Aguardando material",
+    "Material liberado",
+    "Em execução",
+    "Pausada",
+    "Em validação",
+    "Concluída"
+  ];
+
 
   const handleDragStart = (e: React.DragEvent, order: WorkOrder) => {
     setDraggedOrder(order);
@@ -274,7 +285,12 @@ export const Ordens = () => {
       ) : (
         <div className="flex gap-4 overflow-x-auto pb-6 snap-x kanban-scroll">
           {KANBAN_COLUMNS.map(col => {
-            const colOrders = orders.filter(o => o.status === col || (col === "Planejada" && o.status === "Atribuída") || (col === "Pausada" && o.status === "Aguardando terceiro"));
+            const colOrders = orders.filter(o => {
+              if (col === "Planejada") return ["Nova", "Em planejamento", "Planejada", "Atribuída", "Programada"].includes(o.status);
+              if (col === "Pausada") return ["Pausada", "Aguardando terceiro"].includes(o.status);
+              if (col === "Concluída") return ["Concluída", "Cancelada"].includes(o.status);
+              return o.status === col;
+            });
             return (
               <div 
                 key={col} 

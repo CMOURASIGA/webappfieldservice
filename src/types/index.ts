@@ -77,15 +77,25 @@ export interface Request {
   active: boolean;
 }
 
-export type WorkOrderStatus = "Planejada" | "Atribuída" | "Em execução" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Concluída" | "Cancelada" | "Reaberta";
+export type WorkOrderStatus = "Nova" | "Em planejamento" | "Planejada" | "Atribuída" | "Aguardando estoque" | "Aguardando material" | "Material liberado" | "Programada" | "Em execução" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Concluída" | "Cancelada" | "Reaberta";
 
-export interface Material {
+export interface OSMaterial {
   id: string;
-  description: string;
+  materialId?: string; // Se preenchido, é um material cadastrado no estoque
+  description: string; // Nome ou descrição sugerida
   type?: string;
   unitPrice?: number;
   quantity: number;
   total?: number;
+  
+  // Novos campos de integração com estoque
+  classification?: "Obrigatório" | "Recomendado" | "Contingencial" | "Terceiro" | "Não estocável" | "Eventual";
+  availability?: "Disponível" | "Parcialmente disponível" | "Indisponível" | "Aguardando validação" | "Reservado" | "Liberado" | "Retirado" | "Consumido" | "Cancelado";
+  isUnregistered?: boolean;
+  justification?: string;
+  quantityUsed?: number;
+  quantityReturned?: number;
+  quantityLost?: number;
 }
 
 export interface WorkOrder {
@@ -106,7 +116,8 @@ export interface WorkOrder {
   deadline?: string;
   status: WorkOrderStatus;
   checklist: ChecklistItem[];
-  materials?: Material[];
+  materials?: OSMaterial[];
+  supplyStatus?: SupplyStatus;
   observations: string;
   attachments: Attachment[];
   createdAt: string;
@@ -224,4 +235,67 @@ export interface Category {
   name: string;
   type: "Demanda" | "Serviço" | "Documento" | "Preventiva";
   active: boolean;
+}
+
+export type SupplyStatus = "Não informado" | "Em planejamento" | "Aguardando análise" | "Parcialmente disponível" | "Indisponível" | "Reservado" | "Liberado" | "Retirado" | "Finalizado";
+export type StockMaterialStatus = "Normal" | "Atenção" | "Crítico" | "Sem saldo" | "Inativo";
+
+export interface StockMaterial {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  category: string;
+  unit: string;
+  unitId: string;
+  locationId?: string;
+  physicalBalance: number;
+  reservedBalance: number;
+  availableBalance: number;
+  minStock: number;
+  idealStock?: number;
+  status: StockMaterialStatus;
+  manufacturer?: string;
+  model?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockMovement {
+  id: string;
+  type: "Entrada" | "Saída" | "Reserva" | "Liberação" | "Devolução" | "Descarte" | "Ajuste";
+  materialId: string;
+  quantity: number;
+  workOrderId?: string;
+  assetId?: string;
+  locationId?: string;
+  unitId: string;
+  userId: string; // Quem registrou
+  technicianId?: string; // Quem retirou/devolveu
+  providerId?: string;
+  invoice?: string;
+  orderNumber?: string;
+  observations?: string;
+  date: string;
+}
+
+export interface StockRequest {
+  id: string;
+  workOrderId: string;
+  materialId?: string; // Se for solicitação de saldo insuficiente
+  suggestedDescription?: string; // Se for não cadastrado
+  isUnregistered: boolean;
+  quantity: number;
+  estimatedUnit?: string;
+  justification?: string;
+  priority: Priority;
+  requesterId: string;
+  assetId?: string;
+  locationId?: string;
+  neededDate?: string;
+  status: "Aguardando análise" | "Associado a existente" | "Aprovado para novo cadastro" | "Aguardando recebimento" | "Recebido" | "Rejeitado" | "Cancelado";
+  resolutionMaterialId?: string; // Material final associado
+  createdAt: string;
+  updatedAt: string;
 }

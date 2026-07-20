@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider } from "../types";
+import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider, OSMaterial, StockMaterial } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
@@ -22,6 +22,7 @@ export const DetalheOrdem = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [stockMaterials, setStockMaterials] = useState<StockMaterial[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
 
   // Action states
@@ -34,27 +35,116 @@ export const DetalheOrdem = () => {
   const [isPausing, setIsPausing] = useState(false);
 
   
+  
+  const [addingMaterial, setAddingMaterial] = useState(false);
+  const [matMode, setMatMode] = useState<"base" | "unregistered">("base");
+  const [selectedStockMatId, setSelectedStockMatId] = useState("");
+  const [matClass, setMatClass] = useState<any>("Obrigatório");
+  const [matQuantity, setMatQuantity] = useState(1);
+  const [matJustification, setMatJustification] = useState("");
+  const [matDescUnreg, setMatDescUnreg] = useState("");
+
   const [newMaterial, setNewMaterial] = useState({ description: "", type: "", quantity: 1, unitPrice: 0 });
   const [uploading, setUploading] = useState(false);
 
-  const handleAddMaterial = () => {
+  
+  const handleAddMaterialNew = () => {
     if (!order || !currentUser) return;
-    if (!newMaterial.description) return;
-    
     const orders = storageService.get("gsi_work_orders");
     const idx = orders.findIndex(o => o.id === order.id);
+    
     if (idx !== -1) {
       if (!orders[idx].materials) orders[idx].materials = [];
-      orders[idx].materials.push({
-        id: crypto.randomUUID(),
-        ...newMaterial,
-        total: newMaterial.quantity * newMaterial.unitPrice
-      });
+      
+      if (matMode === "base" && selectedStockMatId) {
+        const stockItem = stockMaterials.find(sm => sm.id === selectedStockMatId);
+        if (!stockItem) return;
+        
+        let availability = "Indisponível";
+        if (stockItem.availableBalance >= matQuantity) {
+          availability = "Disponível";
+        } else if (stockItem.availableBalance > 0) {
+          availability = "Parcialmente disponível";
+        }
+        
+        orders[idx].materials.push({
+          id: crypto.randomUUID(),
+          materialId: stockItem.id,
+          description: stockItem.name,
+          type: stockItem.unit,
+          quantity: matQuantity,
+          classification: matClass,
+          availability: availability as any,
+          isUnregistered: false,
+        });
+        
+        if (availability !== "Disponível") {
+           const reqs = storageService.get("gsi_stock_requests");
+           reqs.push({
+             id: crypto.randomUUID(),
+             workOrderId: order.id,
+             materialId: stockItem.id,
+             isUnregistered: false,
+             quantity: matQuantity - stockItem.availableBalance > 0 ? matQuantity - stockItem.availableBalance : matQuantity,
+             priority: order.priority,
+             requesterId: currentUser.id,
+             assetId: order.assetId,
+             locationId: order.locationId,
+             status: "Aguardando análise",
+             createdAt: new Date().toISOString(),
+             updatedAt: new Date().toISOString()
+           });
+           storageService.set("gsi_stock_requests", reqs);
+        }
+      } else if (matMode === "unregistered" && matDescUnreg) {
+        const matId = crypto.randomUUID();
+        orders[idx].materials.push({
+          id: matId,
+          description: matDescUnreg,
+          quantity: matQuantity,
+          classification: matClass,
+          availability: "Aguardando validação",
+          isUnregistered: true,
+          justification: matJustification
+        });
+        
+        const reqs = storageService.get("gsi_stock_requests");
+        reqs.push({
+          id: crypto.randomUUID(),
+          workOrderId: order.id,
+          suggestedDescription: matDescUnreg,
+          isUnregistered: true,
+          quantity: matQuantity,
+          justification: matJustification,
+          priority: order.priority,
+          requesterId: currentUser.id,
+          assetId: order.assetId,
+          locationId: order.locationId,
+          status: "Aguardando análise",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        storageService.set("gsi_stock_requests", reqs);
+      }
+      
+      // Update OS supplyStatus if it was not informed
+      if (!orders[idx].supplyStatus) {
+         orders[idx].supplyStatus = "Aguardando análise";
+      }
+      
       storageService.set("gsi_work_orders", orders);
-      setNewMaterial({ description: "", type: "", quantity: 1, unitPrice: 0 });
+      if (currentUser) {
+         storageService.logAudit(currentUser.id, "Adicionou Material", order.id, "WorkOrder");
+      }
+      setAddingMaterial(false);
+      setSelectedStockMatId("");
+      setMatDescUnreg("");
+      setMatJustification("");
+      setMatQuantity(1);
       loadOrder();
     }
   };
+
 
   const handleRemoveMaterial = (mId: string) => {
     if (!order || !currentUser) return;
@@ -112,6 +202,7 @@ export const DetalheOrdem = () => {
     setCategories(storageService.get("gsi_categories"));
     setUsers(storageService.get("gsi_users"));
     setAssets(storageService.get("gsi_assets"));
+    setStockMaterials(storageService.get("gsi_stock_materials"));
     setProviders(storageService.get("gsi_providers").filter(p => p.status === "Ativo" && p.active !== false));
   }, [id]);
 
@@ -408,38 +499,98 @@ export const DetalheOrdem = () => {
               )}
               
               
+              
               {/* Materials Section */}
               <div className="pt-4 border-t border-slate-200 mt-6">
-                <p className="text-sm font-semibold text-slate-900 mb-3">Materiais Necessários</p>
-                {order.materials && order.materials.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    {order.materials.map(m => (
-                      <div key={m.id} className="flex justify-between items-center p-2 bg-slate-50 border border-slate-200 rounded text-sm">
-                        <div>
-                          <span className="font-medium text-slate-800">{m.description}</span>
-                          <span className="text-slate-500 ml-2">({m.quantity}x - {m.type || "N/A"})</span>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-sm font-semibold text-slate-900">Materiais Necessários</p>
+                  {order.status === "Em execução" || order.status === "Planejada" || order.status === "Atribuída" ? (
+                    <Button variant="secondary" size="sm" onClick={() => setAddingMaterial(!addingMaterial)}>
+                      {addingMaterial ? "Cancelar" : "+ Adicionar Material"}
+                    </Button>
+                  ) : null}
+                </div>
+                
+                {addingMaterial && (
+                  <div className="mb-4 bg-slate-50 p-4 rounded-md border border-slate-200 space-y-4">
+                    <div className="flex gap-4 border-b border-slate-200 pb-2">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="radio" checked={matMode === "base"} onChange={() => setMatMode("base")} className="text-brand-600" />
+                        <span className={matMode === "base" ? "font-medium text-slate-900" : "text-slate-500"}>Material Cadastrado</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="radio" checked={matMode === "unregistered"} onChange={() => setMatMode("unregistered")} className="text-brand-600" />
+                        <span className={matMode === "unregistered" ? "font-medium text-slate-900" : "text-slate-500"}>Não Cadastrado</span>
+                      </label>
+                    </div>
+                    
+                    {matMode === "base" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Select label="Buscar Material" value={selectedStockMatId} onChange={e => setSelectedStockMatId(e.target.value)}>
+                          <option value="">Selecione um material...</option>
+                          {stockMaterials.filter(sm => sm.active !== false).map(sm => (
+                            <option key={sm.id} value={sm.id}>{sm.code} - {sm.name} (Disp: {sm.availableBalance} {sm.unit})</option>
+                          ))}
+                        </Select>
+                        <Select label="Classificação" value={matClass} onChange={e => setMatClass(e.target.value)}>
+                          <option value="Obrigatório">Obrigatório</option>
+                          <option value="Recomendado">Recomendado</option>
+                          <option value="Contingencial">Contingencial</option>
+                          <option value="Terceiro">Fornecido por terceiro</option>
+                          <option value="Eventual">Eventual</option>
+                        </Select>
+                        <Input type="number" label="Quantidade" value={matQuantity} onChange={e => setMatQuantity(Number(e.target.value))} min={1} />
+                        <div className="flex items-end">
+                          <Button onClick={handleAddMaterialNew} className="w-full" disabled={!selectedStockMatId || matQuantity < 1}>Adicionar Material</Button>
                         </div>
-                        {order.status === "Em execução" && (
-                          <button onClick={() => handleRemoveMaterial(m.id)} className="text-red-500 hover:text-red-700">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input label="Descrição Sugerida" value={matDescUnreg} onChange={e => setMatDescUnreg(e.target.value)} placeholder="Descreva o material" required />
+                          <Input type="number" label="Quantidade Estimada" value={matQuantity} onChange={e => setMatQuantity(Number(e.target.value))} min={1} required />
+                          <div className="sm:col-span-2">
+                            <Input label="Justificativa da Necessidade" value={matJustification} onChange={e => setMatJustification(e.target.value)} placeholder="Por que este material é necessário?" required />
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <Button onClick={handleAddMaterialNew} disabled={!matDescUnreg || !matJustification || matQuantity < 1}>Solicitar Material</Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {order.materials && order.materials.length > 0 ? (
+                  <div className="space-y-2">
+                    {order.materials.map(m => (
+                      <div key={m.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm gap-2">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-800 text-sm">{m.description}</span>
+                            {m.isUnregistered && <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700">Não cadastrado</span>}
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span>Qtd: <strong className="text-slate-700">{m.quantity} {m.type || ""}</strong></span>
+                            <span>Classe: {m.classification || "N/A"}</span>
+                            <span className={`px-1.5 py-0.5 rounded-sm font-medium ${m.availability === 'Disponível' ? 'bg-green-100 text-green-700' : m.availability === 'Parcialmente disponível' ? 'bg-yellow-100 text-yellow-700' : m.availability === 'Aguardando validação' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-700'}`}>
+                              {m.availability || "Desconhecido"}
+                            </span>
+                          </div>
+                          {m.justification && <p className="text-xs text-slate-500 mt-1 italic line-clamp-1">"{m.justification}"</p>}
+                        </div>
+                        {(order.status === "Em execução" || order.status === "Planejada") && (
+                          <div className="flex justify-end">
+                            <button onClick={() => handleRemoveMaterial(m.id)} className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
-                )}
-                {order.status === "Em execução" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end bg-slate-50 p-3 rounded border border-slate-200">
-                    <div className="sm:col-span-2">
-                      <Input label="Descrição do material" value={newMaterial.description} onChange={e => setNewMaterial({...newMaterial, description: e.target.value})} placeholder="Ex: Parafusos M8" />
-                    </div>
-                    <div>
-                      <Input type="number" label="Quantidade" value={newMaterial.quantity} onChange={e => setNewMaterial({...newMaterial, quantity: Number(e.target.value)})} />
-                    </div>
-                    <div>
-                      <Button onClick={handleAddMaterial} className="w-full" disabled={!newMaterial.description}>Adicionar</Button>
-                    </div>
-                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic py-2">Nenhum material adicionado à OS.</p>
                 )}
               </div>
 

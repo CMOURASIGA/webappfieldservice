@@ -1,65 +1,23 @@
-import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate } from "../types";
+const fs = require('fs');
+let content = fs.readFileSync('src/services/storageService.ts', 'utf8');
 
-const VERSION = "1.3.0";
+// Update version to force a reload
+content = content.replace(/const VERSION = ".*";/, 'const VERSION = "1.3.0";');
 
-interface DB {
-  gsi_data_version: { version: string };
-  gsi_units: Unit[];
-  gsi_locations: Location[];
-  gsi_assets: Asset[];
-  gsi_users: User[];
-  gsi_requests: Request[];
-  gsi_work_orders: WorkOrder[];
-  gsi_preventive_plans: PreventivePlan[];
-  gsi_documents: Document[];
-  gsi_providers: Provider[];
-  gsi_categories: Category[];
-  gsi_checklist_templates: ChecklistTemplate[];
-  gsi_audit_log: AuditLog[];
-  gsi_stock_materials: any[];
-  gsi_stock_movements: any[];
-  gsi_stock_requests: any[];
+// the goal is to replace everything inside `restoreDefaults() {` and `}` with new mock data.
+// We can use a regex or just substring.
+const restoreStart = content.indexOf('restoreDefaults() {');
+const logAuditStart = content.indexOf('logAudit(userId: string');
+
+if (restoreStart === -1 || logAuditStart === -1) {
+    console.error("Could not find restoreDefaults or logAudit");
+    process.exit(1);
 }
 
-export const storageService = {
-  get<K extends keyof DB>(key: K): DB[K] {
-    const data = localStorage.getItem(key);
-    if (!data) return this.getDefaults(key);
-    try {
-      return JSON.parse(data);
-    } catch {
-      return this.getDefaults(key);
-    }
-  },
+const beforeRestore = content.substring(0, restoreStart);
+const afterRestore = content.substring(logAuditStart);
 
-  set<K extends keyof DB>(key: K, value: DB[K]) {
-    localStorage.setItem(key, JSON.stringify(value));
-  },
-
-  getDefaults<K extends keyof DB>(key: K): DB[K] {
-    if (key === "gsi_data_version") return { version: VERSION } as any;
-    return [] as any;
-  },
-
-  
-  seed() {
-    const versionData = localStorage.getItem("gsi_data_version");
-    if (!versionData) {
-      this.restoreDefaults();
-    } else {
-      try {
-        const v = JSON.parse(versionData);
-        if (v.version !== VERSION) {
-          this.restoreDefaults();
-        }
-      } catch {
-        this.restoreDefaults();
-      }
-    }
-  },
-
-
-  restoreDefaults() {
+const newRestoreBody = `restoreDefaults() {
     localStorage.clear();
     this.set("gsi_data_version", { version: VERSION });
 
@@ -138,7 +96,7 @@ export const storageService = {
       { id: "ast-1", code: "AC-DF-001", name: "Ar Condicionado Central Chiller A", category: "cat-1", unitId: "u-df", locationId: "loc-2", manufacturer: "Carrier", model: "30XW", criticality: "Alta", status: "Ativo", active: true },
       { id: "ast-2", code: "EL-DF-001", name: "Quadro Elétrico Térreo (QGBT)", category: "cat-2", unitId: "u-df", locationId: "loc-1", manufacturer: "Siemens", criticality: "Alta", status: "Ativo", active: true },
       { id: "ast-3", code: "AC-DF-002", name: "Split 18.000 BTUs Reuniões", category: "cat-1", unitId: "u-df", locationId: "loc-4", manufacturer: "LG", model: "Dual Inverter", criticality: "Média", status: "Ativo", active: true },
-      { id: "ast-4", code: "HD-DF-001", name: "Bomba D\'água Recalque B1", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Schneider", criticality: "Alta", status: "Em manutenção", active: true },
+      { id: "ast-4", code: "HD-DF-001", name: "Bomba D\\'água Recalque B1", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Schneider", criticality: "Alta", status: "Em manutenção", active: true },
       { id: "ast-5", code: "AC-RJ-001", name: "Ar Condicionado Central Auditório", category: "cat-1", unitId: "u-rj", locationId: "loc-3", manufacturer: "Trane", criticality: "Alta", status: "Ativo", active: true },
     ];
     this.set("gsi_assets", assets);
@@ -592,39 +550,9 @@ export const storageService = {
     this.set("gsi_providers", providers);
 
     this.logAudit("usr-5", "Sistema restaurado para dados de demonstração estendidos");
-  },
-  logAudit(userId: string, action: string, entityId?: string, entityType?: string, oldValue?: any, newValue?: any) {
-    const logs = this.get("gsi_audit_log");
-    logs.push({
-      id: crypto.randomUUID(),
-      userId,
-      action,
-      entityId,
-      entityType,
-      oldValue,
-      newValue,
-      timestamp: new Date().toISOString()
-    });
-    this.set("gsi_audit_log", logs);
-  },
-
-  exportJSON() {
-    const data: Record<string, any> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("gsi_")) {
-        data[key] = JSON.parse(localStorage.getItem(key) || "[]");
-      }
-    }
-    return JSON.stringify({ version: VERSION, exportedAt: new Date().toISOString(), data });
-  },
-
-  importJSON(jsonString: string) {
-    const parsed = JSON.parse(jsonString);
-    if (!parsed.data) throw new Error("Invalid format");
-    localStorage.clear();
-    for (const key of Object.keys(parsed.data)) {
-      localStorage.setItem(key, JSON.stringify(parsed.data[key]));
-    }
   }
-};
+`;
+
+content = beforeRestore + newRestoreBody + afterRestore;
+
+fs.writeFileSync('src/services/storageService.ts', content);
