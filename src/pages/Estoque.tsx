@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { StockMaterial, Unit } from "../types";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { Package, AlertTriangle, Plus, PackageOpen, Inbox, ShoppingCart, ArrowRightLeft, Search } from "lucide-react";
@@ -154,12 +155,15 @@ export const Estoque = () => {
                   <span>Ideal: {mat.idealStock || 0}</span>
                 </div>
 
-                {/* Ações dentro do card */}
-                <div className="mt-auto flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                  <Button variant="outline" size="sm" className="flex-1 text-xs h-8">Abrir</Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs h-8">Solicitar</Button>
-                </div>
-              </CardContent>
+                </CardContent>
+                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                  <CardFooterActions
+                    onView={() => {}}
+                    viewLabel="Abrir"
+                  >
+                    <Button variant="outline" size="sm" className="text-xs h-8">Solicitar</Button>
+                  </CardFooterActions>
+                </CardFooter>
             </Card>
           )
         })}

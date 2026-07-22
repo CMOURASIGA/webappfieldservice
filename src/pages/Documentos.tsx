@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { Document, Unit } from "../types";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { FileText, AlertTriangle, Plus, Search, Calendar } from "lucide-react";
@@ -118,10 +119,13 @@ export const Documentos = () => {
                   {!doc.fileUrl && <div className="mt-2"><Badge variant="outline" className="text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">Sem anexo</Badge></div>}
                 </div>
 
-                <div className="flex gap-2 pt-3 border-t border-slate-100">
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/documentos/${doc.id}`)}>Abrir</Button>
-                </div>
-              </CardContent>
+                </CardContent>
+                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                  <CardFooterActions
+                    viewLink={`/documentos/${doc.id}`}
+                    viewLabel="Abrir"
+                  />
+                </CardFooter>
             </Card>
           )
         })}

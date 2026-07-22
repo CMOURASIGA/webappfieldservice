@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../types";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { LayoutList, Kanban as KanbanIcon, Plus, Calendar, Clock, AlertCircle } from "lucide-react";
@@ -196,15 +197,18 @@ export const Ordens = () => {
                     <p><span className="font-medium">Prazo:</span> {order.deadline ? format(parseISO(order.deadline), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(order.priority)}`}>
-                      {order.priority}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/ordens/${order.id}`)}>
-                      Abrir OS
-                    </Button>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                    <div className="flex w-full items-center justify-between">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(order.priority)}`}>
+                        {order.priority}
+                      </span>
+                      <CardFooterActions
+                        viewLink={`/ordens/${order.id}`}
+                        viewLabel="Abrir OS"
+                      />
+                    </div>
+                  </CardFooter>
               </Card>
             )
           })}

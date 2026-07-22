@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Request, Unit, Location, Category } from "../types";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { Plus, Calendar, Wrench, Search, Clock, AlertCircle } from "lucide-react";
@@ -139,17 +140,19 @@ export const Servicos = () => {
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-slate-100 flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => navigate(`/servicos/${req.id}`)}>
-                  Abrir
-                </Button>
-                {req.status !== "Convertida em ordem" && (
-                  <Button variant="default" className="flex-1" onClick={() => navigate("/ordens/nova")}>
-                    Gerar OS
-                  </Button>
-                )}
-              </div>
-            </CardContent>
+              </CardContent>
+                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                <CardFooterActions
+                  viewLink={`/servicos/${req.id}`}
+                  viewLabel="Abrir"
+                >
+                  {req.status !== "Convertida em ordem" && (
+                    <Button variant="default" size="sm" onClick={() => navigate("/ordens/nova")}>
+                      Gerar OS
+                    </Button>
+                  )}
+                </CardFooterActions>
+              </CardFooter>
           </Card>
         ))}
         {filteredRequests.length === 0 && (

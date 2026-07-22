@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Provider, Unit, WorkOrder } from "../types";
 import { Button } from "../components/ui/Button";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
@@ -214,27 +215,18 @@ export const Técnicos = () => {
                       </div>
                     </div>
 
-                    <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
-                      <Link to={`/prestadores/${provider.id}`}>
-                        <Button variant="secondary" size="sm">Ver Detalhes</Button>
-                      </Link>
-                      {canEdit && (
-                        <Link to={`/prestadores/${provider.id}/editar`}>
-                          <Button variant="secondary" size="sm">Editar</Button>
-                        </Link>
-                      )}
-                      {canToggle && (
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          onClick={() => toggleStatus(provider.id, provider.status)}
-                          className={provider.status === "Ativo" ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}
-                        >
-                          {provider.status === "Ativo" ? "Inativar" : "Reativar"}
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
+                    </CardContent>
+                <CardFooter className="pt-0 pb-5 px-5">
+                      <CardFooterActions
+                        viewLink={`/prestadores/${provider.id}`}
+                        viewLabel="Ver detalhes"
+                        editLink={canEdit ? `/prestadores/${provider.id}/editar` : undefined}
+                        editLabel="Editar prestador"
+                        onDelete={canToggle ? () => toggleStatus(provider.id, provider.status) : undefined}
+                        deleteLabel={provider.status === "Ativo" ? "Inativar prestador" : "Reativar prestador"}
+                        isDeactivate={true}
+                      />
+                    </CardFooter>
                 </Card>
               );
             })}

@@ -127,7 +127,7 @@ export const NovoPlanoModal = ({ open, onOpenChange, onSuccess }: Props) => {
                 options={assetOptions} 
                 onChange={(val) => setValue("assetId", val)} 
                 placeholder="Buscar ativo..." 
-                command={{ emptyMessage: "Ativo não encontrado"
+                command={{ emptyMessage: "Ativo não encontrado" }}
               />
             </div>
           </div>

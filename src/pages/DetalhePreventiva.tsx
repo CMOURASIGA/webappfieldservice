@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { PreventivePlan, Unit, Asset, Location, User, Provider, Category, ChecklistItem } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Edit, Clock, Settings, FileText, CheckSquare, Wrench, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Clock, Settings, FileText, CheckSquare, Wrench, Trash2, PowerOff } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,6 +15,7 @@ export const DetalhePreventiva = () => {
   const navigate = useNavigate();
 
   const [plan, setPlan] = useState<PreventivePlan | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
@@ -92,11 +94,9 @@ export const DetalhePreventiva = () => {
   };
 
   const handleDelete = () => {
-    if (window.confirm("Deseja realmente excluir este plano preventivo?")) {
-      const plans = storageService.get("gsi_preventive_plans");
-      storageService.set("gsi_preventive_plans", plans.filter(p => p.id !== id));
-      navigate("/preventivas");
-    }
+    const plans = storageService.get("gsi_preventive_plans");
+    storageService.set("gsi_preventive_plans", plans.map(p => p.id === id ? { ...p, status: 'Inativo' } : p));
+    navigate("/preventivas");
   };
 
   return (
@@ -118,9 +118,35 @@ export const DetalhePreventiva = () => {
         </div>
         <div className="flex gap-2">
           <Link to={`/preventivas/${id}/editar`}><Button variant="outline"><Edit className="w-4 h-4 mr-2" /> Editar</Button></Link>
-          <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" /> Excluir
+          <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setIsDeleteDialogOpen(true)}>
+            <PowerOff className="w-4 h-4 mr-2" /> Inativar
           </Button>
+
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirmar inativação</DialogTitle>
+                <DialogDescription>
+                  Deseja realmente inativar este plano preventivo? O registro será mantido no histórico e deixará de ficar disponível para novos vínculos.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
+                <Button 
+                  variant="default" 
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={() => {
+                    handleDelete();
+                    setIsDeleteDialogOpen(false);
+                  }}
+                >
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
 import { Asset, Unit, Location } from "../types";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Drawer } from "../components/ui/Drawer";
@@ -232,14 +233,18 @@ export const Ativos = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
-                    <Link to={`/ativos/${asset.id}`}>
-                      <Button variant="secondary" size="sm">Ver Detalhes</Button>
-                    </Link>
-                    <Button variant="secondary" size="sm" onClick={() => handleOpenEdit(asset)}>Editar</Button>
-                    <Button variant="secondary" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(asset.id)}>Excluir</Button>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                <CardFooter className="pt-0 pb-5 px-5">
+                    <CardFooterActions
+                      viewLink={`/ativos/${asset.id}`}
+                      viewLabel="Ver detalhes"
+                      onEdit={() => handleOpenEdit(asset)}
+                      editLabel="Editar ativo"
+                      onDelete={() => handleDelete(asset.id)}
+                      deleteLabel="Inativar ativo"
+                      isDeactivate={true}
+                    />
+                  </CardFooter>
               </Card>
             ))}
           </div>
@@ -288,14 +293,18 @@ export const Ativos = () => {
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
-                    <Link to={`/locais/${loc.id}`}>
-                      <Button variant="secondary" size="sm">Ver Detalhes</Button>
-                    </Link>
-                    <Button variant="secondary" size="sm" onClick={() => handleOpenEditLocation(loc)}>Editar</Button>
-                    <Button variant="secondary" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteLocation(loc.id)}>Excluir</Button>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                <CardFooter className="pt-0 pb-5 px-5">
+                    <CardFooterActions
+                      viewLink={`/locais/${loc.id}`}
+                      viewLabel="Ver detalhes"
+                      onEdit={() => handleOpenEditLocation(loc)}
+                      editLabel="Editar local"
+                      onDelete={() => handleDeleteLocation(loc.id)}
+                      deleteLabel="Inativar local"
+                      isDeactivate={true}
+                    />
+                  </CardFooter>
               </Card>
             ))}
           </div>
