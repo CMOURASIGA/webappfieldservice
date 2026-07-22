@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { PageHeader, PageHeaderTitle, PageHeaderTitleContent } from "@cnc-ti/layout-basic";
 import { storageService } from "../services/storageService";
 import { AlertTriangle, Clock, FileText, Package, Wrench, UserX, Inbox, CalendarDays, ShoppingCart } from "lucide-react";
 import { isPast, parseISO, startOfDay, endOfDay, addDays } from "date-fns";

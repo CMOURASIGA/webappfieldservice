@@ -23,26 +23,13 @@ import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Visão Geral", href: "/" },
-  { icon: CalendarDays, label: "Agenda", href: "/agenda" },
-  { 
-    icon: Wrench, 
-    label: "Serviços", 
-    subItems: [
-      { icon: Inbox, label: "Manutenção Corretiva", href: "/servicos" },
-      { icon: ClipboardList, label: "Ordens de Serviço", href: "/ordens" },
-      { icon: CalendarClock, label: "Manutenções Preventivas", href: "/preventivas" },
-      { icon: Building2, label: "Ativos e Locais", href: "/ativos" },
-      { icon: Users, label: "Técnicos", href: "/prestadores" },
-    ]
-  },
-  { icon: PackageSearch, label: "Estoque", href: "/estoque" },
-  { icon: FileText, label: "Documentos", href: "/documentos" },
-  { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
+  { icon: Wrench, label: "Gestão de Serviços", href: "/servicos" },
+  { icon: PackageSearch, label: "Gestão de Estoque", href: "/estoque" },
+  { icon: FileText, label: "Documentação Regulatória", href: "/documentos" },
 ];
 
 const adminItems = [
-  { icon: Settings, label: "Administração", href: "/admin" },
-  { icon: History, label: "Auditoria", href: "/auditoria" },
+  { icon: Settings, label: "Configurações", href: "/admin" },
 ];
 
 export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?: boolean, setMobileMenuOpen?: (v: boolean) => void }) => {

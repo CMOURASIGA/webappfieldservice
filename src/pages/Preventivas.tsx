@@ -3,7 +3,7 @@ import { storageService } from "../services/storageService";
 import { PreventivePlan, Unit, Asset, Provider, User } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import { Button } from "../components/ui/Button";
+import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { Plus, Settings } from "lucide-react";

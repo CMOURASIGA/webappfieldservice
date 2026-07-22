@@ -6,6 +6,7 @@ import { Estoque } from "./pages/Estoque";
 import { FilaEstoque } from "./pages/FilaEstoque";
 import { VisaoGeral } from "./pages/VisaoGeral";
 import { Servicos } from "./pages/Servicos";
+import { GestaoServicosDashboard } from "./pages/GestaoServicosDashboard";
 import { NovoServico } from "./pages/NovoServico";
 import { DetalheServico } from "./pages/DetalheServico";
 import { Ordens } from "./pages/Ordens";
@@ -40,7 +41,8 @@ export default function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<VisaoGeral />} />
             <Route path="agenda" element={<Agenda />} />
-            <Route path="servicos" element={<Servicos />} />
+            <Route path="servicos" element={<GestaoServicosDashboard />} />
+            <Route path="servicos/corretivas" element={<Servicos />} />
             <Route path="servicos/nova" element={<NovoServico />} />
             <Route path="servicos/:id" element={<DetalheServico />} />
             

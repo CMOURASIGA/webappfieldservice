@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../types";
-import { Button } from "../components/ui/Button";
+import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
@@ -110,20 +110,18 @@ export const Ordens = () => {
     <div className="space-y-6">
       
       {/* Ações Rápidas no Topo */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => navigate("/ordens/nova")} className="gap-2">
-          <Plus className="w-4 h-4" /> Nova OS
-        </Button>
-        <Button variant="outline" onClick={() => navigate("/agenda")} className="gap-2">
-          <Calendar className="w-4 h-4" /> Ver Agenda
-        </Button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Ordens de Serviço</h1>
+      <PageHeader>
+        <PageHeaderTitleContent>
+          <PageHeaderTitle>Ordens de Serviço</PageHeaderTitle>
           <p className="text-sm text-slate-500">Acompanhamento e execução operacional.</p>
-        </div>
+        </PageHeaderTitleContent>
+        <PageHeaderActionsContainer>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/agenda")}><Calendar className="w-4 h-4" /> Ver Agenda</Button>
+          <Button variant="create" className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="w-4 h-4" /> Nova OS</Button>
+        </PageHeaderActionsContainer>
+      </PageHeader>
+      
+      <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-4">
         <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-md">
           <button
             onClick={() => setViewMode("list")}
