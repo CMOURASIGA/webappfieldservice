@@ -20,6 +20,8 @@ import { DetalheLocal } from "./pages/DetalheLocal";
 import { DetalheAtivo } from "./pages/DetalheAtivo";
 import { Preventivas } from "./pages/Preventivas";
 import { NovaPreventiva } from "./pages/NovaPreventiva";
+import { DetalhePreventiva } from "./pages/DetalhePreventiva";
+import { EditarPreventiva } from "./pages/EditarPreventiva";
 import { Prestadores } from "./pages/Prestadores";
 import { NovoPrestador } from "./pages/NovoPrestador";
 import { EditarPrestador } from "./pages/EditarPrestador";
@@ -48,6 +50,8 @@ export default function App() {
 
             <Route path="preventivas" element={<Preventivas />} />
             <Route path="preventivas/nova" element={<NovaPreventiva />} />
+            <Route path="preventivas/:id" element={<DetalhePreventiva />} />
+            <Route path="preventivas/:id/editar" element={<EditarPreventiva />} />
             <Route path="estoque" element={<Estoque />} />
             <Route path="estoque/fila" element={<FilaEstoque />} />
             <Route path="ativos" element={<Ativos />} />

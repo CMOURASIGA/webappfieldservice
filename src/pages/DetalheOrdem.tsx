@@ -46,6 +46,11 @@ export const DetalheOrdem = () => {
 
   const [newMaterial, setNewMaterial] = useState({ description: "", type: "", quantity: 1, unitPrice: 0 });
   const [uploading, setUploading] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [modalDate, setModalDate] = useState("");
+  const [modalStartTime, setModalStartTime] = useState("");
+  const [modalDuration, setModalDuration] = useState("60");
+  const [modalTechId, setModalTechId] = useState("");
 
   
   const handleAddMaterialNew = () => {
@@ -378,6 +383,7 @@ export const DetalheOrdem = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/ordens")}>Voltar</Button>
+          <Button variant="default" onClick={() => setShowScheduleModal(true)}>Programar</Button>
           <Link to={`/ordens/${order.id}/imprimir`} target="_blank"><Button variant="outline" className="gap-2"><Printer className="w-4 h-4" /> Imprimir</Button></Link>
         </div>
       </div>
@@ -752,6 +758,55 @@ export const DetalheOrdem = () => {
           </Card>
         </div>
       </div>
+    
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-xl">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
+              <CardTitle>Programar Atividade</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowScheduleModal(false)}>X</Button>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Técnico Principal</label>
+                <Select value={modalTechId} onChange={e => setModalTechId(e.target.value)}>
+                  <option value="">Selecione um técnico...</option>
+                  {users.filter(u => u.role === "Executor/Técnico" || u.role === "Administrador").map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Data Planejada</label>
+                  <Input type="date" value={modalDate} onChange={e => setModalDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Hora de Início</label>
+                  <Input type="time" value={modalStartTime} onChange={e => setModalStartTime(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Duração Estimada (minutos)</label>
+                <Select value={modalDuration} onChange={e => setModalDuration(e.target.value)}>
+                  <option value="15">15 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="120">2 horas</option>
+                  <option value="240">4 horas</option>
+                  <option value="480">8 horas</option>
+                  <option value="1440">2 dias</option>
+                </Select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <Button variant="outline" onClick={() => setShowScheduleModal(false)}>Cancelar</Button>
+                <Button onClick={handleSaveSchedule}>Confirmar Programação</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
