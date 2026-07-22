@@ -61,3 +61,4 @@
   }
 }
 @theme { --color-white: #ffffff; }
+.sidebar-text, .sidebar-text * { color: #ffffff !important; }

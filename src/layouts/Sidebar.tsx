@@ -70,8 +70,8 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
             className={cn(
               "flex items-center justify-between w-full h-11 px-4 mx-2 rounded-md transition-colors text-sm pr-6",
               hasActiveChild && !isExpanded
-                ? "bg-white/10 text-white font-medium"
-                : "text-white hover:bg-white/10 hover:text-white"
+                ? "bg-white/10 text-slate-50 font-medium"
+                : "text-slate-50 hover:bg-white/10 hover:text-slate-50"
             )}
             style={{ width: 'calc(100% - 16px)' }}
           >
@@ -100,8 +100,8 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         className={cn(
           "flex items-center h-11 px-4 mx-2 rounded-md mb-1 transition-colors text-sm",
           isActive 
-            ? "bg-white/15 text-white font-medium" 
-            : "text-white hover:bg-white/10 hover:text-white",
+            ? "bg-white/15 text-slate-50 font-medium" 
+            : "text-slate-50 hover:bg-white/10 hover:text-slate-50",
           isSubItem ? "pl-11 h-10" : ""
         )}
       >
@@ -123,14 +123,14 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
       )}
       
       {/* Sidebar */}
-      <aside className={cn(
+      <aside className={cn("sidebar-text",
         "fixed top-0 left-0 h-screen w-[240px] bg-brand-900 flex flex-col z-30 transition-transform duration-300 md:translate-x-0",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="h-16 flex items-center justify-between px-6 mb-4 mt-2">
-          <div className="text-white font-bold text-xl tracking-tight">GSI / CNC</div>
+          <div className="text-slate-50 font-bold text-xl tracking-tight">GSI / CNC</div>
           <button 
-            className="md:hidden text-white hover:text-white p-1"
+            className="md:hidden text-slate-50 hover:text-slate-50 p-1"
             onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -141,7 +141,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
           <div className="flex flex-col">
             {navItems.map(item => renderLink(item))}
             
-            <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-white uppercase tracking-wider">
+            <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-slate-50 uppercase tracking-wider">
               Configurações
             </div>
             {adminItems.map(item => renderLink(item))}
