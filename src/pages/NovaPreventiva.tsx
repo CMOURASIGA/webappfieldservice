@@ -113,14 +113,14 @@ export const NovaPreventiva = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Novo Plano Preventivo</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Manutenção Preventiva</h1>
         <p className="text-sm text-slate-500">Cadastre uma nova rotina de manutenção preventiva.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Detalhes do Plano</CardTitle>
+            <CardTitle>Detalhes da Manutenção</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -246,7 +246,7 @@ export const NovaPreventiva = () => {
             Cancelar
           </Button>
           <Button type="submit">
-            Salvar Plano
+            Salvar
           </Button>
         </div>
       </form>

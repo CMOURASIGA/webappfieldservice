@@ -655,11 +655,12 @@ export const storageService = {
       currentOrders[2].scheduleStatus = "Confirmada pelo técnico";
     }
 
-    // OS 4: Carlos - Quinta 10:00 às 15:00 (Reprogramação)
+    // OS 4: Clima Técnica - Quinta 10:00 às 15:00 (Reprogramação)
     if(currentOrders[3]) {
       const d = new Date(thursday); d.setHours(10, 0, 0, 0);
       const end = new Date(d); end.setHours(15, 0, 0, 0);
-      currentOrders[3].responsibleId = "tec-3";
+      currentOrders[3].responsibleId = undefined;
+      currentOrders[3].providerId = "prov-1";
       currentOrders[3].plannedStart = d.toISOString();
       currentOrders[3].plannedEnd = end.toISOString();
       currentOrders[3].estimatedDurationMinutes = 300;

@@ -29,7 +29,7 @@ export const DetalheServico = () => {
     setUsers(storageService.get("gsi_users"));
   }, [id]);
 
-  if (!request) return <div className="p-6">Serviço não encontrada.</div>;
+  if (!request) return <div className="p-6">Manutenção não encontrada.</div>;
 
   const getUnitName = (uid: string) => units.find(u => u.id === uid)?.name || "N/A";
   const getLocationName = (lid: string) => locations.find(l => l.id === lid)?.name || "N/A";
@@ -70,8 +70,8 @@ export const DetalheServico = () => {
       storageService.set("gsi_requests", reqs);
     }
 
-    storageService.logAudit(currentUser.id, "Serviço convertida em OS", request.id, "Request", request.status, "Convertida em ordem");
-    storageService.logAudit(currentUser.id, "OS Criada a partir de Serviço", newOs.id, "WorkOrder");
+    storageService.logAudit(currentUser.id, "Manutenção convertida em OS", request.id, "Request", request.status, "Convertida em ordem");
+    storageService.logAudit(currentUser.id, "OS Criada a partir de Manutenção Corretiva", newOs.id, "WorkOrder");
 
     navigate(`/ordens/${newOs.id}`);
   };
@@ -80,7 +80,7 @@ export const DetalheServico = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Serviço: {request.protocol}</h1>
+          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenção: {request.protocol}</h1>
           <p className="text-sm text-slate-500">Detalhes da solicitação.</p>
         </div>
         <div className="flex gap-2">

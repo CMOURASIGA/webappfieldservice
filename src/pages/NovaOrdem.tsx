@@ -111,7 +111,7 @@ export const NovaOrdem = () => {
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
         <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Ordem de Serviço</h1>
-        <p className="text-sm text-slate-500">Crie uma OS manual não vinculada a demandas.</p>
+        <p className="text-sm text-slate-500">Crie uma OS manual não vinculada a uma manutenção corretiva.</p>
       </div>
 
       <Card>

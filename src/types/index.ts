@@ -211,6 +211,7 @@ export interface Document {
 }
 
 export interface Provider {
+  type?: "Interno" | "Externo";
   id: string;
   name: string;
   document?: string;

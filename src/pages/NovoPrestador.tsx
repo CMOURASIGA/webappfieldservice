@@ -14,7 +14,7 @@ const specialties = [
   "Combate a incêndio", "Geradores", "Controle de acesso", "Limpeza técnica", "Manutenção geral"
 ];
 
-export const NovoPrestador = () => {
+export const NovoTécnico = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [units, setUnits] = useState<Unit[]>([]);
@@ -28,6 +28,7 @@ export const NovoPrestador = () => {
     specialty: "",
     unitId: "",
     status: "Ativo" as const,
+    type: "Externo" as "Interno" | "Externo",
     observations: "",
   });
 
@@ -49,6 +50,7 @@ export const NovoPrestador = () => {
       specialty: formData.specialty,
       unitId: formData.unitId || undefined,
       status: formData.status,
+      type: formData.type,
       observations: formData.observations,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -59,7 +61,7 @@ export const NovoPrestador = () => {
     providers.push(newProvider);
     storageService.set("gsi_providers", providers);
     
-    storageService.logAudit(currentUser.id, "Prestador Criado", newProvider.id, "Provider");
+    storageService.logAudit(currentUser.id, "Técnico Criado", newProvider.id, "Provider");
 
     navigate("/prestadores");
   };
@@ -67,13 +69,13 @@ export const NovoPrestador = () => {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Novo Prestador</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Novo Técnico</h1>
         <p className="text-sm text-slate-500">Cadastre um novo fornecedor ou profissional.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Informações do Prestador</CardTitle>
+          <CardTitle>Informações do Técnico</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,6 +129,16 @@ export const NovoPrestador = () => {
                 ]}
               />
               <Select
+                label="Tipo"
+                required
+                value={formData.type}
+                onChange={e => setFormData({ ...formData, type: e.target.value as "Interno" | "Externo" })}
+                options={[
+                  { value: "Externo", label: "Externo (Terceirizado)" },
+                  { value: "Interno", label: "Interno (Funcionário)" },
+                ]}
+              />
+              <Select
                 label="Status"
                 required
                 value={formData.status}
@@ -149,7 +161,7 @@ export const NovoPrestador = () => {
                 Cancelar
               </Button>
               <Button type="submit">
-                Salvar Prestador
+                Salvar Técnico
               </Button>
             </div>
           </form>

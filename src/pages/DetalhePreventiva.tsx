@@ -55,7 +55,7 @@ export const DetalhePreventiva = () => {
           <Link to="/preventivas" className="text-slate-500 hover:text-slate-700">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-slate-800">Plano não encontrado</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Manutenção não encontrada</h1>
         </div>
       </div>
     );
@@ -167,7 +167,7 @@ export const DetalhePreventiva = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckSquare className="w-5 h-5 text-brand-600" />
-                Checklist do Plano
+                Checklist
               </CardTitle>
             </CardHeader>
             <CardContent>

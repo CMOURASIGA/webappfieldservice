@@ -201,54 +201,54 @@ export const Ativos = () => {
 
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Código</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Nome / Modelo</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Local</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {assets.map(asset => (
-                  <tr key={asset.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{asset.code}</td>
-                    <td className="px-6 py-4 text-slate-900 flex flex-col">
-                      <span>{asset.name}</span>
-                      <span className="text-xs text-slate-400">{asset.model || asset.manufacturer || '-'}</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{getUnitName(asset.unitId)}</td>
-                    <td className="px-6 py-4 text-slate-600">{getLocationName(asset.locationId)}</td>
-                    <td className="px-6 py-4">{getStatusBadge(asset.status)}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/ativos/${asset.id}`} className="text-blue-600 hover:text-blue-700 font-medium text-sm mr-2">Ver</Link>
-                      <button 
-                        onClick={() => handleOpenEdit(asset)}
-                        className="text-brand-600 hover:text-brand-700 font-medium text-sm"
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(asset.id)}
-                        className="text-red-600 hover:text-red-700 font-medium text-sm"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {assets.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      Nenhum ativo cadastrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {assets.map(asset => (
+              <Card key={asset.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-brand-600 bg-brand-50 px-2 py-0.5 rounded font-semibold">{asset.code}</span>
+                        {getStatusBadge(asset.status)}
+                      </div>
+                      <h3 className="font-semibold text-slate-900 line-clamp-1" title={asset.name}>{asset.name}</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">{asset.category}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-2 flex-1">
+                    <div>
+                      <p className="text-xs text-slate-400">Local</p>
+                      <p className="font-medium text-slate-700">{getLocationName(asset.locationId)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Unidade</p>
+                      <p className="font-medium text-slate-700">{getUnitName(asset.unitId)}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs text-slate-400">Patrimônio / Fabricante</p>
+                      <p className="font-medium text-slate-700">{asset.patrimonyNumber || "-"} {asset.manufacturer && <span className="text-slate-500 font-normal">/ {asset.manufacturer}</span>}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
+                    <Link to={`/ativos/${asset.id}`}>
+                      <Button variant="secondary" size="sm">Ver Detalhes</Button>
+                    </Link>
+                    <Button variant="secondary" size="sm" onClick={() => handleOpenEdit(asset)}>Editar</Button>
+                    <Button variant="secondary" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(asset.id)}>Excluir</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {assets.length === 0 && (
+            <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+              Nenhum ativo encontrado.
+            </div>
+          )}
+
           </div>
         </CardContent>
       </Card>
@@ -257,57 +257,54 @@ export const Ativos = () => {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Código</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Nome / Tipo</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Estrutura</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {locations.filter(l => l.active !== false).map(loc => (
-                  <tr key={loc.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{loc.code}</td>
-                    <td className="px-6 py-4 text-slate-900 flex flex-col">
-                      <span>{loc.name}</span>
-                      <span className="text-xs text-slate-400">{loc.type}</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{getUnitName(loc.unitId)}</td>
-                    <td className="px-6 py-4 text-slate-600 text-xs flex flex-col gap-0.5">
-                      {loc.area && <span>Área: {loc.area}</span>}
-                      {loc.floor && <span>Pavimento: {loc.floor}</span>}
-                      {loc.environment && <span>Ambiente: {loc.environment}</span>}
-                      {!loc.area && !loc.floor && !loc.environment && "-"}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/locais/${loc.id}`} className="text-blue-600 hover:text-blue-700 font-medium text-sm mr-2">Ver</Link>
-                      <button 
-                        onClick={() => handleOpenEditLocation(loc)}
-                        className="text-brand-600 hover:text-brand-700 font-medium text-sm"
-                      >
-                        Editar
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteLocation(loc.id)}
-                        className="text-red-600 hover:text-red-700 font-medium text-sm"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {locations.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                      Nenhum local cadastrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {locations.map(loc => (
+              <Card key={loc.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-brand-600 bg-brand-50 px-2 py-0.5 rounded font-semibold">{loc.code}</span>
+                        <Badge variant="secondary">{loc.type}</Badge>
+                      </div>
+                      <h3 className="font-semibold text-slate-900 line-clamp-1" title={loc.name}>{loc.name}</h3>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-2 flex-1">
+                    <div>
+                      <p className="text-xs text-slate-400">Unidade</p>
+                      <p className="font-medium text-slate-700">{getUnitName(loc.unitId)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Detalhes</p>
+                      <p className="font-medium text-slate-700 text-xs">
+                        {loc.area && <span className="block">Área: {loc.area}</span>}
+                        {loc.floor && <span className="block">Pavimento: {loc.floor}</span>}
+                        {loc.environment && <span className="block">Ambiente: {loc.environment}</span>}
+                        {!loc.area && !loc.floor && !loc.environment && "-"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
+                    <Link to={`/locais/${loc.id}`}>
+                      <Button variant="secondary" size="sm">Ver Detalhes</Button>
+                    </Link>
+                    <Button variant="secondary" size="sm" onClick={() => handleOpenEditLocation(loc)}>Editar</Button>
+                    <Button variant="secondary" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteLocation(loc.id)}>Excluir</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {locations.length === 0 && (
+            <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+              Nenhum local encontrado.
+            </div>
+          )}
+
           </div>
         </CardContent>
       </Card>

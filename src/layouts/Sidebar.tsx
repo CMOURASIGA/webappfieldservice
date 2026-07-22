@@ -28,11 +28,11 @@ const navItems = [
     icon: Wrench, 
     label: "Serviços", 
     subItems: [
-      { icon: Inbox, label: "Demandas", href: "/servicos" },
+      { icon: Inbox, label: "Manutenção Corretiva", href: "/servicos" },
       { icon: ClipboardList, label: "Ordens de Serviço", href: "/ordens" },
-      { icon: CalendarClock, label: "Preventivas", href: "/preventivas" },
+      { icon: CalendarClock, label: "Manutenções Preventivas", href: "/preventivas" },
       { icon: Building2, label: "Ativos e Locais", href: "/ativos" },
-      { icon: Users, label: "Prestadores", href: "/prestadores" },
+      { icon: Users, label: "Técnicos", href: "/prestadores" },
     ]
   },
   { icon: PackageSearch, label: "Estoque", href: "/estoque" },

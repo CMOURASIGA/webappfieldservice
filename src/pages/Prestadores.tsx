@@ -15,7 +15,7 @@ const specialties = [
   "Combate a incêndio", "Geradores", "Controle de acesso", "Limpeza técnica", "Manutenção geral"
 ];
 
-export const Prestadores = () => {
+export const Técnicos = () => {
   const { currentUser } = useAuth();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -57,7 +57,7 @@ export const Prestadores = () => {
     if (currentStatus === "Ativo") {
       const stats = getProviderStats(id);
       if (stats.activeOrders > 0) {
-        if (!confirm(`Este prestador possui ${stats.activeOrders} ordens em andamento. Deseja continuar com a inativação?`)) {
+        if (!confirm(`Este técnico possui ${stats.activeOrders} ordens em andamento. Deseja continuar com a inativação?`)) {
           return;
         }
       }
@@ -70,7 +70,7 @@ export const Prestadores = () => {
       updated[idx].status = newStatus;
       updated[idx].updatedAt = new Date().toISOString();
       storageService.set("gsi_providers", updated);
-      storageService.logAudit(currentUser.id, `Prestador ${newStatus.toLowerCase()}`, id, "Provider", currentStatus, newStatus);
+      storageService.logAudit(currentUser.id, `Técnico ${newStatus.toLowerCase()}`, id, "Provider", currentStatus, newStatus);
       setProviders(updated);
     }
   };
@@ -98,8 +98,8 @@ export const Prestadores = () => {
   const activeLinkedOrders = orders.filter(o => o.providerId && o.status !== "Concluída" && o.status !== "Cancelada").length;
   const delayedLinkedOrders = orders.filter(o => o.providerId && o.status !== "Concluída" && o.status !== "Cancelada" && o.deadline && new Date(o.deadline) < new Date()).length;
 
-  const StatCard = ({ title, value, colorClass }: any) => (
-    <Card>
+  const StatCard = ({ title, value, colorClass, onClick }: any) => (
+    <Card className={onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={onClick}>
       <CardContent className="p-6">
         <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
         <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
@@ -114,19 +114,19 @@ export const Prestadores = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Prestadores de Serviço</h1>
-          <p className="text-sm text-slate-500">Consulte e gerencie empresas e profissionais vinculados às manutenções da GSI.</p>
+          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Técnicos de Serviço</h1>
+          <p className="text-sm text-slate-500">Consulte e gerencie empresas e profissionais externos vinculados às manutenções da GSI.</p>
         </div>
         {canEdit && (
           <Link to="/prestadores/novo">
-            <Button>Novo prestador</Button>
+            <Button>Novo técnico</Button>
           </Link>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Prestadores Ativos" value={activeProviders} colorClass="text-brand-700" />
-        <StatCard title="Prestadores Inativos" value={inactiveProviders} colorClass="text-slate-500" />
+        <StatCard title="Técnicos Ativos" value={activeProviders} colorClass="text-brand-700" onClick={() => { clearFilters(); setStatusFilter("Ativo"); }} />
+        <StatCard title="Técnicos Inativos" value={inactiveProviders} colorClass="text-slate-500" onClick={() => { clearFilters(); setStatusFilter("Inativo"); }} />
         <StatCard title="Ordens Vinculadas (Ativas)" value={activeLinkedOrders} colorClass="text-blue-600" />
         <StatCard title="Ordens Vinculadas (Atrasadas)" value={delayedLinkedOrders} colorClass="text-red-600" />
       </div>
@@ -165,72 +165,86 @@ export const Prestadores = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap border-t border-slate-200">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Prestador</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Especialidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Contato</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-center">Ordens Ativas</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Último Atendimento</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredProviders.map(provider => {
-                  const stats = getProviderStats(provider.id);
-                  return (
-                    <tr key={provider.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-slate-900 flex flex-col">
-                        <span>{provider.name}</span>
-                        {provider.document && <span className="text-xs text-slate-400">{provider.document}</span>}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">{provider.specialty}</td>
-                      <td className="px-6 py-4 text-slate-600 flex flex-col">
-                        <span>{provider.contactName}</span>
-                        <span className="text-xs text-slate-400">{provider.phone}</span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">{getUnitName(provider.unitId)}</td>
-                      <td className="px-6 py-4 text-center">
-                        {stats.activeOrders > 0 ? (
-                          <span className="inline-flex items-center justify-center bg-blue-100 text-blue-700 font-semibold px-2 rounded-full h-6 min-w-6">
-                            {stats.activeOrders}
-                          </span>
-                        ) : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">{stats.lastService}</td>
-                      <td className="px-6 py-4">
-                        <Badge variant={provider.status === "Ativo" ? "success" : "default"}>{provider.status}</Badge>
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <Link to={`/prestadores/${provider.id}`}>
-                          <Button variant="ghost" size="sm">Ver</Button>
+            
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredProviders.map(provider => {
+              const stats = getProviderStats(provider.id);
+              return (
+                <Card key={provider.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-900 line-clamp-1" title={provider.name}>{provider.name}</h3>
+                          <Badge variant={provider.status === "Ativo" ? "success" : "default"}>{provider.status}</Badge>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1 flex gap-2 items-center">
+                          <Badge variant="secondary" className="text-[10px] py-0">{provider.type || "Externo"}</Badge>
+                          {provider.document && <span>{provider.document}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-2 flex-1">
+                      <div>
+                        <p className="text-xs text-slate-400">Especialidade</p>
+                        <p className="font-medium text-slate-700">{provider.specialty || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Unidade</p>
+                        <p className="font-medium text-slate-700">{getUnitName(provider.unitId)}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-slate-400">Contato</p>
+                        <p className="font-medium text-slate-700">{provider.contactName} {provider.phone && <span className="text-slate-500 font-normal">({provider.phone})</span>}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Ordens Ativas</p>
+                        <p className="font-medium text-slate-700">
+                          {stats.activeOrders > 0 ? (
+                            <span className="inline-flex items-center justify-center bg-blue-100 text-blue-700 font-semibold px-2 rounded-full h-5 text-xs">
+                              {stats.activeOrders}
+                            </span>
+                          ) : "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Último Atendimento</p>
+                        <p className="font-medium text-slate-700">{stats.lastService || "-"}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end gap-2">
+                      <Link to={`/prestadores/${provider.id}`}>
+                        <Button variant="secondary" size="sm">Ver Detalhes</Button>
+                      </Link>
+                      {canEdit && (
+                        <Link to={`/prestadores/${provider.id}/editar`}>
+                          <Button variant="secondary" size="sm">Editar</Button>
                         </Link>
-                        {canEdit && (
-                          <Link to={`/prestadores/${provider.id}/editar`}>
-                            <Button variant="ghost" size="sm">Editar</Button>
-                          </Link>
-                        )}
-                        {canToggle && (
-                          <Button variant="ghost" size="sm" onClick={() => toggleStatus(provider.id, provider.status)} className={provider.status === "Ativo" ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}>
-                            {provider.status === "Ativo" ? "Inativar" : "Reativar"}
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {filteredProviders.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
-                      Nenhum prestador encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      )}
+                      {canToggle && (
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={() => toggleStatus(provider.id, provider.status)}
+                          className={provider.status === "Ativo" ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}
+                        >
+                          {provider.status === "Ativo" ? "Inativar" : "Reativar"}
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          {filteredProviders.length === 0 && (
+            <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+              Nenhum técnico encontrado.
+            </div>
+          )}
+
           </div>
         </CardContent>
       </Card>

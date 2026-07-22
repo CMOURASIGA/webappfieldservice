@@ -191,7 +191,7 @@ export const DetalheOrdem = () => {
 
   const PAUSE_REASONS = [
     "Aguardando acesso ao local",
-    "Aguardando prestador",
+    "Aguardando técnico",
     "Aguardando autorização",
     "Aguardando material externo",
     "Indisponibilidade do ativo",
@@ -333,7 +333,7 @@ export const DetalheOrdem = () => {
           storageService.set("gsi_requests", requests);
           
           orders[idx].checklist[cIdx].correctiveRequestId = newId;
-          alert(`Demanda corretiva gerada automaticamente: ${newReq.protocol}`);
+          alert(`Manutenção corretiva gerada automaticamente: ${newReq.protocol}`);
         }
 
         storageService.set("gsi_work_orders", orders);
@@ -359,7 +359,7 @@ export const DetalheOrdem = () => {
       orders[idx].status = "Atribuída";
       orders[idx].updatedAt = new Date().toISOString();
       storageService.set("gsi_work_orders", orders);
-      storageService.logAudit(currentUser.id, "Atribuída OS", order.id, "WorkOrder", "", `Técnico: ${assignUser || '-'}, Prestador: ${assignProvider || '-'}`);
+      storageService.logAudit(currentUser.id, "Atribuída OS", order.id, "WorkOrder", "", `Técnico: ${assignUser || '-'}, Técnico: ${assignProvider || '-'}`);
       loadOrder();
     }
   };
@@ -423,8 +423,8 @@ export const DetalheOrdem = () => {
                 </div>
                 {order.requestId && (
                   <div className="col-span-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase">Origem (Demanda)</p>
-                    <p className="text-sm text-brand-600 underline font-medium cursor-pointer" onClick={() => navigate(`/demandas/${order.requestId}`)}>
+                    <p className="text-xs font-semibold text-slate-500 uppercase">Origem (Manutenção Corretiva)</p>
+                    <p className="text-sm text-brand-600 underline font-medium cursor-pointer" onClick={() => navigate(`/servicos/${order.requestId}`)}>
                       {getRequestProtocol(order.requestId)}
                     </p>
                   </div>
@@ -494,8 +494,8 @@ export const DetalheOrdem = () => {
                             />
                             {item.correctiveRequestId ? (
   <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-    * Demanda corretiva gerada. 
-    <Link to={`/demandas/${item.correctiveRequestId}`} className="underline hover:text-red-800">Ver Demanda</Link>
+    * Manutenção corretiva gerada. 
+    <Link to={`/servicos/${item.correctiveRequestId}`} className="underline hover:text-red-800">Ver Manutenção Corretiva</Link>
   </p>
 ) : (
   <p className="text-xs text-red-600 mt-1">* Uma demanda corretiva será gerada para este item.</p>
@@ -684,7 +684,7 @@ export const DetalheOrdem = () => {
                 <p className="text-sm font-medium">{getUserName(order.responsibleId)}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase">Prestador Externo</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase">Técnico</p>
                 <p className="text-sm font-medium">{getProviderName(order.providerId)}</p>
               </div>
 
@@ -698,8 +698,8 @@ export const DetalheOrdem = () => {
                     onChange={(e) => setAssignUser(e.target.value)}
                   />
                   <Select
-                    label="Prestador Externo"
-                    options={[{ value: "", label: "Nenhum" }, ...providers.filter(p => p.active && (!p.unitId || p.unitId === order.unitId)).map(p => ({ value: p.id, label: p.name }))]}
+                    label="Técnico"
+                    options={[{ value: "", label: "Nenhum" }, ...providers.filter(p => p.active && (!p.unitId || p.unitId === order.unitId)).map(p => ({ value: p.id, label: `${p.name} (${p.type || "Externo"})` }))]}
                     value={assignProvider}
                     onChange={(e) => setAssignProvider(e.target.value)}
                   />

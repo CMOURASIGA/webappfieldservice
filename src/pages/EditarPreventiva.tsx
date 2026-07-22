@@ -152,7 +152,7 @@ export const EditarPreventiva = () => {
           </Button>
         </Link>
         <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Plano: {planCode}</h1>
+          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Manutenção: {planCode}</h1>
           <p className="text-sm text-slate-500">Altere os dados da manutenção preventiva.</p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export const EditarPreventiva = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Informações do Plano</CardTitle>
+            <CardTitle>Informações</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

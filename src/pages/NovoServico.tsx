@@ -99,8 +99,8 @@ export const NovoServico = () => {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Serviço</h1>
-        <p className="text-sm text-slate-500">Registre uma nova solicitação de serviço.</p>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Manutenção Corretiva</h1>
+        <p className="text-sm text-slate-500">Registre uma nova manutenção corretiva.</p>
       </div>
 
       <Card>
@@ -190,7 +190,7 @@ export const NovoServico = () => {
                 Cancelar
               </Button>
               <Button type="submit">
-                Salvar Serviço
+                Salvar
               </Button>
             </div>
           </form>

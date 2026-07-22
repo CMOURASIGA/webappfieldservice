@@ -14,7 +14,7 @@ const specialties = [
   "Combate a incêndio", "Geradores", "Controle de acesso", "Limpeza técnica", "Manutenção geral"
 ];
 
-export const EditarPrestador = () => {
+export const EditarTécnico = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -30,6 +30,7 @@ export const EditarPrestador = () => {
     specialty: "",
     unitId: "",
     status: "Ativo" as const,
+    type: "Externo" as "Interno" | "Externo",
     observations: "",
   });
 
@@ -48,6 +49,7 @@ export const EditarPrestador = () => {
         specialty: found.specialty,
         unitId: found.unitId || "todas",
         status: found.status,
+        type: found.type || "Externo",
         observations: found.observations || "",
       });
     }
@@ -70,29 +72,30 @@ export const EditarPrestador = () => {
         specialty: formData.specialty,
         unitId: formData.unitId === "todas" ? undefined : formData.unitId,
         status: formData.status,
+        type: formData.type,
         observations: formData.observations,
         updatedAt: new Date().toISOString(),
       };
       
       storageService.set("gsi_providers", providers);
-      storageService.logAudit(currentUser.id, "Prestador Atualizado", provider.id, "Provider");
+      storageService.logAudit(currentUser.id, "Técnico Atualizado", provider.id, "Provider");
     }
 
     navigate("/prestadores");
   };
 
-  if (!provider) return <div className="p-6">Prestador não encontrado.</div>;
+  if (!provider) return <div className="p-6">Técnico não encontrado.</div>;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Prestador</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Técnico</h1>
         <p className="text-sm text-slate-500">Atualize as informações do fornecedor.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Informações do Prestador</CardTitle>
+          <CardTitle>Informações do Técnico</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -143,6 +146,16 @@ export const EditarPrestador = () => {
                   { value: "", label: "Selecione..." },
                   { value: "todas", label: "Todas as Unidades" },
                   ...units.map(u => ({ value: u.id, label: u.name }))
+                ]}
+              />
+              <Select
+                label="Tipo"
+                required
+                value={formData.type}
+                onChange={e => setFormData({ ...formData, type: e.target.value as "Interno" | "Externo" })}
+                options={[
+                  { value: "Externo", label: "Externo (Terceirizado)" },
+                  { value: "Interno", label: "Interno (Funcionário)" },
                 ]}
               />
               <Select

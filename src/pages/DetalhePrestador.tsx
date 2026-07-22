@@ -8,7 +8,7 @@ import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
 import { format, isValid, parseISO } from "date-fns";
 
-export const DetalhePrestador = () => {
+export const DetalheTécnico = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -30,7 +30,7 @@ export const DetalhePrestador = () => {
     setLogs(storageService.get("gsi_audit_log").filter(l => l.entityId === id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
   }, [id]);
 
-  if (!provider) return <div className="p-6">Prestador não encontrado.</div>;
+  if (!provider) return <div className="p-6">Técnico não encontrado.</div>;
 
   const getUnitName = (uid?: string) => {
     if (!uid) return "Todas as Unidades";
@@ -68,14 +68,14 @@ export const DetalhePrestador = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Prestador: {provider.name}</h1>
+          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Técnico: {provider.name}</h1>
           <p className="text-sm text-slate-500">Detalhes e histórico de atendimentos.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/prestadores")}>Voltar</Button>
           {true && (
             <Link to={`/prestadores/${provider.id}/editar`}>
-              <Button>Editar Prestador</Button>
+              <Button>Editar Técnico</Button>
             </Link>
           )}
         </div>
@@ -169,7 +169,7 @@ export const DetalhePrestador = () => {
                 {orders.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      Nenhuma OS vinculada a este prestador.
+                      Nenhuma OS vinculada a este técnico.
                     </td>
                   </tr>
                 )}

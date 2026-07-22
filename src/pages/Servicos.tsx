@@ -67,7 +67,7 @@ export const Servicos = () => {
       {/* Ações Rápidas no Topo */}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={() => navigate("/servicos/nova")} className="gap-2">
-          <Plus className="w-4 h-4" /> Novo Serviço
+          <Plus className="w-4 h-4" /> Nova Manutenção
         </Button>
         <Button variant="outline" onClick={() => navigate("/preventivas/nova")} className="gap-2">
           <Calendar className="w-4 h-4" /> Nova Preventiva
@@ -81,7 +81,7 @@ export const Servicos = () => {
       </div>
 
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Serviços</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenção Corretiva</h1>
         <p className="text-sm text-slate-500">Gestão e acompanhamento de solicitações e necessidades.</p>
       </div>
 
@@ -141,7 +141,7 @@ export const Servicos = () => {
               
               <div className="pt-4 border-t border-slate-100 flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => navigate(`/servicos/${req.id}`)}>
-                  Abrir Serviço
+                  Abrir
                 </Button>
                 {req.status !== "Convertida em ordem" && (
                   <Button variant="default" className="flex-1" onClick={() => navigate("/ordens/nova")}>
@@ -154,7 +154,7 @@ export const Servicos = () => {
         ))}
         {filteredRequests.length === 0 && (
           <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg">
-             <p className="text-slate-500">Nenhum serviço encontrado para o filtro atual.</p>
+             <p className="text-slate-500">Nenhuma manutenção encontrado para o filtro atual.</p>
           </div>
         )}
       </div>

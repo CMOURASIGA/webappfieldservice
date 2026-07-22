@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, PreventivePlan, Document, User, Unit, TechnicianWorkSchedule, TechnicianUnavailability } from "../types";
+import { WorkOrder, PreventivePlan, Document, User, Unit, TechnicianWorkSchedule, TechnicianUnavailability, Provider } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -27,6 +27,7 @@ export const Agenda = () => {
   
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [schedules, setSchedules] = useState<TechnicianWorkSchedule[]>([]);
   const [unavailabilities, setUnavailabilities] = useState<TechnicianUnavailability[]>([]);
@@ -53,6 +54,7 @@ export const Agenda = () => {
   const refreshData = () => {
     setOrders(storageService.get("gsi_work_orders"));
     setUsers(storageService.get("gsi_users"));
+    setProviders(storageService.get("gsi_providers"));
     setUnits(storageService.get("gsi_units"));
     setSchedules(storageService.get("gsi_technician_schedules"));
     setUnavailabilities(storageService.get("gsi_technician_unavailabilities"));
@@ -63,6 +65,10 @@ export const Agenda = () => {
   }, []);
 
   const technicians = users.filter(u => u.role === "Executor/Técnico" || u.role === "Administrador");
+  const executors = [
+    ...technicians.map(t => ({ id: t.id, name: t.name, type: "Técnico", source: "user" })),
+    ...providers.filter(p => p.active).map(p => ({ id: p.id, name: p.name, type: p.type || "Externo", source: "provider" }))
+  ];
 
   const startHour = 7;
   const endHour = 20;
@@ -98,7 +104,7 @@ export const Agenda = () => {
   const getScheduledOrders = () => {
     return orders.filter(o => o.plannedStart && o.plannedEnd).filter(o => {
       if (unitFilter && o.unitId !== unitFilter) return false;
-      if (technicianFilter && !o.additionalTechnicianIds?.includes(technicianFilter) && o.responsibleId !== technicianFilter) return false;
+      if (technicianFilter && !o.additionalTechnicianIds?.includes(technicianFilter) && o.responsibleId !== technicianFilter && o.providerId !== technicianFilter) return false;
       return true;
     });
   };
@@ -115,7 +121,7 @@ export const Agenda = () => {
     setModalDate(format(date, 'yyyy-MM-dd'));
     setModalStartTime(`${hour.toString().padStart(2, '0')}:00`);
     setModalDuration(order.estimatedDurationMinutes ? order.estimatedDurationMinutes.toString() : "60");
-    setModalTechId(technicianFilter || order.responsibleId || "");
+    setModalTechId(technicianFilter || order.responsibleId || order.providerId || "");
   };
 
   const handleSaveUnavail = () => {
@@ -157,7 +163,7 @@ export const Agenda = () => {
     const isConflict = orders.some(o => 
       o.id !== schedulingOrder.id &&
       o.plannedStart && o.plannedEnd &&
-      o.responsibleId === modalTechId &&
+      (o.responsibleId === modalTechId || o.providerId === modalTechId) &&
       new Date(o.plannedStart) < endDateTime &&
       new Date(o.plannedEnd) > startDateTime
     );
@@ -172,7 +178,8 @@ export const Agenda = () => {
       if (o.id === schedulingOrder.id) {
         return {
           ...o,
-          responsibleId: modalTechId,
+          responsibleId: executors.find(e => e.id === modalTechId)?.source === "user" ? modalTechId : undefined,
+          providerId: executors.find(e => e.id === modalTechId)?.source === "provider" ? modalTechId : undefined,
           plannedStart: formatISO(startDateTime),
           plannedEnd: formatISO(endDateTime),
           estimatedDurationMinutes: durationMins,
@@ -243,13 +250,13 @@ export const Agenda = () => {
                             setModalDate(format(start, 'yyyy-MM-dd'));
                             setModalStartTime(format(start, 'HH:mm'));
                             setModalDuration(durationInMinutes.toString());
-                            setModalTechId(o.responsibleId || "");
+                            setModalTechId(o.responsibleId || o.providerId || "");
                           }}
                         >
                           <div className="font-semibold text-brand-800">{o.number}</div>
                           <div className="text-brand-600 truncate">{o.technicalDescription}</div>
                           <div className="text-brand-500 text-[10px] mt-0.5">
-                            {users.find(u => u.id === o.responsibleId)?.name || "Sem técnico"}
+                            {executors.find(e => e.id === (o.responsibleId || o.providerId))?.name || "Sem responsável"}
                           </div>
                         </div>
                       );
@@ -275,7 +282,7 @@ export const Agenda = () => {
               <tr>
                 <th className="px-6 py-4 border-b border-slate-200">Data/Hora</th>
                 <th className="px-6 py-4 border-b border-slate-200">Ordem / Serviço</th>
-                <th className="px-6 py-4 border-b border-slate-200">Técnico</th>
+                <th className="px-6 py-4 border-b border-slate-200">Responsável</th>
                 <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
                 <th className="px-6 py-4 border-b border-slate-200">Status Programação</th>
               </tr>
@@ -288,7 +295,7 @@ export const Agenda = () => {
                   setModalDate(format(start, 'yyyy-MM-dd'));
                   setModalStartTime(format(start, 'HH:mm'));
                   setModalDuration(o.estimatedDurationMinutes?.toString() || "60");
-                  setModalTechId(o.responsibleId || "");
+                  setModalTechId(o.responsibleId || o.providerId || "");
                 }}>
                   <td className="px-6 py-4">
                     <div className="font-medium text-slate-900">{format(parseISO(o.plannedStart!), "dd/MM/yyyy", { locale: ptBR })}</div>
@@ -299,7 +306,7 @@ export const Agenda = () => {
                     <div className="text-slate-500 text-xs truncate max-w-[250px]">{o.technicalDescription}</div>
                   </td>
                   <td className="px-6 py-4 text-slate-600">
-                    {users.find(u => u.id === o.responsibleId)?.name || "-"}
+                    {executors.find(e => e.id === (o.responsibleId || o.providerId))?.name || "-"}
                   </td>
                   <td className="px-6 py-4 text-slate-600">
                     {units.find(u => u.id === o.unitId)?.sigla || "-"}
@@ -333,63 +340,87 @@ export const Agenda = () => {
           </div>
         </div>
         
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Técnico</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-center">Horas Programadas</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-center">Horas Ausência</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-center">Capacidade Estimada</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-center">Ocupação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {technicians.filter(t => !technicianFilter || t.id === technicianFilter).map(t => {
-                  // Calcular horas programadas nesta semana
-                  const scheduledTime = getScheduledOrders().filter(o => o.responsibleId === t.id).reduce((acc, curr) => {
-                    return acc + (curr.estimatedDurationMinutes || 0);
-                  }, 0);
-                  const scheduledHours = (scheduledTime / 60).toFixed(1);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {executors.filter(t => !technicianFilter || t.id === technicianFilter).map(t => {
+            // Calcular horas programadas nesta semana
+            const scheduledTime = getScheduledOrders().filter(o => o.responsibleId === t.id || o.providerId === t.id).reduce((acc, curr) => {
+              return acc + (curr.estimatedDurationMinutes || 0);
+            }, 0);
+            const scheduledHours = (scheduledTime / 60).toFixed(1);
 
-                  // Horas base semana (40h)
-                  const baseCapacityHours = 40;
+            // Horas base semana (40h)
+            const baseCapacityHours = 40;
+            
+            // Indisponibilidades nesta semana
+            let unavailHours = 0;
+            unavailabilities.filter(u => u.technicianId === t.id).forEach(u => {
+              const start = new Date(u.startAt);
+              const end = new Date(u.endAt);
+              if (start <= currentWeekEnd && end >= currentWeekStart) { 
+                unavailHours += 8; // Simples: cada dia conta 8h
+              }
+            });
+
+            const capacityAvailable = Math.max(0, baseCapacityHours - unavailHours);
+            const occupancy = capacityAvailable > 0 ? ((scheduledTime / 60) / capacityAvailable) * 100 : 0;
+            
+            let occColor = "text-green-600";
+            let occBg = "bg-green-100";
+            if (occupancy > 70) {
+              occColor = "text-amber-600";
+              occBg = "bg-amber-100";
+            }
+            if (occupancy > 90) {
+              occColor = "text-red-600";
+              occBg = "bg-red-100";
+            }
+
+            return (
+              <Card key={t.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-slate-900 truncate" title={t.name}>{t.name}</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">{t.type}</p>
+                    </div>
+                    <Badge variant={t.source === "provider" ? "secondary" : "default"} className="text-[10px]">
+                      {t.source === "provider" ? "Externo" : "Interno"}
+                    </Badge>
+                  </div>
                   
-                  // Indisponibilidades nesta semana
-                  let unavailHours = 0;
-                  unavailabilities.filter(u => u.technicianId === t.id).forEach(u => {
-                    const start = new Date(u.startAt);
-                    const end = new Date(u.endAt);
-                    if (start <= currentWeekEnd && end >= currentWeekStart) {
-                       unavailHours += 8; // Simples: cada dia conta 8h
-                    }
-                  });
-
-                  const capacityAvailable = Math.max(0, baseCapacityHours - unavailHours);
-                  const occupancy = capacityAvailable > 0 ? ((scheduledTime / 60) / capacityAvailable) * 100 : 0;
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-4 flex-1">
+                    <div>
+                      <span className="block text-xs text-slate-500 mb-0.5">Programadas</span>
+                      <span className="font-medium text-slate-700">{scheduledHours}h</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs text-slate-500 mb-0.5">Ausência</span>
+                      <span className="font-medium text-red-500">{unavailHours}h</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs text-slate-500 mb-0.5">Capacidade</span>
+                      <span className="font-medium text-slate-700">{capacityAvailable}h</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs text-slate-500 mb-0.5">Ocupação</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${occColor}`}>{occupancy.toFixed(0)}%</span>
+                        {occupancy > 100 && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded uppercase font-bold">Sobrecarga</span>}
+                      </div>
+                    </div>
+                  </div>
                   
-                  let occColor = "text-green-600";
-                  if (occupancy > 70) occColor = "text-amber-500";
-                  if (occupancy > 90) occColor = "text-red-600";
-
-                  return (
-                    <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-medium text-slate-900">{t.name}</td>
-                      <td className="px-6 py-4 text-center text-slate-700">{scheduledHours}h</td>
-                      <td className="px-6 py-4 text-center text-red-500">{unavailHours}h</td>
-                      <td className="px-6 py-4 text-center text-slate-700">{capacityAvailable}h</td>
-                      <td className={`px-6 py-4 text-center font-bold ${occColor}`}>
-                        {occupancy.toFixed(0)}%
-                        {occupancy > 100 && <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">Sobrecarga</span>}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+                  <div className="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
+                    <div 
+                      className={`h-full ${occColor.replace('text-', 'bg-')}`} 
+                      style={{ width: `${Math.min(100, occupancy)}%` }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
       </div>
     );
   };
@@ -450,7 +481,7 @@ export const Agenda = () => {
 
         <Select className="w-48" value={technicianFilter} onChange={e => setTechnicianFilter(e.target.value)}>
           <option value="">Todos os Técnicos</option>
-          {technicians.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          {executors.map(t => <option key={t.id} value={t.id}>{t.name} ({t.type})</option>)}
         </Select>
 
         <Button 
@@ -509,7 +540,7 @@ export const Agenda = () => {
                       setModalDate(format(currentDate, 'yyyy-MM-dd'));
                       setModalStartTime("08:00");
                       setModalDuration("60");
-                      setModalTechId(o.responsibleId || "");
+                      setModalTechId(o.responsibleId || o.providerId || "");
                     }}>
                       Programar
                     </Button>
@@ -539,10 +570,10 @@ export const Agenda = () => {
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Técnico</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Responsável</label>
                 <Select value={unavailTechId} onChange={e => setUnavailTechId(e.target.value)}>
-                  <option value="">Selecione um técnico...</option>
-                  {technicians.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  <option value="">Selecione um responsável...</option>
+                  {executors.map(t => <option key={t.id} value={t.id}>{t.name} ({t.type})</option>)}
                 </Select>
               </div>
 
@@ -600,10 +631,10 @@ export const Agenda = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Técnico Principal</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Responsável pela OS</label>
                 <Select value={modalTechId} onChange={e => setModalTechId(e.target.value)}>
-                  <option value="">Selecione um técnico...</option>
-                  {technicians.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  <option value="">Selecione um responsável...</option>
+                  {executors.map(t => <option key={t.id} value={t.id}>{t.name} ({t.type})</option>)}
                 </Select>
               </div>
 

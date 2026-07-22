@@ -44,7 +44,7 @@ export const DetalheAtivo = () => {
 
   // Timeline events
   const timeline = [
-    ...requests.map(r => ({ date: r.createdAt, type: 'Demanda', title: r.title, link: `/demandas/${r.id}`, status: r.status })),
+    ...requests.map(r => ({ date: r.createdAt, type: 'Demanda', title: r.title, link: `/servicos/${r.id}`, status: r.status })),
     ...orders.map(o => ({ date: o.createdAt, type: 'Ordem', title: o.technicalDescription, link: `/ordens/${o.id}`, status: o.status }))
   ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -93,7 +93,7 @@ export const DetalheAtivo = () => {
             <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-1">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">Total de Demandas</p>
+            <p className="text-xs text-slate-500 font-medium">Total de Manutenções Corretivas</p>
             <p className="font-semibold text-lg">{requests.length}</p>
           </CardContent>
         </Card>
