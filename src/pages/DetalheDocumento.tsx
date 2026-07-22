@@ -135,6 +135,7 @@ export const DetalheDocumento = () => {
       case "Atenção": return <Badge variant="warning">{status}</Badge>;
       case "Crítico": return <Badge variant="danger">{status}</Badge>;
       case "Vencido": return <Badge className="bg-red-700 hover:bg-red-800 text-white border-transparent">{status}</Badge>;
+      case "Sem validade definida": return <Badge variant="secondary">{status}</Badge>;
       default: return <Badge variant="default">{status}</Badge>;
     }
   };

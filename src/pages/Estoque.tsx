@@ -65,17 +65,14 @@ export const Estoque = () => {
           <p className="text-sm text-slate-500">Controle materiais, movimentações e necessidades de reposição.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
+          <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Entrada</Button>
+          <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Saída"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Saída</Button>
+          <Button variant="outline" className="gap-2" onClick={() => setShowSolicitacao(true)}><PackageOpen className="w-4 h-4" /> Solicitar Material</Button>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes")}><Search className="w-4 h-4" /> Consultar Movimentações</Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/fila")}><ShoppingCart className="w-4 h-4" /> Solicitações</Button>
           <Button variant="create" className="gap-2" onClick={() => setShowNovoMaterial(true)}><Plus className="w-4 h-4" /> Novo Material</Button>
         </PageHeaderActionsContainer>
       </PageHeader>
-      
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Entrada</Button>
-        <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Saída"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Saída</Button>
-        <Button variant="outline" className="gap-2" onClick={() => setShowSolicitacao(true)}><PackageOpen className="w-4 h-4" /> Solicitar Material</Button>
-        <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes")}><Search className="w-4 h-4" /> Consultar Movimentações</Button>
-      </div>
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

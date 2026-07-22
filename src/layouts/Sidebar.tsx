@@ -71,15 +71,15 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
               "flex items-center justify-between w-full h-11 px-4 mx-2 rounded-md transition-colors text-sm pr-6",
               hasActiveChild && !isExpanded
                 ? "bg-white/10 text-white font-medium"
-                : "text-white/90 hover:bg-white/10 hover:text-white"
+                : "text-white hover:bg-white/10 hover:text-white"
             )}
             style={{ width: 'calc(100% - 16px)' }}
           >
             <div className="flex items-center">
-              <item.icon className="w-[18px] h-[18px] mr-2.5 opacity-90" />
+              <item.icon className="w-[18px] h-[18px] mr-2.5 " />
               {item.label}
             </div>
-            {isExpanded ? <ChevronDown className="w-4 h-4 opacity-70" /> : <ChevronRight className="w-4 h-4 opacity-70" />}
+            {isExpanded ? <ChevronDown className="w-4 h-4 " /> : <ChevronRight className="w-4 h-4 " />}
           </button>
           
           {isExpanded && (
@@ -100,12 +100,12 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         className={cn(
           "flex items-center h-11 px-4 mx-2 rounded-md mb-1 transition-colors text-sm",
           isActive 
-            ? "bg-white/15 text-white font-medium border-l-4 border-white" 
-            : "text-white/90 hover:bg-white/10 hover:text-white",
+            ? "bg-white/15 text-white font-medium" 
+            : "text-white hover:bg-white/10 hover:text-white",
           isSubItem ? "pl-11 h-10" : ""
         )}
       >
-        {!isSubItem && <item.icon className="w-[18px] h-[18px] mr-2.5 opacity-90" />}
+        {!isSubItem && <item.icon className="w-[18px] h-[18px] mr-2.5 " />}
         {isSubItem && <div className="w-1.5 h-1.5 rounded-full bg-white/40 mr-3" />}
         {item.label}
       </Link>
@@ -130,7 +130,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         <div className="h-16 flex items-center justify-between px-6 mb-4 mt-2">
           <div className="text-white font-bold text-xl tracking-tight">GSI / CNC</div>
           <button 
-            className="md:hidden text-white/80 hover:text-white p-1"
+            className="md:hidden text-white hover:text-white p-1"
             onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -141,7 +141,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
           <div className="flex flex-col">
             {navItems.map(item => renderLink(item))}
             
-            <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-white/65 uppercase tracking-wider">
+            <div className="mt-6 mb-2 px-6 text-[11px] font-semibold text-white uppercase tracking-wider">
               Configurações
             </div>
             {adminItems.map(item => renderLink(item))}

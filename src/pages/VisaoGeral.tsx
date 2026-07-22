@@ -98,19 +98,25 @@ export const VisaoGeral = () => {
 
   }, []);
 
-  const StatCard = ({ title, value, icon: Icon, colorClass, link }: any) => (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(link)}>
+  const StatCard = ({ title, value, icon: Icon, colorClass, link }: any) => {
+    const isZero = value === 0;
+    const finalColorClass = isZero ? "text-slate-400" : colorClass;
+    const bgClass = isZero ? "bg-slate-50 text-slate-400" : `bg-slate-100 ${colorClass}`;
+    
+    return (
+    <Card className="cursor-pointer hover:border-brand-300 hover:shadow-sm transition-all" onClick={() => navigate(link)}>
       <CardContent className="p-6 flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-          <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
+          <p className={`text-3xl font-bold ${finalColorClass}`}>{value}</p>
         </div>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-slate-100 ${colorClass}`}>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${bgClass}`}>
           <Icon className="w-6 h-6" />
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">

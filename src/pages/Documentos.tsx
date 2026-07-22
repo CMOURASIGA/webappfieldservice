@@ -31,7 +31,7 @@ export const Documentos = () => {
     total: documents.length,
     criticos: documents.filter(d => getDocStatus(d) === "Crítico").length,
     vencidos: documents.filter(d => getDocStatus(d) === "Vencido").length,
-    aVencer: documents.filter(d => getDocStatus(d) === "A Vencer").length,
+    atencao: documents.filter(d => getDocStatus(d) === "Atenção").length,
     semAnexo: documents.filter(d => !d.fileUrl).length,
   };
 
@@ -39,7 +39,7 @@ export const Documentos = () => {
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Críticos") return getDocStatus(d) === "Crítico";
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
-    if (statusFilter === "A Vencer") return getDocStatus(d) === "A Vencer";
+    if (statusFilter === "Atenção") return getDocStatus(d) === "Atenção";
     if (statusFilter === "Falta Anexo") return !d.fileUrl;
     return true;
   });
@@ -79,9 +79,9 @@ export const Documentos = () => {
           <p className="text-sm font-medium text-slate-600 mb-1">Vencidos</p>
           <p className="text-2xl font-bold text-orange-600">{metrics.vencidos}</p>
         </button>
-        <button onClick={() => setStatusFilter("A Vencer")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "A Vencer" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">A Vencer (30d)</p>
-          <p className="text-2xl font-bold text-amber-500">{metrics.aVencer}</p>
+        <button onClick={() => setStatusFilter("Atenção")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atenção" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Atenção (30d)</p>
+          <p className="text-2xl font-bold text-amber-500">{metrics.atencao}</p>
         </button>
         <button onClick={() => setStatusFilter("Falta Anexo")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Falta Anexo" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
           <p className="text-sm font-medium text-slate-600 mb-1">Sem Anexo</p>
@@ -95,7 +95,8 @@ export const Documentos = () => {
           const status = getDocStatus(doc);
           let badgeClass = "bg-green-100 text-green-700";
           if (status === "Crítico" || status === "Vencido") badgeClass = "bg-red-100 text-red-700";
-          else if (status === "A Vencer") badgeClass = "bg-amber-100 text-amber-700";
+          else if (status === "Atenção") badgeClass = "bg-amber-100 text-amber-700";
+          else if (status === "Sem validade definida") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
             <Card key={doc.id} className="hover:border-brand-300 transition-colors flex flex-col">
@@ -114,7 +115,7 @@ export const Documentos = () => {
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(doc.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Emissão:</span> {doc.issueDate ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : 'N/A'}</p>
                   <p><span className="font-medium text-slate-500">Vencimento:</span> {doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Não possui'}</p>
-                  {!doc.fileUrl && <p className="text-orange-600 font-semibold mt-1">Falta arquivo anexado</p>}
+                  {!doc.fileUrl && <div className="mt-2"><Badge variant="outline" className="text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">Sem anexo</Badge></div>}
                 </div>
 
                 <div className="flex gap-2 pt-3 border-t border-slate-100">

@@ -187,7 +187,7 @@ export interface PreventivePlan {
   active: boolean;
 }
 
-export type DocumentStatus = "Vigente" | "Atenção" | "Crítico" | "Vencido" | "A vencer" | "Sem validade definida";
+export type DocumentStatus = "Vigente" | "Atenção" | "Crítico" | "Vencido" | "Sem validade definida";
 
 export interface DocumentVersion {
   id: string;

@@ -93,7 +93,7 @@ export const Preventivas = () => {
           <p className="text-2xl font-bold text-green-600">{metrics.emDia}</p>
         </button>
         <button onClick={() => setStatusFilter("Próximas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Próximas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">A Vencer (30d)</p>
+          <p className="text-sm font-medium text-slate-600 mb-1">Atenção (30d)</p>
           <p className="text-2xl font-bold text-orange-500">{metrics.proximas}</p>
         </button>
         <button onClick={() => setStatusFilter("Atrasadas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atrasadas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>

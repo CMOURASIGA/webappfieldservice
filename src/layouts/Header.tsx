@@ -24,7 +24,8 @@ export const Header = ({ onMenuClick }: { onMenuClick?: () => void }) => {
           </div>
           <div className="flex flex-col hidden lg:flex">
             <span className="text-sm font-semibold text-slate-900 leading-tight">{currentUser?.name}</span>
-            <span className="text-[11px] text-slate-500">{currentUser?.unitId === 'u-df' ? 'Brasília' : currentUser?.unitId === 'u-rj' ? 'Rio de Janeiro' : 'Todas as Unidades'}</span>
+            <span className="text-xs text-slate-600 font-medium">{currentUser?.role === 'admin' ? 'Administrador' : currentUser?.role === 'manager' ? 'Gestor' : 'Técnico'}</span>
+            <span className="text-[11px] text-slate-500">{currentUser?.unitId === 'u-df' ? 'Sede Brasília' : currentUser?.unitId === 'u-rj' ? 'Escritório RJ' : 'Todas as unidades'}</span>
           </div>
         </div>
       </div>
