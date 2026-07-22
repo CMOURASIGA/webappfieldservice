@@ -3,24 +3,21 @@ import { storageService } from "../services/storageService";
 import { StockMaterial, Unit } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { Select } from "../components/ui/Select";
 import { Badge } from "../components/ui/Badge";
-import { Search, Package, AlertTriangle, XOctagon, Plus, PackageOpen } from "lucide-react";
+import { Package, AlertTriangle, Plus, PackageOpen, Inbox, ShoppingCart, ArrowRightLeft, Search } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Estoque = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [materials, setMaterials] = useState<StockMaterial[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
-  const [unitFilter, setUnitFilter] = useState(currentUser?.unitId || "");
 
   const loadData = () => {
-    setMaterials(storageService.get("gsi_stock_materials"));
-    setUnits(storageService.get("gsi_units"));
+    setMaterials(storageService.get("gsi_stock_materials") || []);
+    setUnits(storageService.get("gsi_units") || []);
   };
 
   useEffect(() => {
@@ -29,181 +26,131 @@ export const Estoque = () => {
 
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || id;
 
-  const filteredMaterials = materials.filter(m => {
-    const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                        m.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "Todos" || m.status === statusFilter;
-    const matchUnit = !unitFilter || m.unitId === unitFilter;
-    return matchSearch && matchStatus && matchUnit;
-  });
-
-  const stats = {
+  // Calculos baseados na regra:
+  // Saldo disponível = physicalBalance - reservedBalance
+  // Reposição necessária quando availableBalance <= minStock
+  
+  const metrics = {
     total: materials.length,
-    normal: materials.filter(m => m.status === "Normal").length,
-    atencao: materials.filter(m => m.status === "Atenção").length,
-    critico: materials.filter(m => m.status === "Crítico").length,
-    semSaldo: materials.filter(m => m.status === "Sem saldo").length,
+    reposicaoNecessaria: materials.filter(m => (m.physicalBalance - m.reservedBalance) <= m.minStock).length,
+    abaixoMinimo: materials.filter(m => m.physicalBalance < m.minStock).length,
+    reservaMaior: materials.filter(m => m.reservedBalance > m.physicalBalance).length,
+    solicitacoesPendentes: 0, // Mock
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Normal": return <Badge variant="success">Normal</Badge>;
-      case "Atenção": return <Badge variant="warning">Atenção</Badge>;
-      case "Crítico": return <Badge variant="default" className="bg-orange-500 text-white border-orange-500">Crítico</Badge>;
-      case "Sem saldo": return <Badge variant="default">Sem saldo</Badge>;
-      default: return <Badge variant="default">{status}</Badge>;
-    }
-  };
+  const filteredMaterials = materials.filter(m => {
+    if (statusFilter === "Todos") return true;
+    if (statusFilter === "Reposição") return (m.physicalBalance - m.reservedBalance) <= m.minStock;
+    if (statusFilter === "Abaixo Minimo") return m.physicalBalance < m.minStock;
+    if (statusFilter === "Reserva Maior") return m.reservedBalance > m.physicalBalance;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Estoque e Materiais</h1>
-          <p className="text-sm text-slate-500">Gestão de materiais para manutenção.</p>
-        </div>
-        <div className="flex gap-2">
-          {/* We will implement FilaEstoque later */}
-          <Link to="/estoque/fila">
-            <Button variant="secondary" className="flex items-center gap-2">
-              <PackageOpen className="w-4 h-4" />
-              Fila de Solicitações
-            </Button>
-          </Link>
-          <Button className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Material
-          </Button>
-        </div>
+      
+      {/* Ações Rápidas no Topo */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button className="gap-2"><Plus className="w-4 h-4" /> Novo Material</Button>
+        <Button variant="outline" className="gap-2"><ArrowRightLeft className="w-4 h-4" /> Registrar Entrada/Saída</Button>
+        <Button variant="outline" className="gap-2"><PackageOpen className="w-4 h-4" /> Solicitar Material</Button>
+        <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/fila")}><ShoppingCart className="w-4 h-4" /> Solicitações</Button>
       </div>
 
+      <div>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Materiais e Estoque</h1>
+        <p className="text-sm text-slate-500">Gestão central de itens para manutenção.</p>
+      </div>
+
+      {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="border-l-4 border-l-brand-500">
-          <CardContent className="p-4 flex flex-col justify-center">
-            <p className="text-sm font-medium text-slate-600 mb-1">Total Cadastrados</p>
-            <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-              <Package className="w-5 h-5 text-slate-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4 flex flex-col justify-center">
-            <p className="text-sm font-medium text-slate-600 mb-1">Estoque Normal</p>
-            <p className="text-2xl font-bold text-slate-900">{stats.normal}</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardContent className="p-4 flex flex-col justify-center">
-            <p className="text-sm font-medium text-slate-600 mb-1">Atenção</p>
-            <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.atencao}</p>
-              <AlertTriangle className="w-5 h-5 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="p-4 flex flex-col justify-center">
-            <p className="text-sm font-medium text-slate-600 mb-1">Crítico</p>
-            <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-slate-900">{stats.critico}</p>
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="p-4 flex flex-col justify-center">
-            <p className="text-sm font-medium text-slate-600 mb-1">Sem Saldo</p>
-            <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-red-600">{stats.semSaldo}</p>
-              <XOctagon className="w-5 h-5 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <button onClick={() => setStatusFilter("Todos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Total de Itens</p>
+          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Reposição")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Reposição" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Reposição Necessária</p>
+          <p className="text-2xl font-bold text-orange-600">{metrics.reposicaoNecessaria}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Abaixo Minimo")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Abaixo Minimo" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Abaixo do Mínimo</p>
+          <p className="text-2xl font-bold text-red-600">{metrics.abaixoMinimo}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Reserva Maior")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Reserva Maior" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Reserva &gt; Disp.</p>
+          <p className="text-2xl font-bold text-red-600">{metrics.reservaMaior}</p>
+        </button>
       </div>
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <Input 
-                placeholder="Buscar por nome ou código..." 
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="w-full md:w-48">
-              <Select value={unitFilter} onChange={e => setUnitFilter(e.target.value)}>
-                <option value="">Todas as Unidades</option>
-                {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-              </Select>
-            </div>
-            <div className="w-full md:w-48">
-              <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="Todos">Todos os Status</option>
-                <option value="Normal">Normal</option>
-                <option value="Atenção">Atenção</option>
-                <option value="Crítico">Crítico</option>
-                <option value="Sem saldo">Sem saldo</option>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filtros Contextuais */}
+      {statusFilter !== "Todos" && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-500">Filtro aplicado:</span>
+          <Badge variant="outline" className="bg-brand-50 text-brand-700 border-brand-200 flex items-center gap-1">
+            {statusFilter}
+            <button onClick={() => setStatusFilter("Todos")} className="ml-1 hover:text-brand-900 font-bold">×</button>
+          </Badge>
+        </div>
+      )}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Código</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Material</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade/Local</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Saldo Físico</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Reservado</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Disponível</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredMaterials.map(m => (
-                  <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{m.code}</td>
-                    <td className="px-6 py-4 flex flex-col">
-                      <span className="font-medium text-slate-900">{m.name}</span>
-                      <span className="text-xs text-slate-500">{m.category}</span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{getUnitName(m.unitId)}</td>
-                    <td className="px-6 py-4 text-right">{m.physicalBalance} {m.unit}</td>
-                    <td className="px-6 py-4 text-right text-orange-600">{m.reservedBalance} {m.unit}</td>
-                    <td className="px-6 py-4 text-right font-medium text-brand-600">{m.availableBalance} {m.unit}</td>
-                    <td className="px-6 py-4">{getStatusBadge(m.status)}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Button variant="ghost" size="sm" className="text-brand-600 h-8 px-2">Ver</Button>
-                      <Button variant="ghost" size="sm" className="text-brand-600 h-8 px-2">Movimentar</Button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredMaterials.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
-                      Nenhum material encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {/* Cards Operacionais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filteredMaterials.map(mat => {
+          const disponivel = mat.physicalBalance - mat.reservedBalance;
+          const reposicao = disponivel <= mat.minStock;
+          
+          return (
+            <Card key={mat.id} className="hover:border-brand-300 transition-colors flex flex-col">
+              <CardContent className="p-4 flex flex-col flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <h3 className="font-semibold text-slate-900 truncate" title={mat.name}>{mat.name}</h3>
+                    <p className="text-xs text-slate-500 font-mono mt-0.5">{mat.code}</p>
+                  </div>
+                  {reposicao && <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 whitespace-nowrap">Reposição</Badge>}
+                </div>
+
+                <div className="text-xs text-slate-500 mb-3 truncate" title={getUnitName(mat.unitId)}>
+                  Unidade: {getUnitName(mat.unitId)}
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-100 mb-4">
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Físico</p>
+                    <p className="font-semibold text-slate-700">{mat.physicalBalance}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Reserva</p>
+                    <p className={`font-semibold ${mat.reservedBalance > mat.physicalBalance ? 'text-red-600' : 'text-slate-700'}`}>{mat.reservedBalance}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Disp.</p>
+                    <p className={`font-semibold ${disponivel <= 0 ? 'text-red-600' : 'text-green-600'}`}>{disponivel}</p>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-500 flex justify-between mb-4">
+                  <span>Mínimo: {mat.minStock}</span>
+                  <span>Ideal: {mat.idealStock || 0}</span>
+                </div>
+
+                {/* Ações dentro do card */}
+                <div className="mt-auto flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                  <Button variant="outline" size="sm" className="flex-1 text-xs h-8">Abrir</Button>
+                  <Button variant="outline" size="sm" className="flex-1 text-xs h-8">Solicitar</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        
+        {filteredMaterials.length === 0 && (
+          <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg">
+             <p className="text-slate-500">Nenhum material encontrado para o filtro atual.</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
     </div>
   );
 };

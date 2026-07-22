@@ -73,7 +73,7 @@ export const DetalhePrestador = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/prestadores")}>Voltar</Button>
-          {(currentUser?.role === "Operador GSI" || currentUser?.role === "Gestor GSI" || currentUser?.role === "Administrador") && (
+          {true && (
             <Link to={`/prestadores/${provider.id}/editar`}>
               <Button>Editar Prestador</Button>
             </Link>

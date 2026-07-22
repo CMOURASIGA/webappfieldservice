@@ -19,21 +19,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const allUsers = storageService.get("gsi_users");
     setUsers(allUsers);
     
-    const savedUserId = localStorage.getItem("gsi_current_profile");
-    if (savedUserId) {
-      const user = allUsers.find(u => u.id === savedUserId);
-      if (user) setCurrentUser(user);
+    // Forçar sempre como Administrador
+    const adminUser = allUsers.find((u: User) => u.role === "Administrador");
+    if (adminUser) {
+      setCurrentUser(adminUser);
     } else if (allUsers.length > 0) {
       setCurrentUser(allUsers[0]);
     }
   }, []);
 
   const switchUser = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
-      localStorage.setItem("gsi_current_profile", userId);
-    }
+    // Disable switching
   };
 
   return (

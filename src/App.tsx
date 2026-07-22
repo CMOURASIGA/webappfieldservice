@@ -5,9 +5,9 @@ import { MainLayout } from "./layouts/MainLayout";
 import { Estoque } from "./pages/Estoque";
 import { FilaEstoque } from "./pages/FilaEstoque";
 import { VisaoGeral } from "./pages/VisaoGeral";
-import { Demandas } from "./pages/Demandas";
-import { NovaDemanda } from "./pages/NovaDemanda";
-import { DetalheDemanda } from "./pages/DetalheDemanda";
+import { Servicos } from "./pages/Servicos";
+import { NovoServico } from "./pages/NovoServico";
+import { DetalheServico } from "./pages/DetalheServico";
 import { Ordens } from "./pages/Ordens";
 import { NovaOrdem } from "./pages/NovaOrdem";
 import { DetalheOrdem } from "./pages/DetalheOrdem";
@@ -40,9 +40,9 @@ export default function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<VisaoGeral />} />
             <Route path="agenda" element={<Agenda />} />
-            <Route path="demandas" element={<Demandas />} />
-            <Route path="demandas/nova" element={<NovaDemanda />} />
-            <Route path="demandas/:id" element={<DetalheDemanda />} />
+            <Route path="servicos" element={<Servicos />} />
+            <Route path="servicos/nova" element={<NovoServico />} />
+            <Route path="servicos/:id" element={<DetalheServico />} />
             
             <Route path="ordens" element={<Ordens />} />
             <Route path="ordens/nova" element={<NovaOrdem />} />

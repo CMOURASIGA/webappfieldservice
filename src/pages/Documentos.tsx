@@ -1,267 +1,137 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import { storageService } from "../services/storageService";
 import { Document, Unit } from "../types";
 import { Card, CardContent } from "../components/ui/Card";
-import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { Select } from "../components/ui/Select";
-import { format, isValid, parseISO, differenceInDays } from "date-fns";
-import { Search, Plus, FileText, AlertTriangle, CheckCircle, ShieldAlert, Clock } from "lucide-react";
+import { Badge } from "../components/ui/Badge";
+import { FileText, AlertTriangle, Plus, Search, Calendar } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { isPast, parseISO, differenceInDays, format } from "date-fns";
 
 export const Documentos = () => {
+  const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [search, setSearch] = useState("");
-  
   const [statusFilter, setStatusFilter] = useState("Todos");
-  const [unitFilter, setUnitFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [responsibleFilter, setResponsibleFilter] = useState("");
-  const [bodyFilter, setBodyFilter] = useState("");
-  
-  const [users, setUsers] = useState<any[]>([]);
-  
-  useEffect(() => {
-    setUsers(storageService.get("gsi_users") || []);
-  }, []);
-
 
   useEffect(() => {
-    loadData();
+    setDocuments(storageService.get("gsi_documents") || []);
+    setUnits(storageService.get("gsi_units") || []);
   }, []);
 
-  const loadData = () => {
-    const rawDocs = storageService.get("gsi_documents");
-    // Auto-update status based on expirationDate and alert config
-    const updatedDocs = rawDocs.map(doc => {
-      if (!doc.expirationDate) {
-        return { ...doc, status: "Sem validade definida" };
-      }
+  const getUnitName = (id?: string) => {
+    if (!id) return "Geral";
+    return units.find(u => u.id === id)?.name || id;
+  };
+
+  const getDocStatus = (doc: Document) => {
+    if (doc.status === "Crítico") return "Crítico";
+    if (doc.expirationDate) {
+      if (isPast(parseISO(doc.expirationDate))) return "Vencido";
       const days = differenceInDays(parseISO(doc.expirationDate), new Date());
-      let newStatus = doc.status;
-      
-      const criticalDays = doc.alertDaysCritical || 15;
-      const attentionDays = doc.alertDaysAttention || 30;
-
-      if (days < 0) {
-        newStatus = "Vencido";
-      } else if (days <= criticalDays) {
-        newStatus = "Crítico";
-      } else if (days <= attentionDays) {
-        newStatus = "Atenção";
-      } else {
-        newStatus = "Vigente";
-      }
-      return { ...doc, status: newStatus };
-    });
-    setDocuments(updatedDocs);
-    setUnits(storageService.get("gsi_units"));
-  };
-
-  const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Vigente": return <Badge variant="success">{status}</Badge>;
-      case "Atenção": return <Badge variant="warning">{status}</Badge>;
-      case "Crítico": return <Badge variant="danger">{status}</Badge>;
-      case "Vencido": return <Badge className="bg-red-700 hover:bg-red-800 text-white border-transparent">{status}</Badge>;
-      default: return <Badge variant="default">{status}</Badge>;
+      if (days <= 30) return "A Vencer";
     }
+    return "Válido";
   };
 
-  const getDaysRemaining = (doc: Document) => {
-    if (!doc.expirationDate) return "-";
-    const days = differenceInDays(parseISO(doc.expirationDate), new Date());
-    if (days < 0) return <span className="text-red-600 font-medium">{-days} dias em atraso</span>;
-    if (days === 0) return <span className="text-red-600 font-medium">Vence hoje</span>;
-    if (days <= (doc.alertDaysCritical || 15)) return <span className="text-red-600 font-medium">{days} dias</span>;
-    if (days <= (doc.alertDaysAttention || 30)) return <span className="text-amber-600 font-medium">{days} dias</span>;
-    return <span className="text-green-600 font-medium">{days} dias</span>;
+  const metrics = {
+    total: documents.length,
+    criticos: documents.filter(d => getDocStatus(d) === "Crítico").length,
+    vencidos: documents.filter(d => getDocStatus(d) === "Vencido").length,
+    aVencer: documents.filter(d => getDocStatus(d) === "A Vencer").length,
+    semAnexo: documents.filter(d => !d.fileUrl).length,
   };
 
-  const stats = {
-    vigente: documents.filter(d => d.status === "Vigente").length,
-    atencao: documents.filter(d => d.status === "Atenção").length,
-    critico: documents.filter(d => d.status === "Crítico").length,
-    vencido: documents.filter(d => d.status === "Vencido").length,
-  };
-
-  
-  const filteredDocs = documents.filter(doc => {
-    const matchesSearch = ((doc.title || "").toString().toLowerCase()).includes(search.toLowerCase()) || 
-                          ((doc.number || "").toString().toLowerCase()).includes(search.toLowerCase()) ||
-                          ((doc.regulatoryBody || "").toString().toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = statusFilter === "Todos" || doc.status === statusFilter;
-    const matchesUnit = !unitFilter || doc.unitId === unitFilter;
-    const matchesType = !typeFilter || doc.type === typeFilter;
-    const matchesResponsible = !responsibleFilter || doc.responsibleId === responsibleFilter;
-    const matchesBody = !bodyFilter || (doc.regulatoryBody || doc.issuer) === bodyFilter;
-    
-    return matchesSearch && matchesStatus && matchesUnit && matchesType && matchesResponsible && matchesBody;
+  const filteredDocs = documents.filter(d => {
+    if (statusFilter === "Todos") return true;
+    if (statusFilter === "Críticos") return getDocStatus(d) === "Crítico";
+    if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
+    if (statusFilter === "A Vencer") return getDocStatus(d) === "A Vencer";
+    if (statusFilter === "Falta Anexo") return !d.fileUrl;
+    return true;
   });
-  
-  const allTypes = Array.from(new Set(documents.map(d => d.type).filter(Boolean)));
-  const allBodies = Array.from(new Set(documents.map(d => d.regulatoryBody || d.issuer).filter(Boolean)));
-
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Documentos Regulatórios</h1>
-          <p className="text-sm text-slate-500">Painel de conformidade, licenças e alvarás.</p>
-        </div>
-        <Link to="/documentos/novo">
-          <Button className="flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Novo Documento
-          </Button>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">Vigentes</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.vigente}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
-              <CheckCircle className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-amber-500">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">Atenção</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.atencao}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-amber-100 text-amber-600">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">Crítico</p>
-              <p className="text-2xl font-bold text-slate-900">{stats.critico}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-red-700 bg-red-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600 mb-1">Vencidos</p>
-              <p className="text-2xl font-bold text-red-700">{stats.vencido}</p>
-            </div>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-200 text-red-700">
-              <Clock className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="lg:col-span-2 relative">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <Input 
-                placeholder="Buscar por título, número ou órgão..." 
-                className="pl-9"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-            <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-              <option value="Todos">Todos os Status</option>
-              <option value="Vigente">Vigentes</option>
-              <option value="Atenção">Atenção</option>
-              <option value="Crítico">Crítico</option>
-              <option value="Vencido">Vencidos</option>
-            </Select>
-            <Select value={unitFilter} onChange={e => setUnitFilter(e.target.value)}>
-              <option value="">Todas as Unidades</option>
-              {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </Select>
-            <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-              <option value="">Qualquer tipo</option>
-              {allTypes.map(t => <option key={t as string} value={t as string}>{t as string}</option>)}
-            </Select>
-            <Select value={bodyFilter} onChange={e => setBodyFilter(e.target.value)}>
-              <option value="">Qualquer Órgão/Emissor</option>
-              {allBodies.map(b => <option key={b as string} value={b as string}>{b as string}</option>)}
-            </Select>
-            <Select value={responsibleFilter} onChange={e => setResponsibleFilter(e.target.value)}>
-              <option value="">Qualquer Responsável</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Ações Rápidas */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={() => navigate("/documentos/novo")} className="gap-2">
+          <Plus className="w-4 h-4" /> Novo Documento
+        </Button>
+      </div>
 
+      <div>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Documentos Regulatórios</h1>
+        <p className="text-sm text-slate-500">Gestão de licenças, laudos, ARTs e certificados.</p>
+      </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Documento</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Órgão Regulador</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Vencimento</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Dias Restantes</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Recorrência</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredDocs.map(doc => (
-                  <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-slate-900">{doc.title}</span>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                          <span>{doc.number}</span>
-                          {doc.requiresART && <Badge className="text-[10px] py-0 px-1 bg-blue-100 text-blue-700 border-transparent">ART</Badge>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{doc.regulatoryBody || doc.issuer || '-'}</td>
-                    <td className="px-6 py-4 text-slate-600">{getUnitName(doc.unitId)}</td>
-                    <td className="px-6 py-4 text-slate-900">{doc.expirationDate ? (isValid(parseISO(doc.expirationDate)) ? (isValid(parseISO(doc.expirationDate)) ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : '-'}</td>
-                    <td className="px-6 py-4">{getDaysRemaining(doc)}</td>
-                    <td className="px-6 py-4 text-slate-600">{doc.periodicity || "Único"}</td>
-                    <td className="px-6 py-4">{getStatusBadge(doc.status)}</td>
-                    <td className="px-6 py-4">
-                      <Link to={`/documentos/${doc.id}`}>
-                        <Button variant="secondary" size="sm">Gerenciar</Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-                {filteredDocs.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
-                      Nenhum documento encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {/* Indicadores Acionáveis */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <button onClick={() => setStatusFilter("Todos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Todos</p>
+          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Críticos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Críticos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Críticos</p>
+          <p className="text-2xl font-bold text-red-600">{metrics.criticos}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Vencidos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Vencidos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Vencidos</p>
+          <p className="text-2xl font-bold text-orange-600">{metrics.vencidos}</p>
+        </button>
+        <button onClick={() => setStatusFilter("A Vencer")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "A Vencer" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">A Vencer (30d)</p>
+          <p className="text-2xl font-bold text-amber-500">{metrics.aVencer}</p>
+        </button>
+        <button onClick={() => setStatusFilter("Falta Anexo")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Falta Anexo" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
+          <p className="text-sm font-medium text-slate-600 mb-1">Sem Anexo</p>
+          <p className="text-2xl font-bold text-slate-600">{metrics.semAnexo}</p>
+        </button>
+      </div>
+
+      {/* Cards Operacionais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredDocs.map(doc => {
+          const status = getDocStatus(doc);
+          let badgeClass = "bg-green-100 text-green-700";
+          if (status === "Crítico" || status === "Vencido") badgeClass = "bg-red-100 text-red-700";
+          else if (status === "A Vencer") badgeClass = "bg-amber-100 text-amber-700";
+
+          return (
+            <Card key={doc.id} className="hover:border-brand-300 transition-colors flex flex-col">
+              <CardContent className="p-4 flex flex-col flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="pr-2">
+                    <h3 className="font-semibold text-slate-900 line-clamp-1" title={doc.title}>{doc.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 uppercase font-bold">{doc.type}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 text-xs font-bold rounded-sm ${badgeClass}`}>
+                    {status}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1 mt-2">
+                  <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(doc.unitId)}</p>
+                  <p><span className="font-medium text-slate-500">Emissão:</span> {doc.issueDate ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : 'N/A'}</p>
+                  <p><span className="font-medium text-slate-500">Vencimento:</span> {doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Não possui'}</p>
+                  {!doc.fileUrl && <p className="text-orange-600 font-semibold mt-1">Falta arquivo anexado</p>}
+                </div>
+
+                <div className="flex gap-2 pt-3 border-t border-slate-100">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/documentos/${doc.id}`)}>Abrir</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+        {filteredDocs.length === 0 && (
+          <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg">
+             <p className="text-slate-500">Nenhum documento encontrado para o filtro atual.</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
     </div>
   );
 };

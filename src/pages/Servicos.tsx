@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Request, Unit, Location, Category } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
+import { Plus, Calendar, Wrench, Search, Clock, AlertCircle } from "lucide-react";
 
-export const Demandas = () => {
+export const Servicos = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<Request[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -15,7 +17,7 @@ export const Demandas = () => {
   const [statusFilter, setStatusFilter] = useState<string>("Todas");
 
   useEffect(() => {
-    setRequests(storageService.get("gsi_requests").sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    setRequests(storageService.get("gsi_requests").sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setUnits(storageService.get("gsi_units"));
     setLocations(storageService.get("gsi_locations"));
     setCategories(storageService.get("gsi_categories"));
@@ -61,90 +63,102 @@ export const Demandas = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Demandas</h1>
-          <p className="text-sm text-slate-500">Acompanhamento e triagem de solicitações.</p>
-        </div>
-        <Link to="/demandas/nova">
-          <Button>Nova Demanda</Button>
-        </Link>
+      
+      {/* Ações Rápidas no Topo */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={() => navigate("/servicos/nova")} className="gap-2">
+          <Plus className="w-4 h-4" /> Novo Serviço
+        </Button>
+        <Button variant="outline" onClick={() => navigate("/preventivas/nova")} className="gap-2">
+          <Calendar className="w-4 h-4" /> Nova Preventiva
+        </Button>
+        <Button variant="outline" onClick={() => navigate("/ordens/nova")} className="gap-2">
+          <Wrench className="w-4 h-4" /> Nova OS
+        </Button>
+        <Button variant="outline" onClick={() => navigate("/agenda")} className="gap-2">
+          <Calendar className="w-4 h-4" /> Ver Agenda
+        </Button>
       </div>
 
+      <div>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Serviços</h1>
+        <p className="text-sm text-slate-500">Gestão e acompanhamento de solicitações e necessidades.</p>
+      </div>
+
+      {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <button onClick={() => setStatusFilter("Todas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Todas</p>
+          <p className="text-sm font-medium text-slate-600 mb-1">Todos</p>
           <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
         </button>
         <button onClick={() => setStatusFilter("Abertas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Abertas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Abertas</p>
+          <p className="text-sm font-medium text-slate-600 mb-1">Abertos</p>
           <p className="text-2xl font-bold text-slate-900">{stats.abertas}</p>
         </button>
         <button onClick={() => setStatusFilter("Em Triagem")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Em Triagem" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Em Triagem</p>
+          <p className="text-sm font-medium text-slate-600 mb-1">Sem Planejamento</p>
           <p className="text-2xl font-bold text-blue-600">{stats.emTriagem}</p>
         </button>
         <button onClick={() => setStatusFilter("Convertidas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Convertidas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Convertidas</p>
+          <p className="text-sm font-medium text-slate-600 mb-1">Convertidos em OS</p>
           <p className="text-2xl font-bold text-green-600">{stats.convertidas}</p>
         </button>
-        <button onClick={() => setStatusFilter("Rejeitadas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Rejeitadas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Rejeitadas</p>
-          <p className="text-2xl font-bold text-red-600">{stats.rejeitadas}</p>
-        </button>
+      </div>
+      
+      {/* Cards Operacionais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {filteredRequests.map(req => (
+          <Card key={req.id} className="hover:border-brand-300 transition-colors">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-slate-900 truncate" title={req.title}>{req.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1">{req.protocol}</p>
+                </div>
+                {getStatusBadge(req.status)}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-xs text-slate-500">Unidade</p>
+                  <p className="font-medium text-slate-700 truncate">{getUnitName(req.unitId)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Local</p>
+                  <p className="font-medium text-slate-700 truncate">{getLocationName(req.locationId)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Data</p>
+                  <p className="font-medium text-slate-700">{(isValid(parseISO(req.createdAt)) ? format(parseISO(req.createdAt), 'dd/MM/yyyy') : 'Inválida')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Prioridade</p>
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(req.suggestedPriority)}`}>
+                    {req.suggestedPriority}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-slate-100 flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => navigate(`/servicos/${req.id}`)}>
+                  Abrir Serviço
+                </Button>
+                {req.status !== "Convertida em ordem" && (
+                  <Button variant="default" className="flex-1" onClick={() => navigate("/ordens/nova")}>
+                    Gerar OS
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {filteredRequests.length === 0 && (
+          <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg">
+             <p className="text-slate-500">Nenhum serviço encontrado para o filtro atual.</p>
+          </div>
+        )}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-6 py-4 border-b border-slate-200">Protocolo</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Prioridade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Unidade</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Local</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Categoria</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Título</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Data</th>
-                  <th className="px-6 py-4 border-b border-slate-200">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredRequests.map(req => (
-                  <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{req.protocol}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(req.suggestedPriority)}`}>
-                        {req.suggestedPriority}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">{getUnitName(req.unitId)}</td>
-                    <td className="px-6 py-4 text-slate-600">{getLocationName(req.locationId)}</td>
-                    <td className="px-6 py-4 text-slate-600">{getCategoryName(req.categoryId)}</td>
-                    <td className="px-6 py-4 text-slate-900 truncate max-w-[200px]" title={req.title}>{req.title}</td>
-                    <td className="px-6 py-4 text-slate-600">{(isValid(parseISO(req.createdAt)) ? format(parseISO(req.createdAt), 'dd/MM/yyyy') : 'Data Inválida')}</td>
-                    <td className="px-6 py-4">{getStatusBadge(req.status)}</td>
-                    <td className="px-6 py-4 text-right">
-                      <Link to={`/demandas/${req.id}`}>
-                        <Button variant="ghost" size="sm">Ver</Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-                {filteredRequests.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="px-6 py-8 text-center text-slate-500">
-                      Nenhuma demanda encontrada para este filtro.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

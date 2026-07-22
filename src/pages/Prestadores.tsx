@@ -107,8 +107,8 @@ export const Prestadores = () => {
     </Card>
   );
 
-  const canEdit = currentUser?.role === "Operador GSI" || currentUser?.role === "Gestor GSI" || currentUser?.role === "Administrador";
-  const canToggle = currentUser?.role === "Gestor GSI" || currentUser?.role === "Administrador";
+  const canEdit = true;
+  const canToggle = true;
 
   return (
     <div className="space-y-6">

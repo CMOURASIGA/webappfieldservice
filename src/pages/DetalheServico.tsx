@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { Badge } from "../components/ui/Badge";
 import { useAuth } from "../contexts/AuthContext";
 
-export const DetalheDemanda = () => {
+export const DetalheServico = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -29,7 +29,7 @@ export const DetalheDemanda = () => {
     setUsers(storageService.get("gsi_users"));
   }, [id]);
 
-  if (!request) return <div className="p-6">Demanda não encontrada.</div>;
+  if (!request) return <div className="p-6">Serviço não encontrada.</div>;
 
   const getUnitName = (uid: string) => units.find(u => u.id === uid)?.name || "N/A";
   const getLocationName = (lid: string) => locations.find(l => l.id === lid)?.name || "N/A";
@@ -70,8 +70,8 @@ export const DetalheDemanda = () => {
       storageService.set("gsi_requests", reqs);
     }
 
-    storageService.logAudit(currentUser.id, "Demanda convertida em OS", request.id, "Request", request.status, "Convertida em ordem");
-    storageService.logAudit(currentUser.id, "OS Criada a partir de Demanda", newOs.id, "WorkOrder");
+    storageService.logAudit(currentUser.id, "Serviço convertida em OS", request.id, "Request", request.status, "Convertida em ordem");
+    storageService.logAudit(currentUser.id, "OS Criada a partir de Serviço", newOs.id, "WorkOrder");
 
     navigate(`/ordens/${newOs.id}`);
   };
@@ -80,12 +80,12 @@ export const DetalheDemanda = () => {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Demanda: {request.protocol}</h1>
+          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Serviço: {request.protocol}</h1>
           <p className="text-sm text-slate-500">Detalhes da solicitação.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => navigate("/demandas")}>Voltar</Button>
-          {(currentUser?.role === "Operador GSI" || currentUser?.role === "Gestor GSI" || currentUser?.role === "Administrador") && request.status !== "Convertida em ordem" && (
+          <Button variant="secondary" onClick={() => navigate("/servicos")}>Voltar</Button>
+          {request.status !== "Convertida em ordem" && (
             <Button onClick={handleConvert}>Converter em OS</Button>
           )}
         </div>

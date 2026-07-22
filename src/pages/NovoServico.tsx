@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { Drawer } from "../components/ui/Drawer";
 import { useAuth } from "../contexts/AuthContext";
 
-export const NovaDemanda = () => {
+export const NovoServico = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   
@@ -68,9 +68,9 @@ export const NovaDemanda = () => {
     requests.push(newRequest);
     storageService.set("gsi_requests", requests);
     
-    storageService.logAudit(currentUser.id, "Demanda Criada", newRequest.id, "Request");
+    storageService.logAudit(currentUser.id, "Serviço Criada", newRequest.id, "Request");
 
-    navigate("/demandas");
+    navigate("/servicos");
   };
 
   const handleSaveNewLocation = (e: React.FormEvent) => {
@@ -99,7 +99,7 @@ export const NovaDemanda = () => {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Demanda</h1>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Serviço</h1>
         <p className="text-sm text-slate-500">Registre uma nova solicitação de serviço.</p>
       </div>
 
@@ -144,7 +144,7 @@ export const NovaDemanda = () => {
                 onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
                 options={categories.map(c => ({ value: c.id, label: c.name }))}
               />
-              {currentUser?.role !== "Solicitante" && (
+              {true && (
                 <>
                   <Select
                     label="Ativo (Opcional)"
@@ -186,11 +186,11 @@ export const NovaDemanda = () => {
             />
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button type="button" variant="secondary" onClick={() => navigate("/demandas")}>
+              <Button type="button" variant="secondary" onClick={() => navigate("/servicos")}>
                 Cancelar
               </Button>
               <Button type="submit">
-                Salvar Demanda
+                Salvar Serviço
               </Button>
             </div>
           </form>

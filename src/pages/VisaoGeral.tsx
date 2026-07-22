@@ -1,73 +1,101 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "../components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { storageService } from "../services/storageService";
-import { Request, WorkOrder, PreventivePlan, Document } from "../types";
-import { Inbox, ClipboardList, Clock, FileText, AlertTriangle, CheckCircle, Activity, UserCog } from "lucide-react";
-import { isPast, parseISO, differenceInDays } from "date-fns";
-import { useAuth } from "../contexts/AuthContext";
+import { AlertTriangle, Clock, FileText, Package, Wrench, UserX, Inbox, CalendarDays, ShoppingCart } from "lucide-react";
+import { isPast, parseISO, startOfDay, endOfDay, addDays } from "date-fns";
 
 export const VisaoGeral = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const [metrics, setMetrics] = useState({
-    demandasAbertas: 0,
-    demandasTriagem: 0,
-    demandasAguardando: 0,
-    demandasConcluidasRecentes: 0,
-    minhasDemandas: 0,
-    
-    osEmExecucao: 0,
-    osSemResponsavel: 0,
+    manutencoesVencidas: 0,
     osAtrasadas: 0,
-    minhasOs: 0,
-    minhasOsAtrasadas: 0,
-    
-    prevAtrasadas: 0,
+    osAguardandoMaterial: 0,
+    servicosSemResponsavel: 0,
+    reposicaoNecessaria: 0,
+    solicitacoesCompra: 0,
     docVencidos: 0,
-    docAVencer: 0,
+    docCriticos: 0,
   });
 
-  useEffect(() => {
-    const requests = storageService.get("gsi_requests");
-    const orders = storageService.get("gsi_work_orders");
-    const plans = storageService.get("gsi_preventive_plans");
-    const docs = storageService.get("gsi_documents");
+  const [agenda, setAgenda] = useState({
+    hoje: 0,
+    semana: 0,
+    semResponsavel: 0,
+  });
 
-    const userId = currentUser?.id;
+  const [decisions, setDecisions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const requests = (storageService.get("gsi_requests") as any[]) || [];
+    const orders = (storageService.get("gsi_work_orders") as any[]) || [];
+    const plans = (storageService.get("gsi_preventive_plans") as any[]) || [];
+    const docs = (storageService.get("gsi_documents") as any[]) || [];
+    const materials = (storageService.get("gsi_stock_materials") as any[]) || [];
+
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const todayEnd = endOfDay(now);
+    const weekEnd = addDays(now, 7);
+
+    // Calc Metrics
+    const prevAtrasadas = plans.filter((p: any) => p.nextExecution && isPast(parseISO(p.nextExecution))).length;
+    
+    const osAtrasadas = orders.filter((o: any) => 
+      o.status !== "Concluída" && o.status !== "Cancelada" && o.deadline && isPast(parseISO(o.deadline))
+    ).length;
+
+    const osAguardandoMaterial = orders.filter((o: any) => 
+      o.status === "Aguardando material" || (o.materials && o.materials.some((m: any) => m.availability === "Indisponível"))
+    ).length;
+
+    const osSemResponsavel = orders.filter((o: any) => 
+      !o.responsibleId && o.status !== "Concluída" && o.status !== "Cancelada"
+    ).length;
+    
+    const reqSemResponsavel = requests.filter((r: any) => r.status === "Em triagem").length;
+    
+    const repoNecessaria = materials.filter((m: any) => (m.physicalBalance - (m.reservedBalance || 0)) <= m.minStock).length;
+
+    const docVencidos = docs.filter((d: any) => d.status === "Vencido" || (d.expirationDate && isPast(parseISO(d.expirationDate)))).length;
+    const docCriticos = docs.filter((d: any) => d.status === "Crítico").length;
 
     setMetrics({
-      demandasAbertas: requests.filter(r => r.status === "Aberta").length,
-      demandasTriagem: requests.filter(r => r.status === "Em triagem").length,
-      demandasAguardando: requests.filter(r => r.status === "Aguardando informação").length,
-      demandasConcluidasRecentes: requests.filter(r => r.status === "Convertida em ordem" ).length, // Simplification
-      minhasDemandas: requests.filter(r => r.solicitanteId === userId && r.status !== "Convertida em ordem").length,
-      
-      osEmExecucao: orders.filter(o => o.status === "Em execução").length,
-      osSemResponsavel: orders.filter(o => o.status === "Planejada" && !o.providerId && !o.responsibleId).length,
-      osAtrasadas: orders.filter(o => {
-        if (o.status === "Concluída" || o.status === "Cancelada") return false;
-        if (!o.deadline) return false;
-        return isPast(parseISO(o.deadline));
-      }).length,
-      
-      minhasOs: orders.filter(o => (o.responsibleId === userId) && o.status !== "Concluída" && o.status !== "Cancelada").length,
-      minhasOsAtrasadas: orders.filter(o => {
-        if (o.responsibleId !== userId) return false;
-        if (o.status === "Concluída" || o.status === "Cancelada") return false;
-        if (!o.deadline) return false;
-        return isPast(parseISO(o.deadline));
-      }).length,
-
-      prevAtrasadas: plans.filter(p => isPast(parseISO(p.nextExecution))).length,
-      docVencidos: docs.filter(d => d.status === "Vencido" || (d.expirationDate && isPast(parseISO(d.expirationDate)))).length,
-      docAVencer: docs.filter(d => {
-        if (d.status === "Vencido" || !d.expirationDate) return false;
-        const days = differenceInDays(parseISO(d.expirationDate), new Date());
-        return days >= 0 && days <= 30;
-      }).length,
+      manutencoesVencidas: prevAtrasadas,
+      osAtrasadas: osAtrasadas,
+      osAguardandoMaterial: osAguardandoMaterial,
+      servicosSemResponsavel: osSemResponsavel + reqSemResponsavel,
+      reposicaoNecessaria: repoNecessaria,
+      solicitacoesCompra: 0, // Mock for now
+      docVencidos: docVencidos,
+      docCriticos: docCriticos,
     });
-  }, [currentUser]);
+
+    // Calc Agenda
+    const hoje = orders.filter((o: any) => o.plannedStart && new Date(o.plannedStart) >= todayStart && new Date(o.plannedStart) <= todayEnd).length;
+    const semana = orders.filter((o: any) => o.plannedStart && new Date(o.plannedStart) >= todayStart && new Date(o.plannedStart) <= weekEnd).length;
+
+    setAgenda({
+      hoje,
+      semana,
+      semResponsavel: osSemResponsavel
+    });
+
+    // Calc Decisions
+    const decisionList = [];
+    if (osSemResponsavel > 0) {
+      decisionList.push({ title: `${osSemResponsavel} OS sem técnico atribuído`, type: "Warning", link: "/ordens" });
+    }
+    if (osAguardandoMaterial > 0) {
+      decisionList.push({ title: `${osAguardandoMaterial} OS travadas por falta de material`, type: "Critical", link: "/ordens" });
+    }
+    if (docCriticos > 0) {
+      decisionList.push({ title: `${docCriticos} Documentos em situação crítica`, type: "Critical", link: "/documentos" });
+    }
+
+    setDecisions(decisionList);
+
+  }, []);
 
   const StatCard = ({ title, value, icon: Icon, colorClass, link }: any) => (
     <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(link)}>
@@ -83,70 +111,75 @@ export const VisaoGeral = () => {
     </Card>
   );
 
-  const renderDashboardByRole = () => {
-    switch (currentUser?.role) {
-      case "Solicitante":
-        return (
-          <>
-            <StatCard title="Minhas Demandas Abertas" value={metrics.minhasDemandas} icon={Inbox} colorClass="text-brand-700" link="/demandas" />
-            <StatCard title="Aguardando Informações" value={metrics.demandasAguardando} icon={AlertTriangle} colorClass="text-amber-600" link="/demandas" />
-            <StatCard title="Concluídas Recentemente" value={metrics.demandasConcluidasRecentes} icon={CheckCircle} colorClass="text-green-600" link="/demandas" />
-          </>
-        );
-      case "Operador GSI":
-        return (
-          <>
-            <StatCard title="Demandas em Triagem" value={metrics.demandasTriagem} icon={Inbox} colorClass="text-amber-600" link="/demandas" />
-            <StatCard title="OS sem Responsável" value={metrics.osSemResponsavel} icon={UserCog} colorClass="text-brand-700" link="/ordens" />
-            <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
-            <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
-            <StatCard title="Preventivas Atrasadas" value={metrics.prevAtrasadas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
-          </>
-        );
-      case "Executor/Técnico":
-        return (
-          <>
-            <StatCard title="Minhas Ordens (Dia)" value={metrics.minhasOs} icon={ClipboardList} colorClass="text-brand-700" link="/ordens" />
-            <StatCard title="Minhas Atrasadas" value={metrics.minhasOsAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
-          </>
-        );
-      case "Gestor GSI":
-        return (
-          <>
-            <StatCard title="Demandas Abertas" value={metrics.demandasAbertas} icon={Inbox} colorClass="text-brand-700" link="/demandas" />
-            <StatCard title="OS em Execução" value={metrics.osEmExecucao} icon={Activity} colorClass="text-blue-600" link="/ordens" />
-            <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
-            <StatCard title="Preventivas Atrasadas" value={metrics.prevAtrasadas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
-            <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
-            <StatCard title="Documentos a Vencer (30d)" value={metrics.docAVencer} icon={FileText} colorClass="text-amber-600" link="/documentos" />
-          </>
-        );
-      case "Administrador":
-        return (
-          <>
-            <StatCard title="Demandas Abertas" value={metrics.demandasAbertas} icon={Inbox} colorClass="text-brand-700" link="/demandas" />
-            <StatCard title="Demandas em Triagem" value={metrics.demandasTriagem} icon={Inbox} colorClass="text-amber-600" link="/demandas" />
-            <StatCard title="OS em Execução" value={metrics.osEmExecucao} icon={ClipboardList} colorClass="text-blue-600" link="/ordens" />
-            <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
-            <StatCard title="Preventivas Atrasadas" value={metrics.prevAtrasadas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
-            <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Visão Geral - {currentUser?.role}</h1>
-        <p className="text-sm text-slate-500">Indicadores e pendências da manutenção predial.</p>
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Visão Geral</h1>
+        <p className="text-sm text-slate-500">Centro de controle operacional e gerencial.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {renderDashboardByRole()}
+      <div>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">Alertas Consolidados</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Preventivas Atrasadas" value={metrics.manutencoesVencidas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
+          <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
+          <StatCard title="OS Faltando Material" value={metrics.osAguardandoMaterial} icon={Package} colorClass="text-amber-600" link="/ordens" />
+          <StatCard title="Sem Responsável" value={metrics.servicosSemResponsavel} icon={UserX} colorClass="text-brand-600" link="/ordens" />
+          
+          <StatCard title="Reposição Necessária" value={metrics.reposicaoNecessaria} icon={ShoppingCart} colorClass="text-orange-600" link="/estoque" />
+          <StatCard title="Compras Pendentes" value={metrics.solicitacoesCompra} icon={Inbox} colorClass="text-slate-600" link="/estoque/fila" />
+          <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
+          <StatCard title="Documentos Críticos" value={metrics.docCriticos} icon={AlertTriangle} colorClass="text-red-600" link="/documentos" />
+        </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Precisa da sua decisão</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {decisions.length === 0 ? (
+              <p className="text-sm text-slate-500">Nenhuma decisão pendente no momento.</p>
+            ) : (
+              <ul className="space-y-3">
+                {decisions.map((d, i) => (
+                  <li key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-md border border-slate-200">
+                    <span className="text-sm font-medium text-slate-800">{d.title}</span>
+                    <button onClick={() => navigate(d.link)} className="text-sm font-semibold text-brand-600 hover:underline">Resolver</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Agenda Resumida</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+               <div className="flex justify-between items-center border-b pb-2">
+                 <span className="text-sm text-slate-600 flex items-center gap-2"><CalendarDays className="w-4 h-4"/> Atividades Hoje</span>
+                 <span className="font-bold text-slate-900">{agenda.hoje}</span>
+               </div>
+               <div className="flex justify-between items-center border-b pb-2">
+                 <span className="text-sm text-slate-600 flex items-center gap-2"><CalendarDays className="w-4 h-4"/> Atividades na Semana</span>
+                 <span className="font-bold text-slate-900">{agenda.semana}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-sm text-slate-600 flex items-center gap-2"><UserX className="w-4 h-4"/> Atividades sem Responsável</span>
+                 <span className="font-bold text-red-600">{agenda.semResponsavel}</span>
+               </div>
+               <div className="pt-2">
+                 <button onClick={() => navigate("/agenda")} className="text-sm text-brand-600 font-semibold hover:underline w-full text-center">Abrir Agenda Completa</button>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
     </div>
   );
 };

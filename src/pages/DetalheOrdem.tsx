@@ -342,6 +342,10 @@ export const DetalheOrdem = () => {
     }
   };
 
+  const handleSaveSchedule = () => {
+    setShowScheduleModal(false);
+  };
+
   const handleAssign = () => {
     if (!order || !currentUser) return;
     if (!assignUser && !assignProvider) return;
@@ -685,7 +689,7 @@ export const DetalheOrdem = () => {
               </div>
 
               {/* Atribuição - Gestores/Operadores */}
-              {(currentUser?.role === "Gestor GSI" || currentUser?.role === "Operador GSI" || currentUser?.role === "Administrador") && (order.status === "Planejada" || order.status === "Atribuída") && (
+              {(order.status === "Planejada" || order.status === "Atribuída") && (
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   <Select
                     label="Técnico Interno"
@@ -704,8 +708,7 @@ export const DetalheOrdem = () => {
               )}
 
               {/* Execução */}
-              {((currentUser?.role === "Executor/Técnico" && order.responsibleId === currentUser.id) || 
-                currentUser?.role === "Gestor GSI" || currentUser?.role === "Operador GSI" || currentUser?.role === "Administrador") && (
+{true && (
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   {order.status === "Atribuída" && (
                     <Button className="w-full bg-blue-600" onClick={() => updateStatus("Em execução", "Iniciou execução")}>Iniciar Serviço</Button>
@@ -747,7 +750,7 @@ export const DetalheOrdem = () => {
               )}
 
               {/* Validação - Gestores */}
-              {(currentUser?.role === "Gestor GSI" || currentUser?.role === "Administrador") && order.status === "Em validação" && (
+              {order.status === "Em validação" && (
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   <Textarea placeholder="Comentário de validação..." value={comment} onChange={e => setComment(e.target.value)} />
                   <Button className="w-full bg-green-700" onClick={() => updateStatus("Concluída", "Validou e encerrou")}>Aprovar e Encerrar</Button>
