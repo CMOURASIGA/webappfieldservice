@@ -56,6 +56,9 @@ export const NovoCompromissoModal = ({ open, onOpenChange, onSuccess }: Props) =
       type: "Outro", reason: data.reason,
       startAt: data.startDate,
       endAt: data.endDate,
+      allDay: false,
+      createdBy: "Sistema",
+      createdAt: new Date().toISOString(),
     };
 
     // A real implementation would generate multiple unavailabilities or store recurrence rules

@@ -314,7 +314,7 @@ export const Agenda = () => {
                     {units.find(u => u.id === o.unitId)?.sigla || "-"}
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant="outline">{o.scheduleStatus}</Badge>
+                    <Badge variant="default">{o.scheduleStatus}</Badge>
                   </td>
                 </tr>
               ))}
@@ -385,7 +385,7 @@ export const Agenda = () => {
                       <h3 className="font-semibold text-slate-900 truncate" title={t.name}>{t.name}</h3>
                       <p className="text-xs text-slate-500 mt-0.5">{t.type}</p>
                     </div>
-                    <Badge variant={t.source === "provider" ? "secondary" : "default"} className="text-[10px]">
+                    <Badge variant="default" className="text-[10px]">
                       {t.source === "provider" ? "Externo" : "Interno"}
                     </Badge>
                   </div>
@@ -435,19 +435,19 @@ export const Agenda = () => {
           <p className="text-sm text-slate-500">Gestão e programação da equipe técnica.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant={viewMode === "Semana" ? "default" : "outline"} onClick={() => setViewMode("Semana")}>
+          <Button variant={viewMode === "Semana" ? "primary" : "secondary"} onClick={() => setViewMode("Semana")}>
             <CalendarDays className="w-4 h-4 mr-2" /> Semana
           </Button>
-          <Button variant={viewMode === "Dia" ? "default" : "outline"} onClick={() => setViewMode("Dia")}>
+          <Button variant={viewMode === "Dia" ? "primary" : "secondary"} onClick={() => setViewMode("Dia")}>
             <CalendarIcon className="w-4 h-4 mr-2" /> Dia
           </Button>
-          <Button variant={viewMode === "Lista" ? "default" : "outline"} onClick={() => setViewMode("Lista")}>
+          <Button variant={viewMode === "Lista" ? "primary" : "secondary"} onClick={() => setViewMode("Lista")}>
             <ListIcon className="w-4 h-4 mr-2" /> Lista
           </Button>
-          <Button variant={viewMode === "Equipe" ? "default" : "outline"} onClick={() => setViewMode("Equipe")}>
+          <Button variant={viewMode === "Equipe" ? "primary" : "secondary"} onClick={() => setViewMode("Equipe")}>
             <Users className="w-4 h-4 mr-2" /> Equipe
           </Button>
-          <Button variant="outline" className="border-brand-200 text-brand-700 bg-brand-50" onClick={() => setShowUnavailModal(true)}>
+          <Button variant="secondary" className="border-brand-200 text-brand-700 bg-brand-50" onClick={() => setShowUnavailModal(true)}>
             + Ausência/Folga
           </Button>
         </div>
@@ -487,7 +487,7 @@ export const Agenda = () => {
         </Select>
 
         <Button 
-          variant={showUnscheduled ? "default" : "outline"} 
+          variant={showUnscheduled ? "primary" : "secondary"} 
           className="relative"
           onClick={() => setShowUnscheduled(!showUnscheduled)}
         >
@@ -514,7 +514,7 @@ export const Agenda = () => {
           <div className="w-80 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg p-4 h-[calc(100vh-250px)] overflow-y-auto shadow-inner">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-800">Aguardando Programação</h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowUnscheduled(false)} className="h-6 w-6">
+              <Button variant="ghost" size="sm" onClick={() => setShowUnscheduled(false)} className="p-2 h-6 w-6">
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -531,7 +531,7 @@ export const Agenda = () => {
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-xs text-brand-700">{o.number}</span>
-                    <Badge variant="outline" className="text-[10px]">{o.priority}</Badge>
+                    <Badge variant="default" className="text-[10px]">{o.priority}</Badge>
                   </div>
                   <p className="text-sm text-slate-700 font-medium line-clamp-2 mb-2">{o.technicalDescription}</p>
                   
@@ -566,7 +566,7 @@ export const Agenda = () => {
           <Card className="w-full max-w-md shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
               <CardTitle>Registrar Ausência/Folga</CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setShowUnavailModal(false)} className="h-8 w-8">
+              <Button variant="ghost" size="sm" onClick={() => setShowUnavailModal(false)} className="p-2 h-8 w-8">
                 <X className="w-4 h-4" />
               </Button>
             </CardHeader>
@@ -608,7 +608,7 @@ export const Agenda = () => {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <Button variant="outline" onClick={() => setShowUnavailModal(false)}>Cancelar</Button>
+                <Button variant="secondary" onClick={() => setShowUnavailModal(false)}>Cancelar</Button>
                 <Button onClick={handleSaveUnavail}>Salvar Registro</Button>
               </div>
             </CardContent>
@@ -622,7 +622,7 @@ export const Agenda = () => {
           <Card className="w-full max-w-md shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
               <CardTitle>Programar Atividade</CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setSchedulingOrder(null)} className="h-8 w-8">
+              <Button variant="ghost" size="sm" onClick={() => setSchedulingOrder(null)} className="p-2 h-8 w-8">
                 <X className="w-4 h-4" />
               </Button>
             </CardHeader>
@@ -665,7 +665,7 @@ export const Agenda = () => {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <Button variant="outline" onClick={() => setSchedulingOrder(null)}>Cancelar</Button>
+                <Button variant="secondary" onClick={() => setSchedulingOrder(null)}>Cancelar</Button>
                 <Button onClick={handleSaveSchedule}>Confirmar Programação</Button>
               </div>
             </CardContent>

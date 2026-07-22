@@ -5,9 +5,10 @@ import { Card, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { ArrowLeft, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const FilaEstoque = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -131,9 +132,9 @@ export const FilaEstoque = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-4">
-        <Link to="/estoque">
-          <Button variant="ghost" className="p-2 h-9 w-9"><ArrowLeft className="w-5 h-5" /></Button>
-        </Link>
+        <Button  variant="ghost" className="p-2 h-9 w-9" onClick={() => navigate(-1)}>
+              <ArrowLeft  className="w-5 h-5" />
+            </Button>
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Fila de Solicitações</h1>
           <p className="text-sm text-slate-500">Gestão de materiais pendentes ou não cadastrados.</p>

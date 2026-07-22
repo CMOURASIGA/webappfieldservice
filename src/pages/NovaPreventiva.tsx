@@ -203,7 +203,7 @@ export const NovaPreventiva = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Checklist de Verificação</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddChecklistItem}>
+            <Button type="button" variant="secondary" size="sm" onClick={handleAddChecklistItem}>
               + Adicionar Item
             </Button>
           </CardHeader>

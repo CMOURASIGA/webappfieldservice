@@ -147,7 +147,7 @@ export const EditarPreventiva = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Link to={`/preventivas/${id}`}>
-          <Button variant="outline" size="icon">
+          <Button variant="secondary" size="sm" className="p-2">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>
@@ -267,12 +267,12 @@ export const EditarPreventiva = () => {
                     />
                     <label htmlFor={`req-${item.id}`} className="text-sm text-slate-600 whitespace-nowrap">Obrigatório</label>
                   </div>
-                  <Button type="button" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => removeChecklistItem(idx)}>
+                  <Button type="button" variant="secondary" className="text-red-600 hover:text-red-700" onClick={() => removeChecklistItem(idx)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={addChecklistItem} className="w-full mt-2">
+              <Button type="button" variant="secondary" onClick={addChecklistItem} className="w-full mt-2">
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Item de Verificação
               </Button>
             </div>
@@ -281,7 +281,7 @@ export const EditarPreventiva = () => {
 
         <div className="flex justify-end gap-3">
           <Link to={`/preventivas/${id}`}>
-            <Button variant="outline" type="button">Cancelar</Button>
+            <Button variant="secondary" type="button">Cancelar</Button>
           </Link>
           <Button type="submit">Salvar Alterações</Button>
         </div>

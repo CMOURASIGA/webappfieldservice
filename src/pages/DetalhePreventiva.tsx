@@ -54,9 +54,9 @@ export const DetalhePreventiva = () => {
     return (
       <div className="p-6">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/preventivas" className="text-slate-500 hover:text-slate-700">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+          <button onClick={() => navigate(-1)} className="text-slate-500 hover:text-slate-700">
+            <ArrowLeft  className="w-5 h-5" />
+          </button>
           <h1 className="text-2xl font-bold text-slate-800">Manutenção não encontrada</h1>
         </div>
       </div>
@@ -64,11 +64,11 @@ export const DetalhePreventiva = () => {
   }
 
   const getStatusBadge = (nextExecution: string | undefined, status: string | undefined) => {
-    if (status === "Inativo") return <Badge variant="secondary">Inativo</Badge>;
-    if (!nextExecution) return <Badge variant="outline">Sem data</Badge>;
+    if (status === "Inativo") return <Badge variant="default">Inativo</Badge>;
+    if (!nextExecution) return <Badge variant="default">Sem data</Badge>;
     
     const nextDate = parseISO(nextExecution);
-    if (!isValid(nextDate)) return <Badge variant="outline">Data Inválida</Badge>;
+    if (!isValid(nextDate)) return <Badge variant="default">Data Inválida</Badge>;
 
     const today = new Date();
     today.setHours(0,0,0,0);
@@ -95,7 +95,7 @@ export const DetalhePreventiva = () => {
 
   const handleDelete = () => {
     const plans = storageService.get("gsi_preventive_plans");
-    storageService.set("gsi_preventive_plans", plans.map(p => p.id === id ? { ...p, status: 'Inativo' } : p));
+    storageService.set("gsi_preventive_plans", plans.map(p => p.id === id ? { ...p, status: 'Inativo' as 'Ativo' | 'Inativo' } : p));
     navigate("/preventivas");
   };
 
@@ -103,11 +103,9 @@ export const DetalhePreventiva = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link to="/preventivas">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="w-4 h-4" />
+          <Button  variant="secondary" size="sm" className="p-2" onClick={() => navigate(-1)}>
+              <ArrowLeft  className="w-4 h-4" />
             </Button>
-          </Link>
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-slate-800">{plan.code}</h1>
@@ -117,8 +115,8 @@ export const DetalhePreventiva = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Link to={`/preventivas/${id}/editar`}><Button variant="outline"><Edit className="w-4 h-4 mr-2" /> Editar</Button></Link>
-          <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setIsDeleteDialogOpen(true)}>
+          <Link to={`/preventivas/${id}/editar`}><Button variant="secondary"><Edit className="w-4 h-4 mr-2" /> Editar</Button></Link>
+          <Button variant="secondary" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setIsDeleteDialogOpen(true)}>
             <PowerOff className="w-4 h-4 mr-2" /> Inativar
           </Button>
 
@@ -132,10 +130,10 @@ export const DetalhePreventiva = () => {
               </DialogHeader>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
+                  <Button variant="secondary">Cancelar</Button>
                 </DialogClose>
                 <Button 
-                  variant="default" 
+                  variant="primary" 
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={() => {
                     handleDelete();
@@ -208,7 +206,7 @@ export const DetalhePreventiva = () => {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-800">{item.description}</p>
-                        {item.required && <Badge variant="secondary" className="mt-1 text-[10px]">Obrigatório</Badge>}
+                        {item.required && <Badge variant="default" className="mt-1 text-[10px]">Obrigatório</Badge>}
                       </div>
                     </div>
                   ))}

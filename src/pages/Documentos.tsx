@@ -5,8 +5,9 @@ import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
+import { Input } from "../components/ui/Input";
 import { FileText, AlertTriangle, Plus, Search, Calendar } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { getDocumentStatus } from "../utils/documentStatus";
 
@@ -14,7 +15,10 @@ export const Documentos = () => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [searchParams] = useSearchParams();
+  const initialstatusFilter = searchParams.get("status") || "Todos";
+  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setDocuments(storageService.get("gsi_documents") || []);
@@ -33,15 +37,21 @@ export const Documentos = () => {
     criticos: documents.filter(d => getDocStatus(d) === "Crítico").length,
     vencidos: documents.filter(d => getDocStatus(d) === "Vencido").length,
     atencao: documents.filter(d => getDocStatus(d) === "Atenção").length,
-    semAnexo: documents.filter(d => !d.fileUrl).length,
+    semAnexo: documents.filter(d => !(d.attachments && d.attachments.length > 0)).length,
   };
 
   const filteredDocs = documents.filter(d => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      if (!d.title.toLowerCase().includes(term) && !d.number?.toLowerCase().includes(term) && !d.issuer?.toLowerCase().includes(term)) {
+        return false;
+      }
+    }
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Críticos") return getDocStatus(d) === "Crítico";
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
     if (statusFilter === "Atenção") return getDocStatus(d) === "Atenção";
-    if (statusFilter === "Falta Anexo") return !d.fileUrl;
+    if (statusFilter === "Falta Anexo") return !(d.attachments && d.attachments.length > 0);
     return true;
   });
 
@@ -51,7 +61,7 @@ export const Documentos = () => {
       {/* Ações Rápidas */}
       <PageHeader>
         <PageHeaderTitleContent>
-          <PageHeaderTitle>Documentação Regulatória</PageHeaderTitle>
+          <PageHeaderTitle title="Documentação Regulatória" />
           <p className="text-sm text-slate-500">Gestão de licenças, laudos, ARTs e certificados.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
@@ -59,11 +69,18 @@ export const Documentos = () => {
         </PageHeaderActionsContainer>
       </PageHeader>
       
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Button variant="outline" className="gap-2"><Calendar className="w-4 h-4" /> Registrar renovação</Button>
-        <Button variant="outline" className="gap-2"><FileText className="w-4 h-4" /> Anexar arquivo</Button>
-        <Button variant="outline" className="gap-2"><Calendar className="w-4 h-4" /> Consultar vencimentos</Button>
-        <Button variant="outline" className="gap-2"><Search className="w-4 h-4" /> Buscar documento</Button>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="default" className="gap-2" onClick={() => setStatusFilter("Vencidos")}><Calendar className="w-4 h-4" /> Consultar vencimentos</Button>
+        </div>
+        <div className="w-full md:w-72">
+          <Input 
+            placeholder="Buscar por nome, código ou órgão..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+          />
+        </div>
       </div>
 
       {/* Indicadores Acionáveis */}
@@ -116,7 +133,7 @@ export const Documentos = () => {
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(doc.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Emissão:</span> {doc.issueDate ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : 'N/A'}</p>
                   <p><span className="font-medium text-slate-500">Vencimento:</span> {doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Não possui'}</p>
-                  {!doc.fileUrl && <div className="mt-2"><Badge variant="outline" className="text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">Sem anexo</Badge></div>}
+                  {!(doc.attachments && doc.attachments.length > 0) && <div className="mt-2"><Badge variant="default" className="text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">Sem anexo</Badge></div>}
                 </div>
 
                 </CardContent>

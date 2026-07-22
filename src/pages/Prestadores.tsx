@@ -180,7 +180,7 @@ export const Técnicos = () => {
                           <Badge variant={provider.status === "Ativo" ? "success" : "default"}>{provider.status}</Badge>
                         </div>
                         <div className="text-xs text-slate-500 mt-1 flex gap-2 items-center">
-                          <Badge variant="secondary" className="text-[10px] py-0">{provider.type || "Externo"}</Badge>
+                          <Badge variant="default" className="text-[10px] py-0">{provider.type || "Externo"}</Badge>
                           {provider.document && <span>{provider.document}</span>}
                         </div>
                       </div>

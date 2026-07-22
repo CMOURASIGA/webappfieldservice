@@ -34,7 +34,7 @@ export const MovimentacoesHistorico = () => {
     <div className="space-y-6">
       <PageHeader>
         <PageHeaderTitleContent>
-          <PageHeaderTitle>Histórico de Movimentações</PageHeaderTitle>
+          <PageHeaderTitle title="Histórico de Movimentações" />
           <p className="text-sm text-slate-500">Extrato completo de entradas, saídas e ajustes de inventário.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>

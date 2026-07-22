@@ -76,9 +76,9 @@ export const NovoDocumento = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
-        <Link to="/documentos">
-          <Button variant="ghost" className="p-2"><ArrowLeft className="w-5 h-5" /></Button>
-        </Link>
+        <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
+              <ArrowLeft  className="w-5 h-5" />
+            </Button>
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900">Novo Documento</h1>
           <p className="text-sm text-slate-500">Cadastre um novo alvará, licença ou laudo.</p>

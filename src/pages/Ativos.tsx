@@ -271,7 +271,7 @@ export const Ativos = () => {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-xs text-brand-600 bg-brand-50 px-2 py-0.5 rounded font-semibold">{loc.code}</span>
-                        <Badge variant="secondary">{loc.type}</Badge>
+                        <Badge variant="default">{loc.type}</Badge>
                       </div>
                       <h3 className="font-semibold text-slate-900 line-clamp-1" title={loc.name}>{loc.name}</h3>
                     </div>

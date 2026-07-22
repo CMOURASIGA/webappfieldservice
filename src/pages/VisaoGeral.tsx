@@ -5,6 +5,7 @@ import { PageHeader, PageHeaderTitle, PageHeaderTitleContent } from "@cnc-ti/lay
 import { storageService } from "../services/storageService";
 import { AlertTriangle, Clock, FileText, Package, Wrench, UserX, Inbox, CalendarDays, ShoppingCart } from "lucide-react";
 import { isPast, parseISO, startOfDay, endOfDay, addDays } from "date-fns";
+import { getDocumentStatus } from "../utils/documentStatus";
 
 export const VisaoGeral = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export const VisaoGeral = () => {
     const plans = (storageService.get("gsi_preventive_plans") as any[]) || [];
     const docs = (storageService.get("gsi_documents") as any[]) || [];
     const materials = (storageService.get("gsi_stock_materials") as any[]) || [];
+    const stockRequests = (storageService.get("gsi_stock_requests") as any[]) || [];
 
     const now = new Date();
     const todayStart = startOfDay(now);
@@ -58,8 +60,8 @@ export const VisaoGeral = () => {
     
     const repoNecessaria = materials.filter((m: any) => (m.physicalBalance - (m.reservedBalance || 0)) <= m.minStock).length;
 
-    const docVencidos = docs.filter((d: any) => d.status === "Vencido" || (d.expirationDate && isPast(parseISO(d.expirationDate)))).length;
-    const docCriticos = docs.filter((d: any) => d.status === "Crítico").length;
+    const docVencidos = docs.filter((d: any) => getDocumentStatus(d.expirationDate, d.status) === "Vencido").length;
+    const docCriticos = docs.filter((d: any) => getDocumentStatus(d.expirationDate, d.status) === "Crítico").length;
 
     setMetrics({
       manutencoesVencidas: prevAtrasadas,
@@ -67,7 +69,7 @@ export const VisaoGeral = () => {
       osAguardandoMaterial: osAguardandoMaterial,
       servicosSemResponsavel: osSemResponsavel + reqSemResponsavel,
       reposicaoNecessaria: repoNecessaria,
-      solicitacoesCompra: 0, // Mock for now
+      solicitacoesCompra: stockRequests.filter((r: any) => r.status === "Pendente").length,
       docVencidos: docVencidos,
       docCriticos: docCriticos,
     });
@@ -85,13 +87,13 @@ export const VisaoGeral = () => {
     // Calc Decisions
     const decisionList = [];
     if (osSemResponsavel > 0) {
-      decisionList.push({ title: `${osSemResponsavel} OS sem técnico atribuído`, type: "Warning", link: "/ordens" });
+      decisionList.push({ title: `${osSemResponsavel} OS sem técnico atribuído`, type: "Warning", link: "/ordens?status=Sem+Responsavel" });
     }
     if (osAguardandoMaterial > 0) {
-      decisionList.push({ title: `${osAguardandoMaterial} OS travadas por falta de material`, type: "Critical", link: "/ordens" });
+      decisionList.push({ title: `${osAguardandoMaterial} OS travadas por falta de material`, type: "Critical", link: "/ordens?status=Falta+Material" });
     }
     if (docCriticos > 0) {
-      decisionList.push({ title: `${docCriticos} Documentos em situação crítica`, type: "Critical", link: "/documentos" });
+      decisionList.push({ title: `${docCriticos} Documentos em situação crítica`, type: "Critical", link: "/documentos?status=Críticos" });
     }
 
     setDecisions(decisionList);
@@ -128,15 +130,15 @@ export const VisaoGeral = () => {
       <div>
         <h2 className="text-lg font-semibold text-slate-800 mb-4">Alertas Consolidados</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Manutenções Preventivas Atrasadas" value={metrics.manutencoesVencidas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas" />
-          <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens" />
-          <StatCard title="OS Faltando Material" value={metrics.osAguardandoMaterial} icon={Package} colorClass="text-amber-600" link="/ordens" />
-          <StatCard title="Sem Responsável" value={metrics.servicosSemResponsavel} icon={UserX} colorClass="text-brand-600" link="/ordens" />
+          <StatCard title="Manutenções Preventivas Atrasadas" value={metrics.manutencoesVencidas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas?status=Atrasadas" />
+          <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens?status=Atrasadas" />
+          <StatCard title="OS Faltando Material" value={metrics.osAguardandoMaterial} icon={Package} colorClass="text-amber-600" link="/ordens?status=Falta+Material" />
+          <StatCard title="Sem Responsável" value={metrics.servicosSemResponsavel} icon={UserX} colorClass="text-brand-600" link="/ordens?status=Sem+Responsavel" />
           
-          <StatCard title="Reposição Necessária" value={metrics.reposicaoNecessaria} icon={ShoppingCart} colorClass="text-orange-600" link="/estoque" />
+          <StatCard title="Reposição Necessária" value={metrics.reposicaoNecessaria} icon={ShoppingCart} colorClass="text-orange-600" link="/estoque?status=Reposição" />
           <StatCard title="Compras Pendentes" value={metrics.solicitacoesCompra} icon={Inbox} colorClass="text-slate-600" link="/estoque/fila" />
-          <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos" />
-          <StatCard title="Documentos Críticos" value={metrics.docCriticos} icon={AlertTriangle} colorClass="text-red-600" link="/documentos" />
+          <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos?status=Vencidos" />
+          <StatCard title="Documentos Críticos" value={metrics.docCriticos} icon={AlertTriangle} colorClass="text-red-600" link="/documentos?status=Críticos" />
         </div>
       </div>
 

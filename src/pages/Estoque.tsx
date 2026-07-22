@@ -7,7 +7,7 @@ import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeader
 import { Badge } from "../components/ui/Badge";
 import { Package, AlertTriangle, Plus, PackageOpen, Inbox, ShoppingCart, ArrowRightLeft, Search } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getStockStatus } from "../utils/stockStatus";
 import { NovoMaterialModal } from "./estoque/NovoMaterialModal";
 import { MovimentacaoModal } from "./estoque/MovimentacaoModal";
@@ -18,7 +18,9 @@ export const Estoque = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<StockMaterial[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
-  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [searchParams] = useSearchParams();
+  const initialstatusFilter = searchParams.get("status") || "Todos";
+  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
 
   const [showNovoMaterial, setShowNovoMaterial] = useState(false);
   const [showMovimentacao, setShowMovimentacao] = useState(false);
@@ -62,7 +64,7 @@ export const Estoque = () => {
       {/* Ações Rápidas no Topo */}
       <PageHeader>
         <PageHeaderTitleContent>
-          <PageHeaderTitle>Gestão de Estoque</PageHeaderTitle>
+          <PageHeaderTitle title="Gestão de Estoque" />
           <p className="text-sm text-slate-500">Controle materiais, movimentações e necessidades de reposição.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
@@ -99,7 +101,7 @@ export const Estoque = () => {
       {statusFilter !== "Todos" && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">Filtro aplicado:</span>
-          <Badge variant="outline" className="bg-brand-50 text-brand-700 border-brand-200 flex items-center gap-1">
+          <Badge variant="default" className="bg-brand-50 text-brand-700 border-brand-200 flex items-center gap-1">
             {statusFilter}
             <button onClick={() => setStatusFilter("Todos")} className="ml-1 hover:text-brand-900 font-bold">×</button>
           </Badge>
@@ -121,7 +123,7 @@ export const Estoque = () => {
                     <p className="text-xs text-slate-500 font-mono mt-0.5">{mat.code}</p>
                   </div>
                   {status !== "Normal" && (
-                    <Badge variant="outline" className={
+                    <Badge variant="default" className={
                       status === "Sem saldo" ? "bg-red-50 text-red-700 border-red-200" :
                       status === "Crítico" ? "bg-orange-50 text-orange-700 border-orange-200" :
                       "bg-yellow-50 text-yellow-700 border-yellow-200"
@@ -175,6 +177,20 @@ export const Estoque = () => {
         )}
       </div>
 
+    
+      {showNovoMaterial && (
+        <NovoMaterialModal open={showNovoMaterial} onOpenChange={setShowNovoMaterial} onSuccess={loadData} />
+      )}
+      {showMovimentacao && (
+        <MovimentacaoModal initialType={movimentacaoType} open={showMovimentacao} onOpenChange={setShowMovimentacao} onSuccess={loadData} />
+      )}
+      {showSolicitacao && (
+        <NovaSolicitacaoModal open={showSolicitacao} onOpenChange={setShowSolicitacao} onSuccess={loadData} />
+      )}
+    
+      <NovoMaterialModal open={showNovoMaterial} onOpenChange={setShowNovoMaterial} onSuccess={loadData} />
+      <MovimentacaoModal initialType={movimentacaoType} open={showMovimentacao} onOpenChange={setShowMovimentacao} onSuccess={loadData} />
+      <NovaSolicitacaoModal open={showSolicitacao} onOpenChange={setShowSolicitacao} onSuccess={loadData} />
     </div>
   );
 };

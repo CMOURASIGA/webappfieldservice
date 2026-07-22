@@ -387,8 +387,8 @@ export const DetalheOrdem = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/ordens")}>Voltar</Button>
-          <Button variant="default" onClick={() => setShowScheduleModal(true)}>Programar</Button>
-          <Link to={`/ordens/${order.id}/imprimir`} target="_blank"><Button variant="outline" className="gap-2"><Printer className="w-4 h-4" /> Imprimir</Button></Link>
+          <Button variant="primary" onClick={() => setShowScheduleModal(true)}>Programar</Button>
+          <Link to={`/ordens/${order.id}/imprimir`} target="_blank"><Button variant="secondary" className="gap-2"><Printer className="w-4 h-4" /> Imprimir</Button></Link>
         </div>
       </div>
 
@@ -803,7 +803,7 @@ export const DetalheOrdem = () => {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <Button variant="outline" onClick={() => setShowScheduleModal(false)}>Cancelar</Button>
+                <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>Cancelar</Button>
                 <Button onClick={handleSaveSchedule}>Confirmar Programação</Button>
               </div>
             </CardContent>

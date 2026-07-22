@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Asset, Request, WorkOrder, PreventivePlan, Document, Unit, Location } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
@@ -10,6 +10,7 @@ import { format, isValid, parseISO } from "date-fns";
 
 export const DetalheAtivo = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   
   const [asset, setAsset] = useState<Asset | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
@@ -51,9 +52,9 @@ export const DetalheAtivo = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <Link to="/ativos">
-          <Button variant="ghost" className="p-2"><ArrowLeft className="w-5 h-5" /></Button>
-        </Link>
+        <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
+              <ArrowLeft  className="w-5 h-5" />
+            </Button>
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-semibold text-slate-900">{asset.name}</h1>

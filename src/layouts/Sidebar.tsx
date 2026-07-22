@@ -21,14 +21,14 @@ import {
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
 
-const navItems = [
+const navItems: { icon: any, label: string, href: string, subItems?: { label: string, href: string }[] }[] = [
   { icon: LayoutDashboard, label: "Visão Geral", href: "/" },
   { icon: Wrench, label: "Gestão de Serviços", href: "/servicos" },
   { icon: PackageSearch, label: "Gestão de Estoque", href: "/estoque" },
   { icon: FileText, label: "Documentação Regulatória", href: "/documentos" },
 ];
 
-const adminItems = [
+const adminItems: { icon: any, label: string, href: string, subItems?: { label: string, href: string }[] }[] = [
   { icon: Settings, label: "Configurações", href: "/admin" },
 ];
 

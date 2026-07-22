@@ -10,7 +10,7 @@ export const GestaoServicosDashboard = () => {
     <div className="space-y-6">
       <PageHeader>
         <PageHeaderTitleContent>
-          <PageHeaderTitle>Gestão de Serviços</PageHeaderTitle>
+          <PageHeaderTitle title="Gestão de Serviços" />
           <p className="text-sm text-slate-500">Central operacional de serviços, ordens, ativos e técnicos.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../types";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
@@ -17,7 +17,9 @@ export const Ordens = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
-  const [statusFilter, setStatusFilter] = useState<string>("Todas");
+  const [searchParams] = useSearchParams();
+  const initialstatusFilter = searchParams.get("status") || "Todas";
+  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
 
   useEffect(() => {
     loadData();
@@ -113,7 +115,7 @@ export const Ordens = () => {
       {/* Ações Rápidas no Topo */}
       <PageHeader>
         <PageHeaderTitleContent>
-          <PageHeaderTitle>Ordens de Serviço</PageHeaderTitle>
+          <PageHeaderTitle title="Ordens de Serviço" />
           <p className="text-sm text-slate-500">Acompanhamento e execução operacional.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
@@ -174,8 +176,8 @@ export const Ordens = () => {
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="font-semibold text-slate-900 line-clamp-2" title={order.title}>{order.title}</h3>
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">{order.code}</p>
+                      <h3 className="font-semibold text-slate-900 line-clamp-2" title={order.technicalDescription}>{order.technicalDescription}</h3>
+                      <p className="text-xs text-slate-500 font-mono mt-0.5">{order.number}</p>
                     </div>
                   </div>
                   
@@ -230,10 +232,10 @@ export const Ordens = () => {
                     return (
                       <div key={order.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-brand-300" onClick={() => navigate(`/ordens/${order.id}`)}>
                         <div className="flex justify-between items-start mb-1">
-                          <p className="text-xs font-mono text-slate-500">{order.code}</p>
+                          <p className="text-xs font-mono text-slate-500">{order.number}</p>
                           <span className={`w-2 h-2 rounded-full ${order.priority === 'Urgente' ? 'bg-red-500' : order.priority === 'Alta' ? 'bg-orange-500' : 'bg-blue-500'}`}></span>
                         </div>
-                        <h4 className="font-medium text-slate-900 text-sm mb-2 line-clamp-2">{order.title}</h4>
+                        <h4 className="font-medium text-slate-900 text-sm mb-2 line-clamp-2">{order.technicalDescription}</h4>
                         
                         {conditions.length > 0 && (
                           <div className="flex flex-wrap gap-1 mb-2">

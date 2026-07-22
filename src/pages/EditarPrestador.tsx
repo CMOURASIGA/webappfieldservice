@@ -29,7 +29,7 @@ export const EditarTécnico = () => {
     email: "",
     specialty: "",
     unitId: "",
-    status: "Ativo" as const,
+    status: "Ativo" as "Ativo" | "Inativo",
     type: "Externo" as "Interno" | "Externo",
     observations: "",
   });

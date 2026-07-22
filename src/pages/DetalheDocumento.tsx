@@ -135,7 +135,7 @@ export const DetalheDocumento = () => {
       case "Atenção": return <Badge variant="warning">{status}</Badge>;
       case "Crítico": return <Badge variant="danger">{status}</Badge>;
       case "Vencido": return <Badge className="bg-red-700 hover:bg-red-800 text-white border-transparent">{status}</Badge>;
-      case "Sem validade definida": return <Badge variant="secondary">{status}</Badge>;
+      case "Sem validade definida": return <Badge variant="default">{status}</Badge>;
       default: return <Badge variant="default">{status}</Badge>;
     }
   };
@@ -174,9 +174,9 @@ export const DetalheDocumento = () => {
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link to="/documentos">
-            <Button variant="ghost" className="p-2"><ArrowLeft className="w-5 h-5" /></Button>
-          </Link>
+          <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
+              <ArrowLeft  className="w-5 h-5" />
+            </Button>
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-[22px] font-semibold text-slate-900">{doc.title}</h1>

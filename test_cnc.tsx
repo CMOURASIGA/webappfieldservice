@@ -3,7 +3,7 @@ import { PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsC
 export const Teste = () => (
   <PageHeader>
     <PageHeaderTitleContent>
-      <PageHeaderTitle>Gestão de Estoque</PageHeaderTitle>
+      <PageHeaderTitle title="Gestão de Estoque" />
       <p>Controle materiais, movimentações e necessidades de reposição.</p>
     </PageHeaderTitleContent>
 

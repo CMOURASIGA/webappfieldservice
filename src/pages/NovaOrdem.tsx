@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Unit, Location, Asset, Category, WorkOrder, Priority, User, Provider } from "../types";
 import { Button } from "../components/ui/Button";
@@ -12,6 +12,8 @@ import { useAuth } from "../contexts/AuthContext";
 
 export const NovaOrdem = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const sourceState = location.state as any;
   const { currentUser } = useAuth();
   
   const [units, setUnits] = useState<Unit[]>([]);

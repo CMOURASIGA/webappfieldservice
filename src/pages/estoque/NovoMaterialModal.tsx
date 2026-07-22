@@ -91,12 +91,12 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Código *</label>
               <Input {...register("code")} placeholder="Ex: MAT-001" />
-              {errors.code && <span className="text-xs text-red-500">{errors.code.message}</span>}
+              {errors.code && <span className="text-xs text-red-500">{errors.code.message as string}</span>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome *</label>
               <Input {...register("name")} placeholder="Ex: Lâmpada LED" />
-              {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
+              {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
                   {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {errors.category && <span className="text-xs text-red-500">{errors.category.message}</span>}
+              {errors.category && <span className="text-xs text-red-500">{errors.category.message as string}</span>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Unidade de Medida *</label>
@@ -124,7 +124,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
                   <SelectItem value="L">Litro (L)</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.unit && <span className="text-xs text-red-500">{errors.unit.message}</span>}
+              {errors.unit && <span className="text-xs text-red-500">{errors.unit.message as string}</span>}
             </div>
           </div>
 
@@ -137,7 +137,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
                   {units.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {errors.unitId && <span className="text-xs text-red-500">{errors.unitId.message}</span>}
+              {errors.unitId && <span className="text-xs text-red-500">{errors.unitId.message as string}</span>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Local (Almoxarifado)</label>
@@ -154,7 +154,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Estoque Mínimo *</label>
               <Input type="number" {...register("minStock")} />
-              {errors.minStock && <span className="text-xs text-red-500">{errors.minStock.message}</span>}
+              {errors.minStock && <span className="text-xs text-red-500">{errors.minStock.message as string}</span>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Estoque Ideal</label>

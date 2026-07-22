@@ -148,10 +148,10 @@ export const CardFooterActions = ({
             </DialogHeader>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline">Cancelar</Button>
+                <Button variant="secondary">Cancelar</Button>
               </DialogClose>
               <Button 
-                variant="default" 
+                variant="primary" 
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={() => {
                   onDelete();

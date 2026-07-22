@@ -7,7 +7,8 @@ import { Badge } from "../components/ui/Badge";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "date-fns";
 import { calculateNextExecution } from "../utils/preventiveCalc";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import { Plus, Settings } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
@@ -18,7 +19,9 @@ export const Preventivas = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [searchParams] = useSearchParams();
+  const initialstatusFilter = searchParams.get("status") || "Todos";
+  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans") || []);
@@ -57,6 +60,59 @@ export const Preventivas = () => {
     atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Atrasada").length,
   };
 
+  
+  const handleGerarOSPendentes = () => {
+    const allPlans = storageService.get("gsi_preventive_plans") || [];
+    const allOrders = storageService.get("gsi_work_orders") || [];
+    
+    // Find a plan that needs an OS and doesn't have an active one
+    let createdOsCount = 0;
+    let newOrders = [...allOrders];
+    
+    for (const plan of allPlans) {
+      if (plan.status !== "Ativo") continue;
+      
+      const status = getStatus(getComputedNextExecution(plan));
+      if (status === "Atrasada" || status === "Próxima") {
+        // Check if it already has an open OS for this plan
+        const hasOpenOs = allOrders.some((o: any) => o.source === "Preventiva" && o.status !== "Concluída" && o.status !== "Cancelada" && o.unitId === plan.unitId && o.assetId === plan.assetId);
+        
+        if (!hasOpenOs) {
+          const year = new Date().getFullYear();
+          const nextNumber = newOrders.filter((o: any) => o.number.includes(year.toString())).length + 1;
+          const number = `OS-${year}-${nextNumber.toString().padStart(4, '0')}`;
+          
+          const newOrder = {
+            id: uuidv4(),
+            number,
+            unitId: plan.unitId,
+            locationId: plan.locationId || "",
+            categoryId: plan.categoryId,
+            assetId: plan.assetId || "",
+            priority: "Média",
+            description: plan.description,
+            technicalDescription: "Manutenção Preventiva gerada automaticamente.\n" + "",
+            source: "Preventiva",
+            status: "Aguardando atendimento",
+            createdAt: new Date().toISOString(),
+            createdBy: "Sistema",
+            materials: [],
+          };
+          
+          newOrders.push(newOrder as any);
+          createdOsCount++;
+        }
+      }
+    }
+    
+    if (createdOsCount > 0) {
+      storageService.set("gsi_work_orders", newOrders);
+      alert(`OS criada com sucesso. Foram geradas ${createdOsCount} ordens de serviço.`);
+    } else {
+      alert("Nenhuma manutenção pendente sem OS foi encontrada.");
+    }
+  };
+  
   const filteredPlans = plans.filter(p => {
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
@@ -73,7 +129,7 @@ export const Preventivas = () => {
         <Button onClick={() => navigate("/preventivas/nova")} className="gap-2">
           <Plus className="w-4 h-4" /> Nova Manutenção Preventiva
         </Button>
-        <Button variant="outline" className="gap-2" onClick={() => alert('Rotina manual executada')}>
+        <Button variant="outline" className="gap-2" onClick={handleGerarOSPendentes}>
           <Settings className="w-4 h-4" /> Gerar OS Pendentes
         </Button>
       </div>
@@ -118,7 +174,7 @@ export const Preventivas = () => {
               <CardContent className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <div className="pr-2">
-                    <h3 className="font-semibold text-slate-900 line-clamp-1" title={plan.title}>{plan.title}</h3>
+                    <h3 className="font-semibold text-slate-900 line-clamp-1" title={plan.description}>{plan.description}</h3>
                     <p className="text-xs text-slate-500 mt-1 uppercase font-bold">{plan.periodicity}</p>
                   </div>
                   <span className={`px-2 py-0.5 text-xs font-bold rounded-sm ${badgeClass}`}>
