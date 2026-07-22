@@ -18,6 +18,7 @@ import {
   subDays, setHours, setMinutes, parse, formatISO
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { NovoCompromissoModal } from "./agenda/NovoCompromissoModal";
 
 type ViewMode = "Semana" | "Dia" | "Lista" | "Equipe";
 
@@ -37,6 +38,7 @@ export const Agenda = () => {
   
   const [showUnscheduled, setShowUnscheduled] = useState(false);
   const [schedulingOrder, setSchedulingOrder] = useState<WorkOrder | null>(null);
+  const [showCompromisso, setShowCompromisso] = useState(false);
 
   // Modal State
   const [modalDate, setModalDate] = useState("");

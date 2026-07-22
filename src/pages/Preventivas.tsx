@@ -5,8 +5,11 @@ import { Card, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
 import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "date-fns";
+import { calculateNextExecution } from "../utils/preventiveCalc";
 import { useNavigate } from "react-router-dom";
 import { Plus, Settings } from "lucide-react";
+import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
+import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
 
 export const Preventivas = () => {
   const navigate = useNavigate();
@@ -23,9 +26,19 @@ export const Preventivas = () => {
     setProviders(storageService.get("gsi_providers") || []);
   }, []);
 
+  const [showNovoPlano, setShowNovoPlano] = useState(false);
+  const [showExecucao, setShowExecucao] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PreventivePlan | undefined>(undefined);
+  const loadData = () => {
+    setPlans(storageService.get("gsi_preventive_plans") || []);
+  };
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
   
+  const getComputedNextExecution = (plan: PreventivePlan) => {
+    return calculateNextExecution(plan.periodicity as any, plan.lastExecution, plan.startDate) || plan.nextExecution;
+  };
+
   const getStatus = (nextExecution?: string) => {
     if (!nextExecution) return "Sem data";
     const date = parseISO(nextExecution);
@@ -38,16 +51,16 @@ export const Preventivas = () => {
 
   const metrics = {
     total: plans.length,
-    emDia: plans.filter(p => getStatus(p.nextExecution) === "Em dia").length,
-    proximas: plans.filter(p => getStatus(p.nextExecution) === "Próxima").length,
-    atrasadas: plans.filter(p => getStatus(p.nextExecution) === "Atrasada").length,
+    emDia: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Em dia").length,
+    proximas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Próxima").length,
+    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Atrasada").length,
   };
 
   const filteredPlans = plans.filter(p => {
     if (statusFilter === "Todas") return true;
-    if (statusFilter === "Em dia") return getStatus(p.nextExecution) === "Em dia";
-    if (statusFilter === "Próximas") return getStatus(p.nextExecution) === "Próxima";
-    if (statusFilter === "Atrasadas") return getStatus(p.nextExecution) === "Atrasada";
+    if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
+    if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p)) === "Próxima";
+    if (statusFilter === "Atrasadas") return getStatus(getComputedNextExecution(p)) === "Atrasada";
     return true;
   });
 
@@ -92,7 +105,8 @@ export const Preventivas = () => {
       {/* Cards Operacionais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPlans.map(plan => {
-          const status = getStatus(plan.nextExecution);
+          const nextExec = getComputedNextExecution(plan);
+          const status = getStatus(nextExec);
           let badgeClass = "bg-green-100 text-green-700";
           if (status === "Atrasada") badgeClass = "bg-red-100 text-red-700";
           else if (status === "Próxima") badgeClass = "bg-orange-100 text-orange-700";
@@ -114,7 +128,7 @@ export const Preventivas = () => {
                 <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1 mt-2">
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(plan.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Ativo:</span> {getAssetCode(plan.assetId)}</p>
-                  <p><span className="font-medium text-slate-500">Próx. Execução:</span> {plan.nextExecution ? format(parseISO(plan.nextExecution), 'dd/MM/yyyy') : 'N/A'}</p>
+                  <p><span className="font-medium text-slate-500">Próx. Execução:</span> {nextExec ? format(parseISO(nextExec), "dd/MM/yyyy") : "N/A"}</p>
                 </div>
 
                 <div className="flex gap-2 pt-3 border-t border-slate-100">

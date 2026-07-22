@@ -6,7 +6,8 @@ import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeader
 import { Badge } from "../components/ui/Badge";
 import { FileText, AlertTriangle, Plus, Search, Calendar } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { isPast, parseISO, differenceInDays, format } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { getDocumentStatus } from "../utils/documentStatus";
 
 export const Documentos = () => {
   const navigate = useNavigate();
@@ -24,15 +25,7 @@ export const Documentos = () => {
     return units.find(u => u.id === id)?.name || id;
   };
 
-  const getDocStatus = (doc: Document) => {
-    if (doc.status === "Crítico") return "Crítico";
-    if (doc.expirationDate) {
-      if (isPast(parseISO(doc.expirationDate))) return "Vencido";
-      const days = differenceInDays(parseISO(doc.expirationDate), new Date());
-      if (days <= 30) return "A Vencer";
-    }
-    return "Válido";
-  };
+  const getDocStatus = (doc: Document) => getDocumentStatus(doc.expirationDate, doc.status);
 
   const metrics = {
     total: documents.length,

@@ -7,6 +7,10 @@ import { Badge } from "../components/ui/Badge";
 import { Package, AlertTriangle, Plus, PackageOpen, Inbox, ShoppingCart, ArrowRightLeft, Search } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { getStockStatus } from "../utils/stockStatus";
+import { NovoMaterialModal } from "./estoque/NovoMaterialModal";
+import { MovimentacaoModal } from "./estoque/MovimentacaoModal";
+import { NovaSolicitacaoModal } from "./estoque/NovaSolicitacaoModal";
 
 export const Estoque = () => {
   const { currentUser } = useAuth();
@@ -14,6 +18,11 @@ export const Estoque = () => {
   const [materials, setMaterials] = useState<StockMaterial[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [statusFilter, setStatusFilter] = useState("Todos");
+
+  const [showNovoMaterial, setShowNovoMaterial] = useState(false);
+  const [showMovimentacao, setShowMovimentacao] = useState(false);
+  const [showSolicitacao, setShowSolicitacao] = useState(false);
+  const [movimentacaoType, setMovimentacaoType] = useState<"Entrada" | "Saída" | "Ajuste">("Entrada");
 
   const loadData = () => {
     setMaterials(storageService.get("gsi_stock_materials") || []);
@@ -57,15 +66,15 @@ export const Estoque = () => {
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/fila")}><ShoppingCart className="w-4 h-4" /> Solicitações</Button>
-          <Button variant="create" className="gap-2"><Plus className="w-4 h-4" /> Novo Material</Button>
+          <Button variant="create" className="gap-2" onClick={() => setShowNovoMaterial(true)}><Plus className="w-4 h-4" /> Novo Material</Button>
         </PageHeaderActionsContainer>
       </PageHeader>
       
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Button variant="outline" className="gap-2"><ArrowRightLeft className="w-4 h-4" /> Registrar Entrada</Button>
-        <Button variant="outline" className="gap-2"><ArrowRightLeft className="w-4 h-4" /> Registrar Saída</Button>
-        <Button variant="outline" className="gap-2"><PackageOpen className="w-4 h-4" /> Solicitar Material</Button>
-        <Button variant="outline" className="gap-2"><Search className="w-4 h-4" /> Consultar Movimentações</Button>
+        <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Entrada</Button>
+        <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Saída"); setShowMovimentacao(true); }}><ArrowRightLeft className="w-4 h-4" /> Registrar Saída</Button>
+        <Button variant="outline" className="gap-2" onClick={() => setShowSolicitacao(true)}><PackageOpen className="w-4 h-4" /> Solicitar Material</Button>
+        <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes")}><Search className="w-4 h-4" /> Consultar Movimentações</Button>
       </div>
 
       {/* Indicadores Acionáveis */}
@@ -103,7 +112,7 @@ export const Estoque = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredMaterials.map(mat => {
           const disponivel = mat.physicalBalance - mat.reservedBalance;
-          const reposicao = disponivel <= mat.minStock;
+          const status = getStockStatus(mat);
           
           return (
             <Card key={mat.id} className="hover:border-brand-300 transition-colors flex flex-col">
@@ -113,7 +122,15 @@ export const Estoque = () => {
                     <h3 className="font-semibold text-slate-900 truncate" title={mat.name}>{mat.name}</h3>
                     <p className="text-xs text-slate-500 font-mono mt-0.5">{mat.code}</p>
                   </div>
-                  {reposicao && <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 whitespace-nowrap">Reposição</Badge>}
+                  {status !== "Normal" && (
+                    <Badge variant="outline" className={
+                      status === "Sem saldo" ? "bg-red-50 text-red-700 border-red-200" :
+                      status === "Crítico" ? "bg-orange-50 text-orange-700 border-orange-200" :
+                      "bg-yellow-50 text-yellow-700 border-yellow-200"
+                    }>
+                      {status}
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="text-xs text-slate-500 mb-3 truncate" title={getUnitName(mat.unitId)}>

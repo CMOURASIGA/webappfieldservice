@@ -20,6 +20,7 @@ export interface Unit {
 export interface Location {
   id: string;
   unitId: string;
+  sector?: string;
   type: string;
   name: string;
   code: string;
@@ -36,6 +37,7 @@ export interface Asset {
   name: string;
   category: string;
   unitId: string;
+  sector?: string;
   locationId: string;
   manufacturer?: string;
   model?: string;
@@ -65,6 +67,7 @@ export interface Request {
   solicitanteId: string;
   assetId?: string;
   unitId: string;
+  sector?: string;
   locationId: string;
   categoryId: string;
   title: string;
@@ -74,6 +77,8 @@ export interface Request {
   attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
   active: boolean;
 }
 
@@ -86,6 +91,8 @@ export interface OSMaterial {
   type?: string;
   unitPrice?: number;
   quantity: number;
+  previousBalance?: number;
+  newBalance?: number;
   total?: number;
   
   // Novos campos de integração com estoque
@@ -111,6 +118,7 @@ export interface WorkOrder {
   requestId?: string;
   preventivePlanId?: string;
   unitId: string;
+  sector?: string;
   locationId: string;
   assetId?: string;
   type: string;
@@ -129,6 +137,8 @@ export interface WorkOrder {
   attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
   active: boolean;
 }
 
@@ -155,6 +165,7 @@ export interface PreventivePlan {
   id: string;
   code: string;
   unitId: string;
+  sector?: string;
   locationId?: string;
   assetId?: string;
   type: string;
@@ -162,6 +173,7 @@ export interface PreventivePlan {
   description: string;
   periodicity: string;
   lastExecution?: string;
+  startDate?: string;
   nextExecution: string;
   responsibleId?: string;
   providerId?: string;
@@ -170,6 +182,8 @@ export interface PreventivePlan {
   status: "Ativo" | "Inativo";
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
   active: boolean;
 }
 
@@ -189,6 +203,7 @@ export interface Document {
   type: string;
   title: string;
   unitId: string;
+  sector?: string;
   locationId?: string;
   assetId?: string;
   issuer: string;
@@ -201,6 +216,8 @@ export interface Document {
   attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
   active: boolean;
   periodicity?: string;
   regulatoryBody?: string;
@@ -224,6 +241,8 @@ export interface Provider {
   observations?: string;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
   active: boolean;
 }
 
@@ -256,6 +275,7 @@ export interface StockMaterial {
   category: string;
   unit: string;
   unitId: string;
+  sector?: string;
   locationId?: string;
   physicalBalance: number;
   reservedBalance: number;
@@ -268,6 +288,8 @@ export interface StockMaterial {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
 }
 
 export interface StockMovement {
@@ -275,10 +297,13 @@ export interface StockMovement {
   type: "Entrada" | "Saída" | "Reserva" | "Liberação" | "Devolução" | "Descarte" | "Ajuste";
   materialId: string;
   quantity: number;
+  previousBalance?: number;
+  newBalance?: number;
   workOrderId?: string;
   assetId?: string;
   locationId?: string;
   unitId: string;
+  sector?: string;
   userId: string; // Quem registrou
   technicianId?: string; // Quem retirou/devolveu
   providerId?: string;
@@ -290,15 +315,20 @@ export interface StockMovement {
 
 export interface StockRequest {
   id: string;
-  workOrderId: string;
+  protocol?: string;
+  workOrderId?: string;
   materialId?: string; // Se for solicitação de saldo insuficiente
   suggestedDescription?: string; // Se for não cadastrado
   isUnregistered: boolean;
   quantity: number;
+  previousBalance?: number;
+  newBalance?: number;
   estimatedUnit?: string;
   justification?: string;
   priority: Priority;
   requesterId: string;
+  unitId?: string;
+  sector?: string;
   assetId?: string;
   locationId?: string;
   neededDate?: string;
@@ -306,6 +336,8 @@ export interface StockRequest {
   resolutionMaterialId?: string; // Material final associado
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
+  resolution?: string;
 }
 
 export type ScheduleStatus = "Não programada" | "Programação sugerida" | "Programada" | "Confirmada pelo técnico" | "Reprogramação necessária" | "Cancelada" | "Concluída";

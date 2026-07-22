@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MainLayout } from "./layouts/MainLayout";
 import { Estoque } from "./pages/Estoque";
+import { MovimentacoesHistorico } from "./pages/estoque/MovimentacoesHistorico";
 import { FilaEstoque } from "./pages/FilaEstoque";
 import { VisaoGeral } from "./pages/VisaoGeral";
 import { Servicos } from "./pages/Servicos";
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="preventivas/:id" element={<DetalhePreventiva />} />
             <Route path="preventivas/:id/editar" element={<EditarPreventiva />} />
             <Route path="estoque" element={<Estoque />} />
+            <Route path="estoque/movimentacoes" element={<MovimentacoesHistorico />} />
             <Route path="estoque/fila" element={<FilaEstoque />} />
             <Route path="ativos" element={<Ativos />} />
             <Route path="ativos/:id" element={<DetalheAtivo />} />
