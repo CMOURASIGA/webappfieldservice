@@ -70,7 +70,12 @@ export const Agenda = () => {
 
   useEffect(() => {
     const periodo = searchParams.get("periodo");
-    if (periodo === "hoje") {
+    const selectedDate = searchParams.get("data");
+    if (periodo === "dia" && selectedDate) {
+      const parsedDate = parseISO(selectedDate);
+      if (isValid(parsedDate)) setCurrentDate(parsedDate);
+      setViewMode("Dia");
+    } else if (periodo === "hoje") {
       setCurrentDate(new Date());
       setViewMode("Dia");
     } else if (periodo === "semana") {

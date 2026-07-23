@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Inbox, 
@@ -15,11 +15,27 @@ import {
   PackageSearch, 
   X,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Wrench
 } from "lucide-react";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  format,
+  getDay,
+  isSameDay,
+  isSameMonth,
+  parseISO,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "../utils/cn";
 import { useAuth } from "../contexts/AuthContext";
+import { storageService } from "../services/storageService";
+import { TechnicianUnavailability, WorkOrder } from "../types";
 
 const navItems: { icon: any, label: string, href: string, subItems?: { label: string, href: string }[] }[] = [
   { icon: LayoutDashboard, label: "Visão Geral", href: "/" },
@@ -34,8 +50,20 @@ const adminItems: { icon: any, label: string, href: string, subItems?: { label: 
 
 export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?: boolean, setMobileMenuOpen?: (v: boolean) => void }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()));
+  const [scheduledDates, setScheduledDates] = useState<Date[]>([]);
+
+  useEffect(() => {
+    const orders = (storageService.get("gsi_work_orders") || []) as WorkOrder[];
+    const commitments = (storageService.get("gsi_technician_unavailabilities") || []) as TechnicianUnavailability[];
+    setScheduledDates([
+      ...orders.filter((order) => order.plannedStart).map((order) => parseISO(order.plannedStart!)),
+      ...commitments.filter((commitment) => commitment.startAt).map((commitment) => parseISO(commitment.startAt)),
+    ]);
+  }, [location.pathname, location.search]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -57,6 +85,14 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
   const toggleExpand = (label: string) => {
     setExpanded(prev => ({ ...prev, [label]: !prev[label] }));
   };
+
+  const monthDays = eachDayOfInterval({
+    start: startOfMonth(calendarMonth),
+    end: endOfMonth(calendarMonth),
+  });
+  const leadingBlankDays = getDay(startOfMonth(calendarMonth));
+  const hasSchedule = (day: Date) => scheduledDates.some((scheduledDate) => isSameDay(scheduledDate, day));
+  const openDay = (day: Date) => navigate(`/agenda?periodo=dia&data=${format(day, "yyyy-MM-dd")}`);
 
   const renderLink = (item: any, isSubItem = false) => {
     if (item.subItems) {
@@ -145,6 +181,60 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
               Configurações
             </div>
             {adminItems.map(item => renderLink(item))}
+
+            <section className="mx-3 mt-6 border-t border-white/25 px-1 pb-5 pt-5 text-white" aria-label="Agenda mensal">
+              <h2 className="mb-4 text-xs font-bold uppercase tracking-wider">Agenda</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  className="rounded p-1.5 hover:bg-white/15"
+                  onClick={() => setCalendarMonth((month) => subMonths(month, 1))}
+                  title="Mês anterior"
+                  aria-label="Mês anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <strong className="text-sm capitalize">{format(calendarMonth, "MMMM yyyy", { locale: ptBR })}</strong>
+                <button
+                  type="button"
+                  className="rounded p-1.5 hover:bg-white/15"
+                  onClick={() => setCalendarMonth((month) => addMonths(month, 1))}
+                  title="Próximo mês"
+                  aria-label="Próximo mês"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase">
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((label) => <span key={label} className="py-1">{label}</span>)}
+              </div>
+              <div className="grid grid-cols-7 text-center text-xs">
+                {Array.from({ length: leadingBlankDays }).map((_, index) => <span key={`empty-${index}`} />)}
+                {monthDays.map((day) => {
+                  const scheduled = hasSchedule(day);
+                  return (
+                    <button
+                      type="button"
+                      key={day.toISOString()}
+                      onClick={() => openDay(day)}
+                      className={cn(
+                        "relative mx-auto flex h-8 w-8 items-center justify-center rounded-md font-semibold hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white",
+                        isSameDay(day, new Date()) && "bg-white/15",
+                        !isSameMonth(day, calendarMonth) && "opacity-40",
+                      )}
+                      title={scheduled ? `${format(day, "dd/MM/yyyy")}, possui programação` : `Abrir ${format(day, "dd/MM/yyyy")}`}
+                      aria-label={scheduled ? `${format(day, "dd/MM/yyyy")}, possui programação` : `Abrir ${format(day, "dd/MM/yyyy")}`}
+                    >
+                      {format(day, "d")}
+                      {scheduled && <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-white" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[10px] leading-4 text-white/80">
+                Clique em uma data para abrir a visão do dia. Pontos brancos indicam dias com programação.
+              </p>
+            </section>
           </div>
         </nav>
       </aside>
