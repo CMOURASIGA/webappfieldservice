@@ -11,6 +11,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { getDocumentStatus } from "../utils/documentStatus";
 import { useAuth } from "../contexts/AuthContext";
+import { MetricButton } from "../components/ui/OperationalPage";
 
 export const Documentos = () => {
   const navigate = useNavigate();
@@ -107,26 +108,11 @@ export const Documentos = () => {
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <button onClick={() => setStatusFilter("Todos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Todos</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Críticos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Críticos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Críticos</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.criticos}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Vencidos")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Vencidos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Vencidos</p>
-          <p className="text-2xl font-bold text-orange-600">{metrics.vencidos}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Atenção")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atenção" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atenção (30d)</p>
-          <p className="text-2xl font-bold text-amber-500">{metrics.atencao}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Falta Anexo")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Falta Anexo" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Sem Anexo</p>
-          <p className="text-2xl font-bold text-slate-600">{metrics.semAnexo}</p>
-        </button>
+        <MetricButton label="Todos" value={metrics.total} active={statusFilter === "Todos"} onClick={() => setStatusFilter("Todos")} />
+        <MetricButton label="Críticos" value={metrics.criticos} active={statusFilter === "Críticos"} valueClassName="text-red-700" onClick={() => setStatusFilter("Críticos")} />
+        <MetricButton label="Vencidos" value={metrics.vencidos} active={statusFilter === "Vencidos"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Vencidos")} />
+        <MetricButton label="Atenção (30d)" value={metrics.atencao} active={statusFilter === "Atenção"} valueClassName="text-amber-700" onClick={() => setStatusFilter("Atenção")} />
+        <MetricButton label="Sem Anexo" value={metrics.semAnexo} active={statusFilter === "Falta Anexo"} onClick={() => setStatusFilter("Falta Anexo")} />
       </div>
 
       {/* Cards Operacionais */}
@@ -139,7 +125,7 @@ export const Documentos = () => {
           else if (status === "Sem validade definida") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
-            <Card key={doc.id} className="hover:border-brand-300 transition-colors flex flex-col">
+            <Card key={doc.id} className="operational-card flex flex-col">
               <CardContent className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <div className="pr-2">

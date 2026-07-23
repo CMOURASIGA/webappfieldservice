@@ -10,6 +10,7 @@ import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { useAuth } from "../contexts/AuthContext";
 import { format, isValid, parseISO } from "date-fns";
+import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
 
 const specialties = [
   "Climatização", "Elétrica", "Civil", "Hidráulica", "Elevadores",
@@ -99,37 +100,27 @@ export const Técnicos = () => {
   const activeLinkedOrders = orders.filter(o => o.providerId && o.status !== "Concluída" && o.status !== "Cancelada").length;
   const delayedLinkedOrders = orders.filter(o => o.providerId && o.status !== "Concluída" && o.status !== "Cancelada" && o.deadline && new Date(o.deadline) < new Date()).length;
 
-  const StatCard = ({ title, value, colorClass, onClick }: any) => (
-    <Card className={onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} onClick={onClick}>
-      <CardContent className="p-6">
-        <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
-        <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-
   const canEdit = true;
   const canToggle = true;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Técnicos de Serviço</h1>
-          <p className="text-sm text-slate-500">Consulte e gerencie empresas e profissionais externos vinculados às manutenções da GSI.</p>
-        </div>
-        {canEdit && (
+      <OperationalPageHeader
+        title="Técnicos de Serviço"
+        description="Consulte e gerencie empresas e profissionais externos vinculados às manutenções da GSI."
+        backTo="/servicos"
+        actions={canEdit ? (
           <Link to="/prestadores/novo">
             <Button>Novo técnico</Button>
           </Link>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Técnicos Ativos" value={activeProviders} colorClass="text-brand-700" onClick={() => { clearFilters(); setStatusFilter("Ativo"); }} />
-        <StatCard title="Técnicos Inativos" value={inactiveProviders} colorClass="text-slate-500" onClick={() => { clearFilters(); setStatusFilter("Inativo"); }} />
-        <StatCard title="Ordens Vinculadas (Ativas)" value={activeLinkedOrders} colorClass="text-blue-600" />
-        <StatCard title="Ordens Vinculadas (Atrasadas)" value={delayedLinkedOrders} colorClass="text-red-600" />
+        <MetricButton label="Técnicos Ativos" value={activeProviders} valueClassName="text-brand-700" onClick={() => { clearFilters(); setStatusFilter("Ativo"); }} />
+        <MetricButton label="Técnicos Inativos" value={inactiveProviders} onClick={() => { clearFilters(); setStatusFilter("Inativo"); }} />
+        <MetricButton label="Ordens Vinculadas (Ativas)" value={activeLinkedOrders} valueClassName="text-blue-700" />
+        <MetricButton label="Ordens Vinculadas (Atrasadas)" value={delayedLinkedOrders} valueClassName="text-red-700" />
       </div>
 
       <Card>
@@ -171,7 +162,7 @@ export const Técnicos = () => {
             {filteredProviders.map(provider => {
               const stats = getProviderStats(provider.id);
               return (
-                <Card key={provider.id} className="hover:shadow-md transition-shadow">
+                <Card key={provider.id} className="operational-card">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">
                       <div>

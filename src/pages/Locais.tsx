@@ -97,7 +97,7 @@ export const Locais = () => {
       <OperationalPageHeader
         title="Locais"
         description="Cadastro de prédios, andares, áreas e ambientes operacionais."
-        backTo="/"
+        backTo="/servicos"
         actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Local</Button>}
       />
 

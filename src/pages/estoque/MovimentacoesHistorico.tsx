@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
   Badge,
-  Button,
   Input,
-  PageHeader,
-  PageHeaderActionsContainer,
-  PageHeaderTitle,
-  PageHeaderTitleContent,
   Select,
   SelectContent,
   SelectItem,
@@ -19,9 +14,9 @@ import {
 import { Card, CardContent } from "../../components/ui/Card";
 import { storageService } from "../../services/storageService";
 import { StockMaterial, StockMovement } from "../../types";
+import { OperationalPageHeader } from "../../components/ui/OperationalPage";
 
 export const MovimentacoesHistorico = () => {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [materials, setMaterials] = useState<StockMaterial[]>([]);
@@ -47,7 +42,7 @@ export const MovimentacoesHistorico = () => {
   }, [searchParams]);
 
   const getMaterialName = (id: string) => materials.find((material) => material.id === id)?.name || id;
-  const getUserName = (id: string) => users.find((user) => user.id === id)?.name || "Usuario";
+  const getUserName = (id: string) => users.find((user) => user.id === id)?.name || "Usuário";
 
   const filtered = movements.filter((movement) => {
     const matchesSearch = getMaterialName(movement.materialId).toLowerCase().includes(searchTerm.toLowerCase());
@@ -57,17 +52,11 @@ export const MovimentacoesHistorico = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader>
-        <PageHeaderTitleContent>
-          <PageHeaderTitle title="Historico de Movimentacoes" />
-          <p className="text-sm text-slate-500">Extrato completo de entradas, saidas e ajustes de inventario.</p>
-        </PageHeaderTitleContent>
-        <PageHeaderActionsContainer>
-          <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque")}>
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </Button>
-        </PageHeaderActionsContainer>
-      </PageHeader>
+      <OperationalPageHeader
+        title="Histórico de Movimentações"
+        description="Extrato completo de entradas, saídas e ajustes de inventário."
+        backTo="/estoque"
+      />
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">

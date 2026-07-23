@@ -1,4 +1,4 @@
-﻿export type Role = "Solicitante" | "Operador GSI" | "Gestor GSI" | "Executor/Técnico" | "Executor/TÃ©cnico" | "Administrador";
+﻿export type Role = "Solicitante" | "Operador GSI" | "Gestor GSI" | "Executor/Técnico" | "Executor/Técnico" | "Administrador";
 
 export interface User {
   id: string;
@@ -42,14 +42,14 @@ export interface Asset {
   manufacturer?: string;
   model?: string;
   patrimonyNumber?: string;
-  criticality: "Baixa" | "MÃ©dia" | "Alta";
-  status: "Ativo" | "Inativo" | "Em manutenÃ§Ã£o";
+  criticality: "Baixa" | "Média" | "Alta";
+  status: "Ativo" | "Inativo" | "Em manutenção";
   observations?: string;
   active: boolean;
 }
 
-export type RequestStatus = "Rascunho" | "Aberta" | "Em triagem" | "Aguardando informação" | "Aguardando informaÃ§Ã£o" | "Aprovada" | "Rejeitada" | "Convertida em ordem";
-export type Priority = "Baixa" | "Média" | "MÃ©dia" | "Alta" | "Urgente";
+export type RequestStatus = "Rascunho" | "Aberta" | "Em triagem" | "Aguardando informação" | "Aguardando informação" | "Aprovada" | "Rejeitada" | "Convertida em ordem";
+export type Priority = "Baixa" | "Média" | "Média" | "Alta" | "Urgente";
 
 export interface Attachment {
   id: string;
@@ -82,12 +82,12 @@ export interface Request {
   active: boolean;
 }
 
-export type WorkOrderStatus = "Nova" | "Em planejamento" | "Planejada" | "Atribuída" | "AtribuÃ­da" | "Aguardando estoque" | "Aguardando material" | "Material liberado" | "Programada" | "Em execução" | "Em execuÃ§Ã£o" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Em validaÃ§Ã£o" | "Concluída" | "ConcluÃ­da" | "Cancelada" | "Reaberta";
+export type WorkOrderStatus = "Nova" | "Em planejamento" | "Planejada" | "Atribuída" | "Atribuída" | "Aguardando estoque" | "Aguardando material" | "Material liberado" | "Programada" | "Em execução" | "Em execução" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Em validação" | "Concluída" | "Concluída" | "Cancelada" | "Reaberta";
 
 export interface OSMaterial {
   id: string;
-  materialId?: string; // Se preenchido, Ã© um material cadastrado no estoque
-  description: string; // Nome ou descriÃ§Ã£o sugerida
+  materialId?: string; // Se preenchido, é um material cadastrado no estoque
+  description: string; // Nome ou descrição sugerida
   type?: string;
   unitPrice?: number;
   quantity: number;
@@ -95,9 +95,9 @@ export interface OSMaterial {
   newBalance?: number;
   total?: number;
   
-  // Novos campos de integraÃ§Ã£o com estoque
-  classification?: "Obrigatório" | "ObrigatÃ³rio" | "Recomendado" | "Contingencial" | "Terceiro" | "Não estocável" | "NÃ£o estocÃ¡vel" | "Eventual";
-  availability?: "Disponível" | "DisponÃ­vel" | "Parcialmente disponível" | "Parcialmente disponÃ­vel" | "Indisponível" | "IndisponÃ­vel" | "Aguardando validação" | "Aguardando validaÃ§Ã£o" | "Reservado" | "Liberado" | "Retirado" | "Consumido" | "Cancelado";
+  // Novos campos de integração com estoque
+  classification?: "Obrigatório" | "Obrigatório" | "Recomendado" | "Contingencial" | "Terceiro" | "Não estocável" | "Não estocável" | "Eventual";
+  availability?: "Disponível" | "Disponível" | "Parcialmente disponível" | "Parcialmente disponível" | "Indisponível" | "Indisponível" | "Aguardando validação" | "Aguardando validação" | "Reservado" | "Liberado" | "Retirado" | "Consumido" | "Cancelado";
   isUnregistered?: boolean;
   justification?: string;
   quantityUsed?: number;
@@ -146,7 +146,7 @@ export interface ChecklistItem {
   id: string;
   description: string;
   required: boolean;
-  result?: "Conforme" | "Não conforme" | "NÃ£o conforme" | "Não se aplica" | "NÃ£o se aplica" | null;
+  result?: "Conforme" | "Não conforme" | "Não conforme" | "Não se aplica" | "Não se aplica" | null;
   observations?: string;
   evidence?: string;
   correctiveRequestId?: string;
@@ -187,7 +187,7 @@ export interface PreventivePlan {
   active: boolean;
 }
 
-export type DocumentStatus = "Vigente" | "Atenção" | "AtenÃ§Ã£o" | "Crítico" | "CrÃ­tico" | "Vencido" | "Sem validade definida";
+export type DocumentStatus = "Vigente" | "Atenção" | "Atenção" | "Crítico" | "Crítico" | "Vencido" | "Sem validade definida";
 
 export interface DocumentVersion {
   id: string;
@@ -260,12 +260,12 @@ export interface AuditLog {
 export interface Category {
   id: string;
   name: string;
-  type: "ServiÃ§o" | "Documento" | "Preventiva" | "Demanda";
+  type: "Serviço" | "Documento" | "Preventiva" | "Demanda";
   active: boolean;
 }
 
-export type SupplyStatus = "Não informado" | "NÃ£o informado" | "Em planejamento" | "Aguardando análise" | "Aguardando anÃ¡lise" | "Parcialmente disponível" | "Parcialmente disponÃ­vel" | "Indisponível" | "IndisponÃ­vel" | "Reservado" | "Liberado" | "Retirado" | "Finalizado";
-export type StockMaterialStatus = "Normal" | "Atenção" | "AtenÃ§Ã£o" | "Crítico" | "CrÃ­tico" | "Sem saldo" | "Inativo";
+export type SupplyStatus = "Não informado" | "Não informado" | "Em planejamento" | "Aguardando análise" | "Aguardando análise" | "Parcialmente disponível" | "Parcialmente disponível" | "Indisponível" | "Indisponível" | "Reservado" | "Liberado" | "Retirado" | "Finalizado";
+export type StockMaterialStatus = "Normal" | "Atenção" | "Atenção" | "Crítico" | "Crítico" | "Sem saldo" | "Inativo";
 
 export interface StockMaterial {
   id: string;
@@ -294,7 +294,7 @@ export interface StockMaterial {
 
 export interface StockMovement {
   id: string;
-  type: "Entrada" | "Saída" | "SaÃ­da" | "Reserva" | "Liberação" | "LiberaÃ§Ã£o" | "Devolução" | "DevoluÃ§Ã£o" | "Descarte" | "Ajuste";
+  type: "Entrada" | "Saída" | "Saída" | "Reserva" | "Liberação" | "Liberação" | "Devolução" | "Devolução" | "Descarte" | "Ajuste";
   materialId: string;
   quantity: number;
   previousBalance?: number;
@@ -317,8 +317,8 @@ export interface StockRequest {
   id: string;
   protocol?: string;
   workOrderId?: string;
-  materialId?: string; // Se for solicitaÃ§Ã£o de saldo insuficiente
-  suggestedDescription?: string; // Se for nÃ£o cadastrado
+  materialId?: string; // Se for solicitação de saldo insuficiente
+  suggestedDescription?: string; // Se for não cadastrado
   isUnregistered: boolean;
   quantity: number;
   previousBalance?: number;
@@ -332,7 +332,7 @@ export interface StockRequest {
   assetId?: string;
   locationId?: string;
   neededDate?: string;
-  status: "Aguardando análise" | "Aguardando anÃ¡lise" | "Associado a existente" | "Aprovado para novo cadastro" | "Aguardando recebimento" | "Recebido" | "Rejeitado" | "Cancelado";
+  status: "Aguardando análise" | "Aguardando análise" | "Associado a existente" | "Aprovado para novo cadastro" | "Aguardando recebimento" | "Recebido" | "Rejeitado" | "Cancelado";
   resolutionMaterialId?: string; // Material final associado
   createdAt: string;
   updatedAt: string;
@@ -340,7 +340,7 @@ export interface StockRequest {
   resolution?: string;
 }
 
-export type ScheduleStatus = "Não programada" | "NÃ£o programada" | "Programação sugerida" | "ProgramaÃ§Ã£o sugerida" | "Programada" | "Confirmada pelo técnico" | "Confirmada pelo tÃ©cnico" | "Reprogramação necessária" | "ReprogramaÃ§Ã£o necessÃ¡ria" | "Cancelada" | "Concluída" | "ConcluÃ­da";
+export type ScheduleStatus = "Não programada" | "Não programada" | "Programação sugerida" | "Programação sugerida" | "Programada" | "Confirmada pelo técnico" | "Confirmada pelo técnico" | "Reprogramação necessária" | "Reprogramação necessária" | "Cancelada" | "Concluída" | "Concluída";
 
 export interface TechnicianWorkSchedule {
   id: string;
@@ -354,7 +354,7 @@ export interface TechnicianWorkSchedule {
   active: boolean;
 }
 
-export type UnavailabilityType = "Férias" | "FÃ©rias" | "Afastamento" | "Folga" | "Treinamento" | "Reunião" | "ReuniÃ£o" | "Serviço externo" | "ServiÃ§o externo" | "Bloqueio administrativo" | "Outro";
+export type UnavailabilityType = "Férias" | "Férias" | "Afastamento" | "Folga" | "Treinamento" | "Reunião" | "Reunião" | "Serviço externo" | "Serviço externo" | "Bloqueio administrativo" | "Outro";
 
 export interface TechnicianUnavailability {
   id: string;

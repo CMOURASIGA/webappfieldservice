@@ -136,7 +136,7 @@ export const Ativos = () => {
       <OperationalPageHeader
         title="Ativos"
         description="Gestão do patrimônio e dos equipamentos vinculados às unidades."
-        backTo="/"
+        backTo="/servicos"
         actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Ativo</Button>}
       />
 

@@ -9,6 +9,7 @@ import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
 import { format, isValid, addDays } from "date-fns";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const NovaPreventiva = () => {
   const navigate = useNavigate();
@@ -112,10 +113,11 @@ export const NovaPreventiva = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Manutenção Preventiva</h1>
-        <p className="text-sm text-slate-500">Cadastre uma nova rotina de manutenção preventiva.</p>
-      </div>
+      <OperationalPageHeader
+        title="Nova Manutenção Preventiva"
+        description="Cadastre uma nova rotina de manutenção preventiva."
+        backTo="/preventivas"
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>

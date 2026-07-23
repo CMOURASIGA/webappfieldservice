@@ -8,6 +8,7 @@ import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 
 const specialties = [
   "Climatização", "Elétrica", "Civil", "Hidráulica", "Elevadores",
@@ -88,10 +89,11 @@ export const EditarTécnico = () => {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Técnico</h1>
-        <p className="text-sm text-slate-500">Atualize as informações do fornecedor.</p>
-      </div>
+      <OperationalPageHeader
+        title="Editar Técnico"
+        description="Atualize as informações do fornecedor."
+        backTo="/prestadores"
+      />
 
       <Card>
         <CardHeader>

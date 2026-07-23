@@ -4,7 +4,7 @@ import { PreventivePlan, Unit, Asset, Provider, User } from "../types";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
-import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
+import { Button } from "@cnc-ti/layout-basic";
 import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "date-fns";
 import { calculateNextExecution } from "../utils/preventiveCalc";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Plus, Settings } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
+import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const Preventivas = () => {
   const navigate = useNavigate();
@@ -124,39 +125,28 @@ export const Preventivas = () => {
   return (
     <div className="space-y-6">
       
-      {/* Ações Rápidas */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => navigate("/preventivas/nova")} className="gap-2">
-          <Plus className="w-4 h-4" /> Nova Manutenção Preventiva
-        </Button>
-        <Button variant="outline" className="gap-2" onClick={handleGerarOSPendentes}>
-          <Settings className="w-4 h-4" /> Gerar OS Pendentes
-        </Button>
-      </div>
-
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenções Preventivas</h1>
-        <p className="text-sm text-slate-500">Gestão de rotinas e calendários de manutenção.</p>
-      </div>
+      <OperationalPageHeader
+        title="Manutenções Preventivas"
+        description="Gestão de rotinas e calendários de manutenção."
+        backTo="/servicos"
+        actions={
+          <>
+            <Button onClick={() => navigate("/preventivas/nova")} className="gap-2">
+              <Plus className="w-4 h-4" /> Nova Manutenção Preventiva
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={handleGerarOSPendentes}>
+              <Settings className="w-4 h-4" /> Gerar OS Pendentes
+            </Button>
+          </>
+        }
+      />
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button onClick={() => setStatusFilter("Todas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Total de Manutenções</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Em dia")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Em dia" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Em Dia</p>
-          <p className="text-2xl font-bold text-green-600">{metrics.emDia}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Próximas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Próximas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atenção (30d)</p>
-          <p className="text-2xl font-bold text-orange-500">{metrics.proximas}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Atrasadas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atrasadas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atrasadas</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.atrasadas}</p>
-        </button>
+        <MetricButton label="Total de Manutenções" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
+        <MetricButton label="Em Dia" value={metrics.emDia} active={statusFilter === "Em dia"} valueClassName="text-green-700" onClick={() => setStatusFilter("Em dia")} />
+        <MetricButton label="Atenção (30d)" value={metrics.proximas} active={statusFilter === "Próximas"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Próximas")} />
+        <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
       </div>
 
       {/* Cards Operacionais */}
@@ -170,7 +160,7 @@ export const Preventivas = () => {
           else if (status === "Sem data") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
-            <Card key={plan.id} className="hover:border-brand-300 transition-colors flex flex-col">
+            <Card key={plan.id} className="operational-card flex flex-col">
               <CardContent className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <div className="pr-2">

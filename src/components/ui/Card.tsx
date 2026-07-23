@@ -3,7 +3,7 @@ import { cn } from "../../utils/cn";
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-lg border border-slate-200 bg-white shadow-1", className)} {...props} />
+    <div ref={ref} className={cn("rounded-xl border border-slate-300 bg-white shadow-1", className)} {...props} />
   )
 );
 Card.displayName = "Card";
@@ -31,7 +31,7 @@ CardContent.displayName = "CardContent";
 
 export const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex items-center p-4 pt-0", className)} {...props} />
+    <div ref={ref} className={cn("flex items-center border-t border-slate-300 p-0", className)} {...props} />
   )
 );
 CardFooter.displayName = "CardFooter";

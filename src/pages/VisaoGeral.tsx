@@ -92,13 +92,13 @@ export const VisaoGeral = () => {
 
     const decisionList: Array<{ title: string; type: string; link: string }> = [];
     if (osSemResponsavel > 0) {
-      decisionList.push({ title: `${osSemResponsavel} OS sem tecnico atribuido`, type: "Warning", link: "/ordens?status=Sem+Responsavel" });
+      decisionList.push({ title: `${osSemResponsavel} OS sem técnico atribuído`, type: "Warning", link: "/ordens?status=Sem+Responsavel" });
     }
     if (osAguardandoMaterial > 0) {
       decisionList.push({ title: `${osAguardandoMaterial} OS travadas por falta de material`, type: "Critical", link: "/ordens?status=Falta+Material" });
     }
     if (docCriticos > 0) {
-      decisionList.push({ title: `${docCriticos} documentos em situacao critica`, type: "Critical", link: "/documentos?status=Críticos" });
+      decisionList.push({ title: `${docCriticos} documentos em situação crítica`, type: "Critical", link: "/documentos?status=Críticos" });
     }
 
     setDecisions(decisionList);
@@ -110,14 +110,14 @@ export const VisaoGeral = () => {
     const bgClass = isZero ? "bg-slate-50 text-slate-400" : `bg-slate-100 ${colorClass}`;
 
     return (
-      <Card className="cursor-pointer transition-all hover:border-brand-300 hover:shadow-sm" onClick={() => navigate(link)}>
-        <CardContent className="flex items-center justify-between p-6">
+      <Card className="cursor-pointer transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-2" onClick={() => navigate(link)}>
+        <CardContent className="flex min-h-32 items-start justify-between p-5">
           <div>
-            <p className="mb-1 text-sm font-medium text-slate-500">{title}</p>
-            <p className={`text-3xl font-bold ${finalColorClass}`}>{value}</p>
+            <p className="mb-5 text-xs font-bold uppercase tracking-wide text-slate-600">{title}</p>
+            <p className={`text-3xl font-bold ${finalColorClass}`}>{String(value).padStart(2, "0")}</p>
           </div>
-          <div className={`flex h-12 w-12 items-center justify-center rounded-full ${bgClass}`}>
-            <Icon className="h-6 w-6" />
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${bgClass}`}>
+            <Icon className="h-5 w-5" />
           </div>
         </CardContent>
       </Card>
@@ -131,31 +131,31 @@ export const VisaoGeral = () => {
       <div>
         <h2 className="mb-4 text-lg font-semibold text-slate-800">Alertas Consolidados</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Manutencoes Preventivas Atrasadas" value={metrics.manutencoesVencidas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas?status=Atrasadas" />
+          <StatCard title="Manutenções Preventivas Atrasadas" value={metrics.manutencoesVencidas} icon={AlertTriangle} colorClass="text-red-600" link="/preventivas?status=Atrasadas" />
           <StatCard title="OS Atrasadas" value={metrics.osAtrasadas} icon={Clock} colorClass="text-red-600" link="/ordens?status=Atrasadas" />
           <StatCard title="OS Faltando Material" value={metrics.osAguardandoMaterial} icon={Package} colorClass="text-amber-600" link="/ordens?status=Falta+Material" />
-          <StatCard title="Sem Responsavel" value={metrics.servicosSemResponsavel} icon={UserX} colorClass="text-brand-600" link="/ordens?status=Sem+Responsavel" />
-          <StatCard title="Reposicao Necessaria" value={metrics.reposicaoNecessaria} icon={ShoppingCart} colorClass="text-orange-600" link="/estoque?status=Reposição" />
+          <StatCard title="Sem Responsável" value={metrics.servicosSemResponsavel} icon={UserX} colorClass="text-brand-600" link="/ordens?status=Sem+Responsavel" />
+          <StatCard title="Reposição Necessária" value={metrics.reposicaoNecessaria} icon={ShoppingCart} colorClass="text-orange-600" link="/estoque?status=Reposição" />
           <StatCard title="Compras Pendentes" value={metrics.solicitacoesCompra} icon={Inbox} colorClass="text-slate-600" link="/estoque/fila" />
           <StatCard title="Documentos Vencidos" value={metrics.docVencidos} icon={FileText} colorClass="text-red-600" link="/documentos?status=Vencidos" />
-          <StatCard title="Documentos Criticos" value={metrics.docCriticos} icon={AlertTriangle} colorClass="text-red-600" link="/documentos?status=Críticos" />
+          <StatCard title="Documentos Críticos" value={metrics.docCriticos} icon={AlertTriangle} colorClass="text-red-600" link="/documentos?status=Críticos" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Precisa da sua decisao</CardTitle>
+            <CardTitle className="text-lg font-semibold">Precisa da sua decisão</CardTitle>
           </CardHeader>
           <CardContent>
             {decisions.length === 0 ? (
-              <p className="text-sm text-slate-500">Nenhuma decisao pendente no momento.</p>
+              <p className="text-sm text-slate-500">Nenhuma decisão pendente no momento.</p>
             ) : (
               <ul className="space-y-3">
                 {decisions.map((decision, index) => (
                   <li key={index} className="flex flex-col gap-3 rounded-md border border-slate-300 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm font-medium text-slate-800">{decision.title}</span>
-                    <Button size="sm" className="gap-2 shadow-1" onClick={() => navigate(decision.link)}>
+                    <Button variant="create" size="sm" className="gap-2" onClick={() => navigate(decision.link)}>
                       Resolver <ArrowRight className="h-4 w-4" />
                     </Button>
                   </li>
@@ -171,20 +171,20 @@ export const VisaoGeral = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <button onClick={() => navigate("/agenda?periodo=hoje")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
+              <button onClick={() => navigate("/agenda?periodo=hoje")} className="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
                 <span className="flex items-center gap-2 text-sm text-slate-600"><CalendarDays className="h-4 w-4" /> Atividades Hoje</span>
                 <span className="font-bold text-slate-900">{agenda.hoje}</span>
               </button>
-              <button onClick={() => navigate("/agenda?periodo=semana")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
+              <button onClick={() => navigate("/agenda?periodo=semana")} className="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
                 <span className="flex items-center gap-2 text-sm text-slate-600"><CalendarDays className="h-4 w-4" /> Atividades na Semana</span>
                 <span className="font-bold text-slate-900">{agenda.semana}</span>
               </button>
-              <button onClick={() => navigate("/ordens?status=Sem+Responsavel")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
-                <span className="flex items-center gap-2 text-sm text-slate-600"><UserX className="h-4 w-4" /> Atividades sem Responsavel</span>
+              <button onClick={() => navigate("/ordens?status=Sem+Responsavel")} className="flex w-full items-center justify-between rounded-md border border-slate-300 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
+                <span className="flex items-center gap-2 text-sm text-slate-600"><UserX className="h-4 w-4" /> Atividades sem Responsável</span>
                 <span className="font-bold text-red-600">{agenda.semResponsavel}</span>
               </button>
               <div className="pt-2">
-                <Button onClick={() => navigate("/agenda")} className="w-full gap-2 shadow-1">
+                <Button variant="create" onClick={() => navigate("/agenda")} className="w-full gap-2">
                   Abrir Agenda Completa <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>

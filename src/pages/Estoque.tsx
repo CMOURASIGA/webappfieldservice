@@ -3,10 +3,6 @@ import { ArrowRightLeft, PackageOpen, Plus, Search, ShoppingCart } from "lucide-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
-  PageHeader,
-  PageHeaderActionsContainer,
-  PageHeaderTitle,
-  PageHeaderTitleContent,
 } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
@@ -18,6 +14,7 @@ import { MovimentacoesHistorico } from "./estoque/MovimentacoesHistorico";
 import { NovaSolicitacaoModal } from "./estoque/NovaSolicitacaoModal";
 import { NovoMaterialModal } from "./estoque/NovoMaterialModal";
 import { getPendingStockRequests, getStockStatus, reconcileMaterial } from "../utils/stock";
+import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const Estoque = () => {
   const navigate = useNavigate();
@@ -63,54 +60,40 @@ export const Estoque = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader>
-        <PageHeaderTitleContent>
-          <PageHeaderTitle title="Gestao de Estoque" />
-          <p className="text-sm text-slate-500">Controle de materiais, movimentacoes e necessidades de reposicao.</p>
-        </PageHeaderTitleContent>
-        <PageHeaderActionsContainer>
+      <OperationalPageHeader
+        title="Gestão de Estoque"
+        description="Controle de materiais, movimentações e necessidades de reposição."
+        backTo="/"
+        actions={
+          <>
           <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}>
             <ArrowRightLeft className="w-4 h-4" /> Registrar Entrada
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Saída"); setShowMovimentacao(true); }}>
-            <ArrowRightLeft className="w-4 h-4" /> Registrar Saida
+            <ArrowRightLeft className="w-4 h-4" /> Registrar Saída
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => { setSelectedMaterialId(undefined); setShowSolicitacao(true); }}>
             <PackageOpen className="w-4 h-4" /> Solicitar Material
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes")}>
-            <Search className="w-4 h-4" /> Consultar Movimentacoes
+            <Search className="w-4 h-4" /> Consultar Movimentações
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/fila")}>
-            <ShoppingCart className="w-4 h-4" /> Solicitacoes
+            <ShoppingCart className="w-4 h-4" /> Solicitações
           </Button>
           <Button variant="create" className="gap-2" onClick={() => setShowNovoMaterial(true)}>
             <Plus className="w-4 h-4" /> Novo Material
           </Button>
-        </PageHeaderActionsContainer>
-      </PageHeader>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <button onClick={() => setStatusFilter("Todos")} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "Todos" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="mb-1 text-sm font-medium text-slate-600">Total de Itens</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Reposição")} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "Reposição" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="mb-1 text-sm font-medium text-slate-600">Reposicao Necessaria</p>
-          <p className="text-2xl font-bold text-orange-600">{metrics.reposicaoNecessaria}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Abaixo Minimo")} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "Abaixo Minimo" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="mb-1 text-sm font-medium text-slate-600">Abaixo do Minimo</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.abaixoMinimo}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Reserva Maior")} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "Reserva Maior" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="mb-1 text-sm font-medium text-slate-600">Reserva maior que saldo</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.reservaMaior}</p>
-        </button>
-        <button onClick={() => navigate("/estoque/fila")} className="rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-brand-300">
-          <p className="mb-1 text-sm font-medium text-slate-600">Solicitacoes Pendentes</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.solicitacoesPendentes}</p>
-        </button>
+        <MetricButton label="Total de Itens" value={metrics.total} active={statusFilter === "Todos"} onClick={() => setStatusFilter("Todos")} />
+        <MetricButton label="Reposição Necessária" value={metrics.reposicaoNecessaria} active={statusFilter === "Reposição"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Reposição")} />
+        <MetricButton label="Abaixo do Mínimo" value={metrics.abaixoMinimo} active={statusFilter === "Abaixo Minimo"} valueClassName="text-red-700" onClick={() => setStatusFilter("Abaixo Minimo")} />
+        <MetricButton label="Reserva maior que saldo" value={metrics.reservaMaior} active={statusFilter === "Reserva Maior"} valueClassName="text-red-700" onClick={() => setStatusFilter("Reserva Maior")} />
+        <MetricButton label="Solicitações Pendentes" value={metrics.solicitacoesPendentes} onClick={() => navigate("/estoque/fila")} />
       </div>
 
       {statusFilter !== "Todos" && (
@@ -129,7 +112,7 @@ export const Estoque = () => {
           const status = getStockStatus(material);
 
           return (
-            <Card key={material.id} className="flex flex-col transition-colors hover:border-brand-300">
+            <Card key={material.id} className="operational-card flex flex-col">
               <CardContent className="flex flex-1 flex-col p-4">
                 <div className="mb-2 flex items-start justify-between">
                   <div className="min-w-0 flex-1 pr-2">
@@ -180,7 +163,7 @@ export const Estoque = () => {
               <CardFooter className="mt-3 border-t border-slate-100 px-4 pb-4 pt-3">
                 <CardFooterActions
                   onView={() => navigate(`/estoque/movimentacoes?materialId=${material.id}`)}
-                  viewLabel="Historico"
+                  viewLabel="Histórico"
                 >
                   <Button
                     variant="outline"
