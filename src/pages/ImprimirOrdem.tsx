@@ -94,6 +94,17 @@ export const ImprimirOrdem = () => {
           <p className="text-sm whitespace-pre-wrap">{order.technicalDescription}</p>
         </div>
 
+        <div className="border border-black p-3 mb-6">
+          <h3 className="font-bold border-b border-black pb-1 mb-2">Histórico de Atendimento e Acompanhamentos</h3>
+          {order.observations?.trim() ? (
+            <div className="space-y-2 text-sm whitespace-pre-wrap leading-relaxed">
+              {order.observations.trim()}
+            </div>
+          ) : (
+            <p className="text-sm">Nenhum acompanhamento registrado até o momento.</p>
+          )}
+        </div>
+
         {/* Materiais */}
         <div className="border border-black p-0 mb-6">
           <h3 className="font-bold border-b border-black p-2 bg-gray-100">Materiais Necessários / Peças</h3>
