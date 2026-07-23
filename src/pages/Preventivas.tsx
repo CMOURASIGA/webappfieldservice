@@ -9,7 +9,7 @@ import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "da
 import { calculateNextExecution } from "../utils/preventiveCalc";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { Plus, Settings } from "lucide-react";
+import { CheckCircle2, Plus, Settings, X } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
 import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
@@ -28,6 +28,8 @@ export const Preventivas = () => {
   const [periodicityFilter, setPeriodicityFilter] = useState("Todas");
   const [unitFilter, setUnitFilter] = useState("Todas");
   const [providerFilter, setProviderFilter] = useState("Todos");
+  const [generatedOrderNumbers, setGeneratedOrderNumbers] = useState<string[]>([]);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans") || []);
@@ -73,7 +75,7 @@ export const Preventivas = () => {
     const allOrders = storageService.get("gsi_work_orders") || [];
     
     // Find a plan that needs an OS and doesn't have an active one
-    let createdOsCount = 0;
+    const createdNumbers: string[] = [];
     let newOrders = [...allOrders];
     
     for (const plan of allPlans) {
@@ -113,16 +115,18 @@ export const Preventivas = () => {
           };
           
           newOrders.push(newOrder as any);
-          createdOsCount++;
+          createdNumbers.push(number);
         }
       }
     }
     
-    if (createdOsCount > 0) {
+    if (createdNumbers.length > 0) {
       storageService.set("gsi_work_orders", newOrders);
-      alert(`OS criada com sucesso. Foram geradas ${createdOsCount} ordens de serviço.`);
+      setGeneratedOrderNumbers(createdNumbers);
+      setGenerationMessage(null);
     } else {
-      alert("Nenhuma manutenção pendente sem OS foi encontrada.");
+      setGeneratedOrderNumbers([]);
+      setGenerationMessage("Nenhuma manutenção pendente sem OS foi encontrada.");
     }
   };
   
@@ -159,6 +163,31 @@ export const Preventivas = () => {
           </>
         }
       />
+
+      {generatedOrderNumbers.length > 0 && (
+        <section className="mx-auto max-w-3xl rounded-xl border-2 border-green-500 bg-green-50 px-6 py-5 text-center shadow-2" role="status">
+          <div className="flex flex-col items-center gap-3">
+            <CheckCircle2 className="h-8 w-8 text-green-700" />
+            <div>
+              <h2 className="text-lg font-bold text-green-950">Ordens de Serviço criadas</h2>
+              <p className="mt-1 text-sm text-green-800">As manutenções pendentes foram convertidas em OS e já estão disponíveis para programação.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {generatedOrderNumbers.map((number) => <span key={number} className="rounded-md border border-green-700 bg-white px-3 py-1.5 font-mono text-sm font-bold text-green-900">{number}</span>)}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              <Button variant="create" onClick={() => navigate("/ordens")}>Ver Ordens de Serviço</Button>
+              <Button variant="outline" className="gap-2" onClick={() => setGeneratedOrderNumbers([])}><X className="h-4 w-4" /> Fechar</Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {generationMessage && (
+        <div className="mx-auto max-w-3xl rounded-xl border-2 border-amber-400 bg-amber-50 px-5 py-4 text-center text-sm font-medium text-amber-900" role="status">
+          {generationMessage}
+        </div>
+      )}
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por manutenção, código, periodicidade, unidade ou ativo..." resultCount={filteredPlans.length} />
 
