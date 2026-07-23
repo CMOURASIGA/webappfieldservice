@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider, OSMaterial, StockMaterial } from "../types";
 import { Button } from "../components/ui/Button";
@@ -9,12 +9,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Input } from "../components/ui/Input";
-import { Paperclip, Plus, Trash2, Printer } from "lucide-react";
+import { CalendarClock, Paperclip, Plus, Trash2, Printer } from "lucide-react";
 import { resolveOrderStatusFromMaterials } from "../utils/stock";
+import { Drawer } from "../components/ui/Drawer";
 
 export const DetalheOrdem = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const createdOrderNumber = (location.state as { createdOrderNumber?: string } | null)?.createdOrderNumber;
   const { currentUser } = useAuth();
   
   const [order, setOrder] = useState<WorkOrder | null>(null);
@@ -350,7 +353,30 @@ export const DetalheOrdem = () => {
   };
 
   const handleSaveSchedule = () => {
+    if (!order || !modalDate || !modalStartTime || !modalTechId) return;
+    const start = new Date(`${modalDate}T${modalStartTime}:00`);
+    const end = new Date(start.getTime() + Number(modalDuration) * 60000);
+    const orders = storageService.get("gsi_work_orders");
+    const index = orders.findIndex((item) => item.id === order.id);
+    if (index === -1) return;
+
+    const selectedUser = users.find((user) => user.id === modalTechId);
+    if (selectedUser) {
+      orders[index].responsibleId = selectedUser.id;
+      orders[index].providerId = undefined;
+    } else {
+      orders[index].providerId = modalTechId;
+    }
+    orders[index].plannedStart = start.toISOString();
+    orders[index].plannedEnd = end.toISOString();
+    orders[index].estimatedDurationMinutes = Number(modalDuration);
+    orders[index].scheduleStatus = "Programada";
+    orders[index].status = "Programada";
+    orders[index].updatedAt = new Date().toISOString();
+    storageService.set("gsi_work_orders", orders);
+    if (currentUser) storageService.logAudit(currentUser.id, "Programou OS", order.id, "WorkOrder", order.scheduleStatus || "Não programada", "Programada");
     setShowScheduleModal(false);
+    loadOrder();
   };
 
   const handleAssign = () => {
@@ -388,6 +414,12 @@ export const DetalheOrdem = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {createdOrderNumber && (
+        <div className="rounded-xl border-2 border-green-500 bg-green-50 p-4 text-green-950 shadow-1" role="status">
+          <strong>Ordem criada com sucesso:</strong> <span className="ml-1 rounded-md bg-green-700 px-3 py-1 font-mono font-bold text-white">{createdOrderNumber}</span>
+          <p className="mt-2 text-sm">Guarde esta numeração. Ela já pode ser localizada pela busca da tela de Ordens de Serviço.</p>
+        </div>
+      )}
       <div className="page-title-panel flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900 mb-1">OS: {order.number}</h1>
@@ -395,8 +427,17 @@ export const DetalheOrdem = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => navigate("/ordens")}>Voltar</Button>
-          <Button variant="primary" onClick={() => setShowScheduleModal(true)}>Programar</Button>
-          <Link to={`/ordens/${order.id}/imprimir`} target="_blank"><Button variant="secondary" className="gap-2"><Printer className="w-4 h-4" /> Imprimir</Button></Link>
+          <Button variant="primary" className="gap-2 shadow-2" onClick={() => {
+            if (order.plannedStart) {
+              const planned = new Date(order.plannedStart);
+              setModalDate(planned.toISOString().slice(0, 10));
+              setModalStartTime(planned.toTimeString().slice(0, 5));
+            }
+            setModalDuration(String(order.estimatedDurationMinutes || 60));
+            setModalTechId(order.responsibleId || order.providerId || "");
+            setShowScheduleModal(true);
+          }}><CalendarClock className="h-4 w-4" /> Programar</Button>
+          <Button variant="secondary" className="gap-2 border-slate-400 shadow-1" onClick={() => navigate(`/ordens/${order.id}/imprimir`)}><Printer className="w-4 h-4" /> Imprimir</Button>
         </div>
       </div>
 
@@ -771,19 +812,19 @@ export const DetalheOrdem = () => {
         </div>
       </div>
     
-      {showScheduleModal && (
-        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
-              <CardTitle>Programar Atividade</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setShowScheduleModal(false)}>X</Button>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
+      <Drawer isOpen={showScheduleModal} onClose={() => setShowScheduleModal(false)} title="Programar Ordem de Serviço">
+            <div className="space-y-4 rounded-xl border-2 border-slate-300 bg-white p-4">
+              {order.scheduleStatus === "Programada" && (
+                <div className="rounded-lg border-2 border-green-400 bg-green-50 p-3 text-sm font-semibold text-green-800">
+                  Esta OS está programada. Salvar novamente atualizará a programação.
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Técnico Principal</label>
                 <Select value={modalTechId} onChange={e => setModalTechId(e.target.value)}>
                   <option value="">Selecione um técnico...</option>
                   {users.filter(u => u.role === "Executor/Técnico" || u.role === "Administrador").map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  {providers.filter(p => p.active).map(provider => <option key={provider.id} value={provider.id}>{provider.name} (externo)</option>)}
                 </Select>
               </div>
 
@@ -813,13 +854,10 @@ export const DetalheOrdem = () => {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button variant="secondary" onClick={() => setShowScheduleModal(false)}>Cancelar</Button>
-                <Button onClick={handleSaveSchedule}>Confirmar Programação</Button>
+                <Button variant="create" onClick={handleSaveSchedule} disabled={!modalTechId || !modalDate || !modalStartTime}>Confirmar Programação</Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+      </Drawer>
     </div>
   );
 };
-

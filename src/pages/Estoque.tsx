@@ -180,13 +180,15 @@ export const Estoque = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs"
+                    className="card-action-button"
+                    title="Solicitar material"
+                    aria-label="Solicitar material"
                     onClick={() => {
                       setSelectedMaterialId(material.id);
                       setShowSolicitacao(true);
                     }}
                   >
-                    Solicitar
+                    <PackageOpen className="h-4 w-4" />
                   </Button>
                 </CardFooterActions>
               </CardFooter>

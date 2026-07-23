@@ -59,7 +59,7 @@ export const Documentos = () => {
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
     if (statusFilter === "Atenção") return getDocStatus(d) === "Atenção";
     if (statusFilter === "Falta Anexo") return !(d.attachments && d.attachments.length > 0);
-    if (statusFilter === "Vencimentos") return Boolean(d.expirationDate);
+    if (statusFilter === "Vencimentos") return ["Vencido", "Crítico", "Atenção"].includes(getDocStatus(d));
     return true;
   }).sort((a, b) => {
     if (statusFilter !== "Vencimentos") return 0;
@@ -99,6 +99,7 @@ export const Documentos = () => {
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button variant="default" className="gap-2" onClick={() => setStatusFilter("Vencimentos")}><Calendar className="w-4 h-4" /> Consultar vencimentos</Button>
+          {statusFilter === "Vencimentos" && <span className="text-sm font-medium text-slate-600">Exibindo vencidos, críticos e próximos do vencimento.</span>}
         </div>
       </div>
 

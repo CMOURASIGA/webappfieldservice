@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
   Badge,
@@ -23,6 +23,7 @@ export const MovimentacoesHistorico = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("Todos");
+  const materialIdFilter = searchParams.get("materialId");
 
   useEffect(() => {
     const allMovements = (storageService.get("gsi_stock_movements") || []).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -45,9 +46,10 @@ export const MovimentacoesHistorico = () => {
   const getUserName = (id: string) => users.find((user) => user.id === id)?.name || "Usuário";
 
   const filtered = movements.filter((movement) => {
+    const matchesMaterial = !materialIdFilter || movement.materialId === materialIdFilter;
     const matchesSearch = getMaterialName(movement.materialId).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "Todos" || movement.type === typeFilter;
-    return matchesSearch && matchesType;
+    return matchesMaterial && matchesSearch && matchesType;
   });
 
   return (
@@ -92,7 +94,11 @@ export const MovimentacoesHistorico = () => {
                   <span>Data: {format(parseISO(movement.date), "dd/MM/yyyy HH:mm")}</span>
                   <span>Responsavel: {getUserName(movement.userId)}</span>
                   {movement.sector && <span>Setor: {movement.sector}</span>}
-                  {movement.workOrderId && <span>OS: {movement.workOrderId}</span>}
+                  {movement.workOrderId && (
+                    <Link className="font-semibold text-brand-700 underline-offset-2 hover:underline" to={`/ordens/${movement.workOrderId}`}>
+                      Destino: {storageService.get("gsi_work_orders").find((order) => order.id === movement.workOrderId)?.number || movement.workOrderId}
+                    </Link>
+                  )}
                 </div>
               </div>
               <div className="text-right">

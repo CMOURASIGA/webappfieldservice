@@ -88,13 +88,15 @@ interface SearchToolbarProps {
 
 export const SearchToolbar = ({ value, onChange, placeholder = "Buscar registros...", resultCount }: SearchToolbarProps) => (
   <div className="flex flex-col gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 shadow-1 sm:flex-row sm:items-center">
-    <div className="relative flex-1">
-      <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-500" />
+    <div className="flex flex-1">
+      <span className="flex w-11 shrink-0 items-center justify-center rounded-l-md border-2 border-r-0 border-slate-400 bg-slate-100 text-brand-800" aria-hidden="true">
+        <Search className="h-4 w-4" />
+      </span>
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="pl-9"
+        className="rounded-l-none"
       />
     </div>
     {value && (

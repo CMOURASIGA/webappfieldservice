@@ -125,7 +125,7 @@ export const Ordens = () => {
         actions={
           <>
             <Button variant="secondary" className="gap-2" onClick={() => navigate("/agenda")}><Calendar className="h-4 w-4" /> Ver Agenda</Button>
-            <Button className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="h-4 w-4" /> Nova OS</Button>
+            <Button variant="create" className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="h-4 w-4" /> Nova OS</Button>
           </>
         }
       />
@@ -209,24 +209,28 @@ export const Ordens = () => {
           })}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-6">
+        <div className="flex overflow-x-auto rounded-xl border-2 border-slate-400 bg-white pb-6">
           {KANBAN_COLUMNS.map(col => {
             const colOrders = filteredOrders.filter(o => getKanbanColumn(o.status) === col);
             return (
-              <div key={col} className="flex-none w-80 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col">
-                <div className="flex justify-between items-center mb-4">
+              <div key={col} className="flex w-80 flex-none flex-col border-r-2 border-slate-400 bg-slate-50 last:border-r-0">
+                <div className="mb-4 flex items-center justify-between border-b-2 border-slate-400 bg-slate-100 p-4">
                   <h3 className="font-semibold text-slate-700">{col}</h3>
                   <span className="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{colOrders.length}</span>
                 </div>
                 
-                <div className="space-y-3 overflow-y-auto flex-1 pr-1 min-h-[300px] max-h-[600px]">
+                <div className="min-h-[300px] max-h-[600px] flex-1 space-y-3 overflow-y-auto px-4 pb-4">
                   {colOrders.map(order => {
                     const conditions = getConditionLabels(order);
                     return (
                       <div key={order.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-brand-300" onClick={() => navigate(`/ordens/${order.id}`)}>
                         <div className="flex justify-between items-start mb-1">
                           <p className="text-xs font-mono text-slate-500">{order.number}</p>
-                          <span className={`w-2 h-2 rounded-full ${order.priority === 'Urgente' ? 'bg-red-500' : order.priority === 'Alta' ? 'bg-orange-500' : 'bg-blue-500'}`}></span>
+                          <span
+                            className={`h-3 w-3 rounded-full ring-2 ring-white ${order.priority === 'Urgente' ? 'bg-red-500' : order.priority === 'Alta' ? 'bg-orange-500' : 'bg-blue-500'}`}
+                            title={`Prioridade: ${order.priority}`}
+                            aria-label={`Prioridade: ${order.priority}`}
+                          />
                         </div>
                         <h4 className="font-medium text-slate-900 text-sm mb-2 line-clamp-2">{order.technicalDescription}</h4>
                         

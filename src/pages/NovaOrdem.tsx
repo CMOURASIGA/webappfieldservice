@@ -113,7 +113,7 @@ export const NovaOrdem = () => {
     
     storageService.logAudit(currentUser.id, "Ordem Criada", newOs.id, "WorkOrder");
 
-    navigate("/ordens");
+    navigate(`/ordens/${newOs.id}`, { state: { createdOrderNumber: newOs.number } });
   };
 
   const handleSaveNewLocation = (e: React.FormEvent) => {

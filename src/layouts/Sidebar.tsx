@@ -117,14 +117,14 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
       {/* Mobile backdrop */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 z-20 md:hidden" 
+          className="fixed inset-0 bg-slate-900/50 z-[60] md:hidden" 
           onClick={() => setMobileMenuOpen && setMobileMenuOpen(false)}
         />
       )}
       
       {/* Sidebar */}
       <aside className={cn("sidebar-text",
-        "fixed top-0 left-0 h-screen w-[240px] bg-brand-900 flex flex-col z-30 transition-transform duration-300 md:translate-x-0",
+        "fixed top-0 left-0 h-screen w-[240px] bg-brand-900 flex flex-col z-[70] transition-transform duration-300 md:translate-x-0",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="h-16 flex items-center justify-between px-6 mb-4 mt-2">

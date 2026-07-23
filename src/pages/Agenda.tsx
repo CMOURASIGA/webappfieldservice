@@ -214,12 +214,12 @@ export const Agenda = () => {
     const scheduled = getScheduledOrders();
     
     return (
-      <div className="agenda-grid flex h-[calc(100vh-250px)] flex-col">
+      <div className="agenda-grid flex h-[calc(100vh-250px)] flex-col border-2 border-slate-500">
         {/* Header Days */}
         <div className="flex border-b-2 border-slate-300 bg-slate-100">
-          <div className="w-16 flex-shrink-0 border-r-2 border-slate-400"></div>
+          <div className="w-16 flex-shrink-0 border-r-2 border-slate-500"></div>
           {weekDays.map(day => (
-            <div key={day.toISOString()} className={`flex-1 border-r-2 border-slate-400 py-2 text-center last:border-r-0 ${isToday(day) ? 'bg-brand-100' : ''}`}>
+            <div key={day.toISOString()} className={`flex-1 border-r-2 border-slate-500 py-2 text-center last:border-r-0 ${isToday(day) ? 'bg-brand-100' : ''}`}>
               <div className="text-xs text-slate-500 uppercase">{format(day, 'EEE', { locale: ptBR })}</div>
               <div className={`text-lg font-medium ${isToday(day) ? 'text-brand-700' : 'text-slate-800'}`}>
                 {format(day, 'dd')}
@@ -232,14 +232,14 @@ export const Agenda = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="relative">
             {hours.map(hour => (
-              <div key={hour} className="flex min-h-[60px] border-b-2 border-slate-300 last:border-b-0">
-                <div className="w-16 flex-shrink-0 border-r-2 border-slate-400 bg-slate-100 py-2 text-center text-xs font-semibold text-slate-600">
+              <div key={hour} className="flex min-h-[60px] border-b-2 border-slate-400 last:border-b-0">
+                <div className="w-16 flex-shrink-0 border-r-2 border-slate-500 bg-slate-100 py-2 text-center text-xs font-semibold text-slate-600">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 {weekDays.map(day => (
                   <div 
                     key={`${day.toISOString()}-${hour}`} 
-                    className={`relative flex-1 border-r-2 border-slate-400 transition-colors last:border-r-0 ${isToday(day) ? 'bg-brand-50/50' : ''}`}
+                    className={`relative flex-1 border-r-2 border-slate-500 transition-colors last:border-r-0 ${isToday(day) ? 'bg-brand-50/50' : ''}`}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, day, hour)}
                   >

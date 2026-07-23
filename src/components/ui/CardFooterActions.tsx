@@ -46,17 +46,17 @@ export const CardFooterActions = ({
   const renderViewButton = () => {
     if (viewLink) {
       return (
-        <Link to={viewLink}>
-          <Button variant="primary" size="sm" className="gap-2 shadow-1">
-            <Eye className="w-4 h-4" /> {viewLabel}
+        <Link to={viewLink} title={viewLabel} aria-label={viewLabel}>
+          <Button variant="primary" size="sm" className="card-action-button shadow-1" title={viewLabel} aria-label={viewLabel}>
+            <Eye className="w-4 h-4" />
           </Button>
         </Link>
       );
     }
     if (onView) {
       return (
-        <Button variant="primary" size="sm" className="gap-2 shadow-1" onClick={onView}>
-          <Eye className="w-4 h-4" /> {viewLabel}
+        <Button variant="primary" size="sm" className="card-action-button shadow-1" onClick={onView} title={viewLabel} aria-label={viewLabel}>
+          <Eye className="w-4 h-4" />
         </Button>
       );
     }
