@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Asset, Request, WorkOrder, PreventivePlan, Document, Unit, Location } from "../types";
@@ -45,7 +45,7 @@ export const DetalheAtivo = () => {
 
   // Timeline events
   const timeline = [
-    ...requests.map(r => ({ date: r.createdAt, type: 'Demanda', title: r.title, link: `/servicos/${r.id}`, status: r.status })),
+    ...requests.map(r => ({ date: r.createdAt, type: 'SolicitaÃ§Ã£o', title: r.title, link: `/servicos/${r.id}`, status: r.status })),
     ...orders.map(o => ({ date: o.createdAt, type: 'Ordem', title: o.technicalDescription, link: `/ordens/${o.id}`, status: o.status }))
   ].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -58,11 +58,11 @@ export const DetalheAtivo = () => {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-semibold text-slate-900">{asset.name}</h1>
-            <Badge variant={asset.status === 'Ativo' ? 'success' : asset.status === 'Em manutenção' ? 'warning' : 'default'}>{asset.status}</Badge>
+            <Badge variant={asset.status === 'Ativo' ? 'success' : asset.status === 'Em manutenÃ§Ã£o' ? 'warning' : 'default'}>{asset.status}</Badge>
             <Badge className="bg-slate-100 text-slate-700">{asset.code}</Badge>
           </div>
           <p className="text-sm text-slate-500 mt-1 flex items-center gap-4">
-            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5"/> {unit?.name} {location ? `• ${location.name}` : ''}</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5"/> {unit?.name} {location ? `â€¢ ${location.name}` : ''}</span>
             <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5"/> {asset.category}</span>
           </p>
         </div>
@@ -74,8 +74,8 @@ export const DetalheAtivo = () => {
             <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1">
               <Wrench className="w-5 h-5" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">Última Intervenção</p>
-            <p className="font-semibold text-sm">{lastOrder ? (isValid(parseISO(lastOrder.updatedAt)) ? (isValid(parseISO(lastOrder.updatedAt)) ? format(parseISO(lastOrder.updatedAt), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : 'Nenhuma'}</p>
+            <p className="text-xs text-slate-500 font-medium">Ãšltima IntervenÃ§Ã£o</p>
+            <p className="font-semibold text-sm">{lastOrder ? (isValid(parseISO(lastOrder.updatedAt)) ? (isValid(parseISO(lastOrder.updatedAt)) ? format(parseISO(lastOrder.updatedAt), 'dd/MM/yyyy') : 'Data InvÃ¡lida') : 'Data InvÃ¡lida') : 'Nenhuma'}</p>
           </CardContent>
         </Card>
         
@@ -84,8 +84,8 @@ export const DetalheAtivo = () => {
             <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-1">
               <Clock className="w-5 h-5" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">Próxima Preventiva</p>
-            <p className="font-semibold text-sm">{nextPlan ? (isValid(parseISO(nextPlan.nextExecution)) ? (isValid(parseISO(nextPlan.nextExecution)) ? format(parseISO(nextPlan.nextExecution), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida') : 'Não programada'}</p>
+            <p className="text-xs text-slate-500 font-medium">PrÃ³xima Preventiva</p>
+            <p className="font-semibold text-sm">{nextPlan ? (isValid(parseISO(nextPlan.nextExecution)) ? (isValid(parseISO(nextPlan.nextExecution)) ? format(parseISO(nextPlan.nextExecution), 'dd/MM/yyyy') : 'Data InvÃ¡lida') : 'Data InvÃ¡lida') : 'NÃ£o programada'}</p>
           </CardContent>
         </Card>
 
@@ -94,7 +94,7 @@ export const DetalheAtivo = () => {
             <div className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-1">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <p className="text-xs text-slate-500 font-medium">Total de Manutenções Corretivas</p>
+            <p className="text-xs text-slate-500 font-medium">Total de ManutenÃ§Ãµes Corretivas</p>
             <p className="font-semibold text-lg">{requests.length}</p>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export const DetalheAtivo = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Eventos</CardTitle>
+              <CardTitle>HistÃ³rico de Eventos</CardTitle>
             </CardHeader>
             <CardContent>
               {timeline.length > 0 ? (
@@ -125,12 +125,12 @@ export const DetalheAtivo = () => {
                       <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-semibold text-sm text-slate-900">{evt.type}</span>
-                          <span className="text-xs text-slate-500">{(isValid(parseISO(evt.date)) ? (isValid(parseISO(evt.date)) ? format(parseISO(evt.date), 'dd/MM/yyyy HH:mm') : 'Data Inválida') : 'Data Inválida')}</span>
+                          <span className="text-xs text-slate-500">{(isValid(parseISO(evt.date)) ? (isValid(parseISO(evt.date)) ? format(parseISO(evt.date), 'dd/MM/yyyy HH:mm') : 'Data InvÃ¡lida') : 'Data InvÃ¡lida')}</span>
                         </div>
                         <p className="text-sm text-slate-700 line-clamp-2">{evt.title}</p>
                         <div className="flex justify-between items-end mt-3">
                           <Badge variant="default" className="text-[10px]">{evt.status}</Badge>
-                          <Link to={evt.link} className="text-xs font-medium text-brand-600 hover:text-brand-800">Ver detalhes →</Link>
+                          <Link to={evt.link} className="text-xs font-medium text-brand-600 hover:text-brand-800">Ver detalhes â†’</Link>
                         </div>
                       </div>
                     </div>
@@ -146,7 +146,7 @@ export const DetalheAtivo = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Detalhes Técnicos</CardTitle>
+              <CardTitle>Detalhes TÃ©cnicos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -154,7 +154,7 @@ export const DetalheAtivo = () => {
                 <p className="text-sm font-medium">{asset.manufacturer || '-'} {asset.model ? ` / ${asset.model}` : ''}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 mb-0.5">Nº Patrimônio</p>
+                <p className="text-xs text-slate-500 mb-0.5">NÂº PatrimÃ´nio</p>
                 <p className="text-sm font-medium">{asset.patrimonyNumber || '-'}</p>
               </div>
               <div>
@@ -163,7 +163,7 @@ export const DetalheAtivo = () => {
               </div>
               {asset.observations && (
                 <div>
-                  <p className="text-xs text-slate-500 mb-0.5">Observações</p>
+                  <p className="text-xs text-slate-500 mb-0.5">ObservaÃ§Ãµes</p>
                   <p className="text-sm">{asset.observations}</p>
                 </div>
               )}
@@ -183,7 +183,7 @@ export const DetalheAtivo = () => {
                       <p className="text-xs text-slate-500 mt-1">{p.description}</p>
                       <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-100">
                         <span className="text-[10px] uppercase text-slate-500 font-semibold">{p.periodicity}</span>
-                        <span className="text-xs text-slate-700">Prox: {(isValid(parseISO(p.nextExecution)) ? (isValid(parseISO(p.nextExecution)) ? format(parseISO(p.nextExecution), 'dd/MM/yyyy') : 'Data Inválida') : 'Data Inválida')}</span>
+                        <span className="text-xs text-slate-700">Prox: {(isValid(parseISO(p.nextExecution)) ? (isValid(parseISO(p.nextExecution)) ? format(parseISO(p.nextExecution), 'dd/MM/yyyy') : 'Data InvÃ¡lida') : 'Data InvÃ¡lida')}</span>
                       </div>
                     </li>
                   ))}
@@ -222,3 +222,5 @@ export const DetalheAtivo = () => {
     </div>
   );
 };
+
+

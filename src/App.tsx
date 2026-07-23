@@ -1,37 +1,39 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MainLayout } from "./layouts/MainLayout";
-import { Estoque } from "./pages/Estoque";
-import { MovimentacoesHistorico } from "./pages/estoque/MovimentacoesHistorico";
-import { FilaEstoque } from "./pages/FilaEstoque";
-import { VisaoGeral } from "./pages/VisaoGeral";
-import { Servicos } from "./pages/Servicos";
-import { GestaoServicosDashboard } from "./pages/GestaoServicosDashboard";
-import { NovoServico } from "./pages/NovoServico";
-import { DetalheServico } from "./pages/DetalheServico";
-import { Ordens } from "./pages/Ordens";
-import { NovaOrdem } from "./pages/NovaOrdem";
-import { DetalheOrdem } from "./pages/DetalheOrdem";
-import { Documentos } from "./pages/Documentos";
-import { NovoDocumento } from "./pages/NovoDocumento";
-import { DetalheDocumento } from "./pages/DetalheDocumento";
-import { EditarDocumento } from "./pages/EditarDocumento";
-import { Ativos } from "./pages/Ativos";
-import { DetalheLocal } from "./pages/DetalheLocal";
-import { DetalheAtivo } from "./pages/DetalheAtivo";
-import { Preventivas } from "./pages/Preventivas";
-import { NovaPreventiva } from "./pages/NovaPreventiva";
-import { DetalhePreventiva } from "./pages/DetalhePreventiva";
-import { EditarPreventiva } from "./pages/EditarPreventiva";
-import { Técnicos as Prestadores } from "./pages/Prestadores";
-import { NovoTécnico as NovoPrestador } from "./pages/NovoPrestador";
-import { EditarTécnico as EditarPrestador } from "./pages/EditarPrestador";
-import { DetalheTécnico as DetalhePrestador } from "./pages/DetalhePrestador";
-import { Admin } from "./pages/Admin";
-import { Auditoria } from "./pages/Auditoria";
 import { Agenda } from "./pages/Agenda";
+import { Admin } from "./pages/Admin";
+import { Ativos } from "./pages/Ativos";
+import { Auditoria } from "./pages/Auditoria";
+import { DetalheAtivo } from "./pages/DetalheAtivo";
+import { DetalheDocumento } from "./pages/DetalheDocumento";
+import { DetalheLocal } from "./pages/DetalheLocal";
+import { DetalheOrdem } from "./pages/DetalheOrdem";
+import { DetalhePreventiva } from "./pages/DetalhePreventiva";
+import { DetalheServico } from "./pages/DetalheServico";
+import { DetalheT\u00E9cnico as DetalhePrestador } from "./pages/DetalhePrestador";
+import { Documentos } from "./pages/Documentos";
+import { EditarDocumento } from "./pages/EditarDocumento";
+import { EditarPreventiva } from "./pages/EditarPreventiva";
+import { EditarT\u00E9cnico as EditarPrestador } from "./pages/EditarPrestador";
+import { Estoque } from "./pages/Estoque";
+import { FilaEstoque } from "./pages/FilaEstoque";
+import { GestaoServicosDashboard } from "./pages/GestaoServicosDashboard";
 import { ImprimirOrdem } from "./pages/ImprimirOrdem";
+import { Locais } from "./pages/Locais";
+import { MovimentacoesHistorico } from "./pages/estoque/MovimentacoesHistorico";
+import { NovaOrdem } from "./pages/NovaOrdem";
+import { NovaPreventiva } from "./pages/NovaPreventiva";
+import { NovoDocumento } from "./pages/NovoDocumento";
+import { NovoServico } from "./pages/NovoServico";
+import { NovoT\u00E9cnico as NovoPrestador } from "./pages/NovoPrestador";
+import { Ordens } from "./pages/Ordens";
+import { Preventivas } from "./pages/Preventivas";
+import { Relatorios } from "./pages/Relatorios";
+import { Servicos } from "./pages/Servicos";
+import { T\u00E9cnicos as Prestadores } from "./pages/Prestadores";
+import { VisaoGeral } from "./pages/VisaoGeral";
 
 export default function App() {
   return (
@@ -46,7 +48,7 @@ export default function App() {
             <Route path="servicos/corretivas" element={<Servicos />} />
             <Route path="servicos/nova" element={<NovoServico />} />
             <Route path="servicos/:id" element={<DetalheServico />} />
-            
+
             <Route path="ordens" element={<Ordens />} />
             <Route path="ordens/nova" element={<NovaOrdem />} />
             <Route path="ordens/:id" element={<DetalheOrdem />} />
@@ -55,27 +57,29 @@ export default function App() {
             <Route path="preventivas/nova" element={<NovaPreventiva />} />
             <Route path="preventivas/:id" element={<DetalhePreventiva />} />
             <Route path="preventivas/:id/editar" element={<EditarPreventiva />} />
+
             <Route path="estoque" element={<Estoque />} />
             <Route path="estoque/movimentacoes" element={<MovimentacoesHistorico />} />
             <Route path="estoque/fila" element={<FilaEstoque />} />
+
             <Route path="ativos" element={<Ativos />} />
             <Route path="ativos/:id" element={<DetalheAtivo />} />
+            <Route path="locais" element={<Locais />} />
             <Route path="locais/:id" element={<DetalheLocal />} />
+
             <Route path="documentos" element={<Documentos />} />
             <Route path="documentos/novo" element={<NovoDocumento />} />
             <Route path="documentos/:id" element={<DetalheDocumento />} />
             <Route path="documentos/:id/editar" element={<EditarDocumento />} />
-            <Route path="admin" element={<Admin />} />
-            <Route path="auditoria" element={<Auditoria />} />
-            
+
             <Route path="prestadores" element={<Prestadores />} />
             <Route path="prestadores/novo" element={<NovoPrestador />} />
             <Route path="prestadores/:id/editar" element={<EditarPrestador />} />
             <Route path="prestadores/:id" element={<DetalhePrestador />} />
-            
-            {/* Fallbacks for now */}
-            <Route path="relatorios" element={<div className="p-6">Relatórios (Em breve)</div>} />
-            
+
+            <Route path="relatorios" element={<Relatorios />} />
+            <Route path="admin" element={<Admin />} />
+            <Route path="auditoria" element={<Auditoria />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
@@ -83,8 +87,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-
-
-
-

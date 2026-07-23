@@ -108,6 +108,22 @@ export const DetalheDocumento = () => {
     }
   };
 
+  const handleDeactivate = () => {
+    if (!doc) return;
+
+    const docs = storageService.get("gsi_documents");
+    const idx = docs.findIndex((item) => item.id === doc.id);
+    if (idx === -1) return;
+
+    docs[idx].active = false;
+    docs[idx].updatedAt = new Date().toISOString();
+    storageService.set("gsi_documents", docs);
+    if (currentUser) {
+      storageService.logAudit(currentUser.id, "Inativou Documento", doc.id, "Document");
+    }
+    navigate("/documentos");
+  };
+
   const [newVersion, setNewVersion] = useState({ version: "", observations: "" });
 
   useEffect(() => {
@@ -188,6 +204,7 @@ export const DetalheDocumento = () => {
         </div>
         <div className="flex gap-2">
           <Link to={`/documentos/${doc.id}/editar`}><Button variant="secondary" className="flex items-center gap-2"><Pencil className="w-4 h-4"/> Editar</Button></Link>
+          <Button variant="destructive" onClick={handleDeactivate}>Inativar</Button>
         </div>
       </div>
 

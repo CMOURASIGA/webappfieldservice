@@ -1,38 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
+  Button,
+  Combobox,
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  Button,
   Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Combobox,
 } from "@cnc-ti/layout-basic";
-import { storageService } from "../../services/storageService";
-import { StockMaterial, StockMovement } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
+import { storageService } from "../../services/storageService";
+import { StockMovement, WorkOrder, WorkOrderStatus } from "../../types";
+import { getAvailableStock, reconcileMaterial, updateOrderMaterialAvailability } from "../../utils/stock";
 
 const schema = z.object({
   type: z.enum(["Entrada", "Saída", "Ajuste"]),
-  materialId: z.string().min(1, "Material é obrigatório"),
+  materialId: z.string().min(1, "Material e obrigatorio"),
   quantity: z.coerce.number().min(0.01, "Quantidade deve ser maior que zero"),
-  unitId: z.string().min(1, "Unidade organizacional é obrigatória"),
+  unitId: z.string().min(1, "Unidade organizacional e obrigatoria"),
   sector: z.string().optional(),
   locationId: z.string().optional(),
-  providerId: z.string().optional(), // For Entrada
-  technicianId: z.string().optional(), // For Saída
+  providerId: z.string().optional(),
+  technicianId: z.string().optional(),
   workOrderId: z.string().optional(),
   invoice: z.string().optional(),
   observations: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === "Ajuste" && !data.observations?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["observations"],
+      message: "Informe a justificativa do ajuste de inventario.",
+    });
+  }
 });
 
 interface Props {
@@ -48,63 +57,89 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
     resolver: zodResolver(schema),
     defaultValues: {
       type: initialType,
-    }
+    },
   });
 
+  useEffect(() => {
+    if (!open) {
+      reset({ type: initialType });
+    }
+  }, [initialType, open, reset]);
+
   const selectedType = watch("type") || initialType;
+  const selectedMaterialId = watch("materialId");
 
   const materials = storageService.get("gsi_stock_materials") || [];
   const units = storageService.get("gsi_units") || [];
   const locations = storageService.get("gsi_locations") || [];
   const users = storageService.get("gsi_users") || [];
 
-  const materialOptions = materials.filter((m: any) => m.active).map((m: any) => ({
-    value: m.id,
-    label: `${m.code} - ${m.name} (${m.physicalBalance} Disp.)`
-  }));
+  const materialOptions = useMemo(
+    () =>
+      materials
+        .filter((material: any) => material.active)
+        .map((material: any) => ({
+          value: material.id,
+          label: `${material.code} - ${material.name} (${getAvailableStock(material)} disponivel)`,
+        })),
+    [materials],
+  );
+
+  const selectedMaterial = materials.find((material: any) => material.id === selectedMaterialId);
+
+  useEffect(() => {
+    if (!selectedMaterial) return;
+    setValue("unitId", selectedMaterial.unitId || "");
+    setValue("locationId", selectedMaterial.locationId || "");
+  }, [selectedMaterial, setValue]);
 
   const onSubmit = (data: any) => {
     const allMaterials = storageService.get("gsi_stock_materials") || [];
-    const matIndex = allMaterials.findIndex((m: any) => m.id === data.materialId);
-    
-    if (matIndex === -1) {
-      alert("Material não encontrado.");
+    const materialIndex = allMaterials.findIndex((material: any) => material.id === data.materialId);
+
+    if (materialIndex === -1) {
+      alert("Material nao encontrado.");
       return;
     }
-    
-    const material = allMaterials[matIndex];
-    let previousBalance = material.physicalBalance;
+
+    const material = { ...allMaterials[materialIndex] };
+    const previousBalance = Number(material.physicalBalance || 0);
+    const previousReserved = Number(material.reservedBalance || 0);
+    const availableBefore = getAvailableStock(material);
     let newBalance = previousBalance;
+    let newReserved = previousReserved;
 
     if (data.type === "Entrada") {
-      newBalance = previousBalance + data.quantity;
+      newBalance = previousBalance + Number(data.quantity);
     } else if (data.type === "Saída") {
-      if (previousBalance < data.quantity) {
-        alert("Saldo insuficiente para esta saída.");
+      if (availableBefore < Number(data.quantity)) {
+        alert("Saldo disponivel insuficiente para esta saida.");
         return;
       }
-      newBalance = previousBalance - data.quantity;
-    } else if (data.type === "Ajuste") {
-      newBalance = data.quantity; // Em ajuste, a quantidade informada é o saldo físico final
+      newBalance = previousBalance - Number(data.quantity);
+      const reservedToRelease = data.workOrderId ? Math.min(previousReserved, Number(data.quantity)) : 0;
+      newReserved = Math.max(0, previousReserved - reservedToRelease);
+    } else {
+      newBalance = Number(data.quantity);
     }
 
-    // Update material
-    material.physicalBalance = newBalance;
-    material.availableBalance = newBalance - material.reservedBalance;
-    material.updatedAt = new Date().toISOString();
-    
-    allMaterials[matIndex] = material;
+    const updatedMaterial = reconcileMaterial({
+      ...material,
+      physicalBalance: newBalance,
+      reservedBalance: newReserved,
+    });
+
+    allMaterials[materialIndex] = updatedMaterial;
     storageService.set("gsi_stock_materials", allMaterials);
 
-    // Create movement
     const movements = storageService.get("gsi_stock_movements") || [];
-    const qty = data.type === "Ajuste" ? Math.abs(newBalance - previousBalance) : data.quantity;
-    
+    const quantity = data.type === "Ajuste" ? Math.abs(newBalance - previousBalance) : Number(data.quantity);
+
     const newMovement: StockMovement = {
-      id: "mov-" + Date.now(),
+      id: `mov-${Date.now()}`,
       type: data.type,
       materialId: data.materialId,
-      quantity: qty,
+      quantity,
       previousBalance,
       newBalance,
       unitId: data.unitId,
@@ -116,63 +151,92 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
       invoice: data.invoice,
       observations: data.observations,
       userId: currentUser?.id || "usr-1",
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
     };
 
     storageService.set("gsi_stock_movements", [...movements, newMovement]);
-    
-    reset();
+
+    if (data.workOrderId) {
+      const orders = storageService.get("gsi_work_orders");
+      const nextOrders = orders.map((order: WorkOrder) => {
+        if (order.id !== data.workOrderId) return order;
+
+        const nextAvailability = data.type === "Entrada" ? "Reservado" : "Consumido";
+        const nextOrder = updateOrderMaterialAvailability(order, data.materialId, undefined, (item) => ({
+          ...item,
+          availability: nextAvailability,
+          quantityUsed: data.type === "Saída" ? Number(data.quantity) : item.quantityUsed,
+        }));
+
+        if (data.type === "Saída" && ["Material liberado", "Aguardando material", "Aguardando estoque"].includes(nextOrder.status)) {
+          return {
+            ...nextOrder,
+            status: "Em execução" as WorkOrderStatus,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+
+        return nextOrder;
+      });
+
+      storageService.set("gsi_work_orders", nextOrders);
+    }
+
+    storageService.logAudit(currentUser?.id || "system", "Registrou movimentacao de estoque", newMovement.id, "StockMovement", undefined, newMovement);
+
+    reset({ type: initialType });
     onSuccess();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Registrar Movimentação</DialogTitle>
+          <DialogTitle>Registrar Movimentacao</DialogTitle>
         </DialogHeader>
-        
+
         <form id="movimentacao-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo de Movimentação *</label>
-              <Select onValueChange={(val) => setValue("type", val)} defaultValue={initialType}>
+              <label className="text-sm font-medium">Tipo de Movimentacao *</label>
+              <Select onValueChange={(value) => setValue("type", value)} value={selectedType}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Entrada">Entrada (Recebimento)</SelectItem>
-                  <SelectItem value="Saída">Saída (Consumo/Retirada)</SelectItem>
-                  <SelectItem value="Ajuste">Ajuste de Inventário</SelectItem>
+                  <SelectItem value="Entrada">Entrada</SelectItem>
+                  <SelectItem value="Saída">Saida</SelectItem>
+                  <SelectItem value="Ajuste">Ajuste</SelectItem>
                 </SelectContent>
               </Select>
               {errors.type && <span className="text-xs text-red-500">{errors.type.message as string}</span>}
             </div>
-            <div className="space-y-2 flex flex-col">
+            <div className="flex flex-col space-y-2">
               <label className="text-sm font-medium">Material *</label>
-              <Combobox 
-                options={materialOptions} 
-                onChange={(val) => setValue("materialId", val)} 
-                placeholder="Buscar material..." 
-                command={{ emptyMessage: "Material não encontrado" }}
+              <Combobox
+                options={materialOptions}
+                onChange={(value) => setValue("materialId", value)}
+                placeholder="Buscar material..."
+                command={{ emptyMessage: "Material nao encontrado" }}
               />
+              {selectedMaterial && (
+                <p className="text-xs text-slate-500">Saldo fisico: {selectedMaterial.physicalBalance} | reservado: {selectedMaterial.reservedBalance} | disponivel: {getAvailableStock(selectedMaterial)}</p>
+              )}
               {errors.materialId && <span className="text-xs text-red-500">{errors.materialId.message as string}</span>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {selectedType === "Ajuste" ? "Novo Saldo Físico Real *" : "Quantidade *"}
-              </label>
+              <label className="text-sm font-medium">{selectedType === "Ajuste" ? "Novo saldo fisico *" : "Quantidade *"}</label>
               <Input type="number" step="0.01" {...register("quantity")} />
               {errors.quantity && <span className="text-xs text-red-500">{errors.quantity.message as string}</span>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Unidade Organizacional *</label>
-              <Select onValueChange={(val) => setValue("unitId", val)}>
+              <Select onValueChange={(value) => setValue("unitId", value)} value={watch("unitId")}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {units.map((u: any) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                  {units.map((unit: any) => <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               {errors.unitId && <span className="text-xs text-red-500">{errors.unitId.message as string}</span>}
@@ -181,17 +245,17 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Local / Armazém</label>
-              <Select onValueChange={(val) => setValue("locationId", val)}>
+              <label className="text-sm font-medium">Local / Armazem</label>
+              <Select onValueChange={(value) => setValue("locationId", value)} value={watch("locationId")}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
-                  {locations.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                  {locations.map((location: any) => <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Setor Solicitante / Destino</label>
-              <Input {...register("sector")} placeholder="Ex: Manutenção, Limpeza..." />
+              <label className="text-sm font-medium">Setor solicitante / destino</label>
+              <Input {...register("sector")} placeholder="Ex: Manutencao" />
             </div>
           </div>
 
@@ -202,7 +266,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
                 <Input {...register("providerId")} placeholder="Nome do fornecedor" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Nota Fiscal / Pedido</label>
+                <label className="text-sm font-medium">Nota fiscal / pedido</label>
                 <Input {...register("invoice")} />
               </div>
             </div>
@@ -211,33 +275,31 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
           {selectedType === "Saída" && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Técnico / Retirante</label>
-                <Select onValueChange={(val) => setValue("technicianId", val)}>
+                <label className="text-sm font-medium">Tecnico / retirante</label>
+                <Select onValueChange={(value) => setValue("technicianId", value)} value={watch("technicianId")}>
                   <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    {users.map((u: any) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+                    {users.map((user: any) => <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Ordem de Serviço (Opcional)</label>
-                <Input {...register("workOrderId")} placeholder="Ex: OS-2026-001" />
+                <label className="text-sm font-medium">Ordem de servico</label>
+                <Input {...register("workOrderId")} placeholder="Ex: os-1" />
               </div>
             </div>
           )}
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">Observações / Justificativa</label>
-            <Input {...register("observations")} placeholder="Detalhes da movimentação..." />
-            {selectedType === "Ajuste" && (
-              <p className="text-xs text-orange-600 font-medium mt-1">Ajuste de inventário exige justificativa do motivo (ex: quebra, erro de contagem).</p>
-            )}
+            <label className="text-sm font-medium">Observacoes / justificativa</label>
+            <Input {...register("observations")} placeholder="Detalhes da movimentacao" />
+            {errors.observations && <span className="text-xs text-red-500">{errors.observations.message as string}</span>}
           </div>
         </form>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button variant="create" type="submit" form="movimentacao-form">Confirmar Movimentação</Button>
+          <Button variant="create" type="submit" form="movimentacao-form">Confirmar Movimentacao</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

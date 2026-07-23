@@ -1,19 +1,51 @@
 import express from "express";
+import http from "http";
+import net from "net";
 import path from "path";
-import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+async function findAvailablePort(startPort: number): Promise<number> {
+  let currentPort = startPort;
+
+  while (true) {
+    const available = await new Promise<boolean>((resolve) => {
+      const server = net.createServer();
+
+      server.once("error", () => {
+        resolve(false);
+      });
+
+      server.once("listening", () => {
+        server.close(() => resolve(true));
+      });
+
+      server.listen(currentPort, "0.0.0.0");
+    });
+
+    if (available) {
+      return currentPort;
+    }
+
+    currentPort += 1;
+  }
+}
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const httpServer = http.createServer(app);
+  const preferredPort = Number(process.env.PORT ?? 3000);
+  const isProduction = process.env.NODE_ENV === "production";
+  const port = isProduction ? preferredPort : await findAvailablePort(preferredPort);
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProduction) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer,
+        },
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -27,8 +59,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  httpServer.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${port}`);
   });
 }
 

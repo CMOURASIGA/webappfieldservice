@@ -10,9 +10,11 @@ import { FileText, AlertTriangle, Plus, Search, Calendar } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { getDocumentStatus } from "../utils/documentStatus";
+import { useAuth } from "../contexts/AuthContext";
 
 export const Documentos = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [searchParams] = useSearchParams();
@@ -20,9 +22,13 @@ export const Documentos = () => {
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    setDocuments(storageService.get("gsi_documents") || []);
+  const loadData = () => {
+    setDocuments((storageService.get("gsi_documents") || []).filter((document: Document) => document.active !== false));
     setUnits(storageService.get("gsi_units") || []);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const getUnitName = (id?: string) => {
@@ -54,6 +60,22 @@ export const Documentos = () => {
     if (statusFilter === "Falta Anexo") return !(d.attachments && d.attachments.length > 0);
     return true;
   });
+
+  const handleDeactivate = (id: string) => {
+    const docs = storageService.get("gsi_documents");
+    const index = docs.findIndex((document) => document.id === id);
+    if (index === -1) return;
+
+    docs[index].active = false;
+    docs[index].updatedAt = new Date().toISOString();
+    storageService.set("gsi_documents", docs);
+
+    if (currentUser) {
+      storageService.logAudit(currentUser.id, "Inativou Documento", id, "Document");
+    }
+
+    loadData();
+  };
 
   return (
     <div className="space-y-6">
@@ -141,6 +163,9 @@ export const Documentos = () => {
                   <CardFooterActions
                     viewLink={`/documentos/${doc.id}`}
                     viewLabel="Abrir"
+                    onDelete={() => handleDeactivate(doc.id)}
+                    deleteLabel="Inativar documento"
+                    isDeactivate={true}
                   />
                 </CardFooter>
             </Card>
