@@ -59,7 +59,7 @@ export const MetricButton = ({ label, value, active, valueClassName, icon: Icon 
     type="button"
     aria-pressed={active}
     className={cn(
-      "min-h-32 rounded-xl border-2 bg-white p-5 text-left shadow-1 transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-700/25",
+      "metric-card min-h-32 rounded-xl border-2 bg-white p-5 text-left shadow-1 transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-2 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand-700/25",
       active ? "border-brand-700 bg-brand-050 ring-1 ring-brand-700/15" : "border-slate-300",
       className,
     )}
