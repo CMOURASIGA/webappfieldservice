@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { PreventivePlan, Unit, Asset, Location, User, Provider, Category, ChecklistItem } from "../types";
+import { MaintenanceExecution, PreventivePlan, Unit, Asset, Location, User, Provider, Category, ChecklistItem } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
@@ -22,6 +22,7 @@ export const DetalhePreventiva = () => {
   const [category, setCategory] = useState<Category | null>(null);
   const [responsible, setResponsible] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
+  const [executions, setExecutions] = useState<MaintenanceExecution[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -47,6 +48,7 @@ export const DetalhePreventiva = () => {
     if (planObj.providerId) {
       setProvider(storageService.get("gsi_providers").find(p => p.id === planObj.providerId) || null);
     }
+    setExecutions((storageService.get("gsi_maintenance_executions") || []).filter((execution) => execution.planId === planObj.id).sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime()));
 
   }, [id]);
 
@@ -184,6 +186,19 @@ export const DetalhePreventiva = () => {
                   <p className="font-medium">{plan.type || "Preventiva"}</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5 text-brand-600" /> Histórico de Execuções</CardTitle></CardHeader>
+            <CardContent>
+              {executions.length ? <div className="space-y-3">{executions.map((execution) => (
+                <div key={execution.id} className="rounded-lg border-2 border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center justify-between gap-3"><strong className="text-sm text-slate-900">{formatDate(execution.executedAt)}</strong><Badge variant="success">{execution.status}</Badge></div>
+                  <p className="mt-2 text-sm text-slate-700">{execution.notes}</p>
+                  <p className="mt-2 text-xs text-slate-500">Duração: {execution.durationMinutes || 0} min · Evidências: {execution.attachments.length}</p>
+                </div>
+              ))}</div> : <p className="rounded-lg border-2 border-dashed border-slate-300 p-5 text-sm text-slate-500">Nenhuma execução registrada para este plano.</p>}
             </CardContent>
           </Card>
 

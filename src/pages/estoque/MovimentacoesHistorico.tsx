@@ -23,6 +23,9 @@ export const MovimentacoesHistorico = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("Todos");
+  const [userFilter, setUserFilter] = useState("Todos");
+  const [sectorFilter, setSectorFilter] = useState("Todos");
+  const [categoryFilter, setCategoryFilter] = useState("Todas");
   const materialIdFilter = searchParams.get("materialId");
 
   useEffect(() => {
@@ -44,13 +47,20 @@ export const MovimentacoesHistorico = () => {
 
   const getMaterialName = (id: string) => materials.find((material) => material.id === id)?.name || id;
   const getUserName = (id: string) => users.find((user) => user.id === id)?.name || "Usuário";
+  const getMaterialCategory = (id: string) => materials.find((material) => material.id === id)?.category || "Sem categoria";
 
   const filtered = movements.filter((movement) => {
     const matchesMaterial = !materialIdFilter || movement.materialId === materialIdFilter;
     const matchesSearch = getMaterialName(movement.materialId).toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "Todos" || movement.type === typeFilter;
-    return matchesMaterial && matchesSearch && matchesType;
+    const matchesUser = userFilter === "Todos" || movement.userId === userFilter || movement.technicianId === userFilter;
+    const matchesSector = sectorFilter === "Todos" || movement.sector === sectorFilter;
+    const matchesCategory = categoryFilter === "Todas" || getMaterialCategory(movement.materialId) === categoryFilter;
+    return matchesMaterial && matchesSearch && matchesType && matchesUser && matchesSector && matchesCategory;
   });
+
+  const sectors = [...new Set(movements.map((movement) => movement.sector).filter(Boolean))] as string[];
+  const categories = [...new Set(materials.map((material) => material.category).filter(Boolean))];
 
   return (
     <div className="space-y-6">
@@ -60,7 +70,7 @@ export const MovimentacoesHistorico = () => {
         backTo="/estoque"
       />
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="grid grid-cols-1 gap-4 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-5">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input placeholder="Buscar por nome do material..." className="pl-9" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
@@ -77,6 +87,9 @@ export const MovimentacoesHistorico = () => {
             </SelectContent>
           </Select>
         </div>
+        <Select onValueChange={setUserFilter} value={userFilter}><SelectTrigger><SelectValue placeholder="Responsável" /></SelectTrigger><SelectContent><SelectItem value="Todos">Todos os responsáveis</SelectItem>{users.map((user) => <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>)}</SelectContent></Select>
+        <Select onValueChange={setSectorFilter} value={sectorFilter}><SelectTrigger><SelectValue placeholder="Setor" /></SelectTrigger><SelectContent><SelectItem value="Todos">Todos os setores</SelectItem>{sectors.map((sector) => <SelectItem key={sector} value={sector}>{sector}</SelectItem>)}</SelectContent></Select>
+        <Select onValueChange={setCategoryFilter} value={categoryFilter}><SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger><SelectContent><SelectItem value="Todas">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent></Select>
       </div>
 
       <div className="space-y-3">
@@ -89,6 +102,7 @@ export const MovimentacoesHistorico = () => {
                     {movement.type}
                   </Badge>
                   <span className="text-sm font-semibold text-slate-900">{getMaterialName(movement.materialId)}</span>
+                  <span className="text-xs text-slate-500">{getMaterialCategory(movement.materialId)}</span>
                 </div>
                 <div className="text-sm text-slate-500 flex flex-wrap gap-x-4 gap-y-1">
                   <span>Data: {format(parseISO(movement.date), "dd/MM/yyyy HH:mm")}</span>

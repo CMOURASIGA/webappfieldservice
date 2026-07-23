@@ -24,6 +24,10 @@ export const Preventivas = () => {
   const initialstatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("Todos");
+  const [periodicityFilter, setPeriodicityFilter] = useState("Todas");
+  const [unitFilter, setUnitFilter] = useState("Todas");
+  const [providerFilter, setProviderFilter] = useState("Todos");
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans") || []);
@@ -40,6 +44,7 @@ export const Preventivas = () => {
   };
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
+  const getProviderName = (id?: string) => providers.find((provider) => provider.id === id)?.name || "Não atribuído";
   
   const getComputedNextExecution = (plan: PreventivePlan) => {
     return calculateNextExecution(plan.periodicity as any, plan.lastExecution, plan.startDate) || plan.nextExecution;
@@ -77,7 +82,7 @@ export const Preventivas = () => {
       const status = getStatus(getComputedNextExecution(plan));
       if (status === "Atrasada" || status === "Próxima") {
         // Check if it already has an open OS for this plan
-        const hasOpenOs = allOrders.some((o: any) => o.source === "Preventiva" && o.status !== "Concluída" && o.status !== "Cancelada" && o.unitId === plan.unitId && o.assetId === plan.assetId);
+        const hasOpenOs = allOrders.some((o: any) => o.preventivePlanId === plan.id && o.status !== "Concluída" && o.status !== "Cancelada");
         
         if (!hasOpenOs) {
           const year = new Date().getFullYear();
@@ -87,6 +92,7 @@ export const Preventivas = () => {
           const newOrder = {
             id: uuidv4(),
             number,
+            preventivePlanId: plan.id,
             unitId: plan.unitId,
             locationId: plan.locationId || "",
             categoryId: plan.categoryId,
@@ -95,10 +101,15 @@ export const Preventivas = () => {
             description: plan.description,
             technicalDescription: "Manutenção Preventiva gerada automaticamente.\n" + "",
             source: "Preventiva",
-            status: "Aguardando atendimento",
+            status: "Planejada",
             createdAt: new Date().toISOString(),
             createdBy: "Sistema",
             materials: [],
+            checklist: plan.checklist.map((item) => ({ ...item, result: null })),
+            observations: `OS gerada automaticamente do plano ${plan.code}.`,
+            attachments: [],
+            updatedAt: new Date().toISOString(),
+            active: true,
           };
           
           newOrders.push(newOrder as any);
@@ -119,6 +130,10 @@ export const Preventivas = () => {
     const term = searchTerm.trim().toLowerCase();
     if (term && ![p.code, p.description, p.periodicity, getUnitName(p.unitId), getAssetCode(p.assetId)]
       .some((value) => value?.toLowerCase().includes(term))) return false;
+    if (typeFilter !== "Todos" && p.type !== typeFilter) return false;
+    if (periodicityFilter !== "Todas" && p.periodicity !== periodicityFilter) return false;
+    if (unitFilter !== "Todas" && p.unitId !== unitFilter) return false;
+    if (providerFilter !== "Todos" && p.providerId !== providerFilter) return false;
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
     if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p)) === "Próxima";
@@ -146,6 +161,13 @@ export const Preventivas = () => {
       />
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por manutenção, código, periodicidade, unidade ou ativo..." resultCount={filteredPlans.length} />
+
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option>Todos</option>{[...new Set(plans.map((plan) => plan.type).filter(Boolean))].map((type) => <option key={type}>{type}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={periodicityFilter} onChange={(event) => setPeriodicityFilter(event.target.value)}><option>Todas</option>{[...new Set(plans.map((plan) => plan.periodicity).filter(Boolean))].map((periodicity) => <option key={periodicity}>{periodicity}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)}><option value="Todas">Todas as unidades</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}><option value="Todos">Todos os prestadores</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}</select>
+      </div>
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -181,6 +203,7 @@ export const Preventivas = () => {
                 <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1 mt-2">
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(plan.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Ativo:</span> {getAssetCode(plan.assetId)}</p>
+                  <p><span className="font-medium text-slate-500">Prestador:</span> {getProviderName(plan.providerId)}</p>
                   <p><span className="font-medium text-slate-500">Próx. Execução:</span> {nextExec ? format(parseISO(nextExec), "dd/MM/yyyy") : "N/A"}</p>
                 </div>
 

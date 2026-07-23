@@ -126,6 +126,15 @@ export const EditarDocumento = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Select label="Regra de acompanhamento" name="scope" value={formData.scope || (formData.periodicity === "Único" ? "Único" : "Periódico")} onChange={handleChange}>
+                <option value="Único">Vencimento único</option>
+                <option value="Periódico">Documento periódico</option>
+                <option value="Recorrente">Compromisso recorrente mensal</option>
+              </Select>
+              {formData.scope === "Recorrente" && <Input label="Dia de vencimento mensal" name="recurrenceDay" type="number" min="1" max="28" value={formData.recurrenceDay || 1} onChange={handleChange} />}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select label="Responsável" name="responsibleId" value={formData.responsibleId} onChange={handleChange}>
                 <option value="">Selecione...</option>
                 {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}

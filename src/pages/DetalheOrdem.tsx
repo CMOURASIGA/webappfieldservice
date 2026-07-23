@@ -12,6 +12,7 @@ import { Input } from "../components/ui/Input";
 import { CalendarClock, Paperclip, Plus, Trash2, Printer } from "lucide-react";
 import { resolveOrderStatusFromMaterials } from "../utils/stock";
 import { Drawer } from "../components/ui/Drawer";
+import { calculateNextExecution } from "../utils/preventiveCalc";
 
 export const DetalheOrdem = () => {
   const { id } = useParams();
@@ -242,31 +243,33 @@ export const DetalheOrdem = () => {
         const pIdx = plans.findIndex(p => p.id === orders[idx].preventivePlanId);
         if (pIdx !== -1) {
           const plan = plans[pIdx];
-          const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
-          const addMonths = (date, months) => {
-            const d = new Date(date);
-            d.setMonth(d.getMonth() + months);
-            return d;
-          };
-          const addYears = (date, years) => {
-            const d = new Date(date);
-            d.setFullYear(d.getFullYear() + years);
-            return d;
-          };
-          
-          let nextDate = new Date(plan.nextExecution);
-          if (plan.periodicity === "diaria") nextDate = addDays(nextDate, 1);
-          else if (plan.periodicity === "semanal") nextDate = addDays(nextDate, 7);
-          else if (plan.periodicity === "mensal") nextDate = addMonths(nextDate, 1);
-          else if (plan.periodicity === "trimestral") nextDate = addMonths(nextDate, 3);
-          else if (plan.periodicity === "semestral") nextDate = addMonths(nextDate, 6);
-          else if (plan.periodicity === "anual") nextDate = addYears(nextDate, 1);
-
-          plans[pIdx].lastExecution = new Date().toISOString();
-          plans[pIdx].nextExecution = nextDate.toISOString();
+          const executedAt = new Date().toISOString();
+          const nextExecution = calculateNextExecution(plan.periodicity, executedAt, plan.startDate);
+          plans[pIdx].lastExecution = executedAt;
+          plans[pIdx].nextExecution = nextExecution || plan.nextExecution;
           plans[pIdx].updatedAt = new Date().toISOString();
           
           storageService.set("gsi_preventive_plans", plans);
+        }
+      }
+
+      if (newStatus === "Concluída") {
+        const executions = storageService.get("gsi_maintenance_executions") || [];
+        const alreadyRegistered = executions.some((execution) => execution.workOrderId === orders[idx].id);
+        if (!alreadyRegistered) {
+          executions.push({
+            id: crypto.randomUUID(),
+            planId: orders[idx].preventivePlanId,
+            workOrderId: orders[idx].id,
+            executedAt: new Date().toISOString(),
+            technicianId: currentUser.id,
+            status: "Concluída",
+            notes: comment || orders[idx].observations || "Execução concluída pela OS.",
+            durationMinutes: orders[idx].estimatedDurationMinutes,
+            attachments: orders[idx].attachments || [],
+            createdAt: new Date().toISOString(),
+          });
+          storageService.set("gsi_maintenance_executions", executions);
         }
       }
 

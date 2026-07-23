@@ -22,6 +22,9 @@ export const Documentos = () => {
   const initialstatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("Todos");
+  const [responsibleFilter, setResponsibleFilter] = useState("Todos");
+  const [scopeFilter, setScopeFilter] = useState("Todos");
 
   const loadData = () => {
     setDocuments((storageService.get("gsi_documents") || []).filter((document: Document) => document.active !== false));
@@ -37,7 +40,7 @@ export const Documentos = () => {
     return units.find(u => u.id === id)?.name || id;
   };
 
-  const getDocStatus = (doc: Document) => getDocumentStatus(doc.expirationDate, doc.status);
+  const getDocStatus = (doc: Document) => getDocumentStatus(doc);
 
   const metrics = {
     total: documents.length,
@@ -50,10 +53,13 @@ export const Documentos = () => {
   const filteredDocs = documents.filter(d => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      if (!d.title.toLowerCase().includes(term) && !d.number?.toLowerCase().includes(term) && !d.issuer?.toLowerCase().includes(term)) {
+      if (!d.title.toLowerCase().includes(term) && !d.number?.toLowerCase().includes(term) && !d.issuer?.toLowerCase().includes(term) && !d.regulatoryBody?.toLowerCase().includes(term) && !d.type.toLowerCase().includes(term)) {
         return false;
       }
     }
+    if (typeFilter !== "Todos" && d.type !== typeFilter) return false;
+    if (responsibleFilter !== "Todos" && d.responsibleId !== responsibleFilter) return false;
+    if (scopeFilter !== "Todos" && (d.scope || (d.periodicity === "Único" ? "Único" : "Periódico")) !== scopeFilter) return false;
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Críticos") return getDocStatus(d) === "Crítico";
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
@@ -65,6 +71,12 @@ export const Documentos = () => {
     if (statusFilter !== "Vencimentos") return 0;
     return new Date(a.expirationDate || "2999-12-31").getTime() - new Date(b.expirationDate || "2999-12-31").getTime();
   });
+
+  const types = [...new Set(documents.map((document) => document.type).filter(Boolean))];
+  const responsibles = [...new Set(documents.map((document) => document.responsibleId).filter(Boolean))];
+  const documentsByType = types.map((type) => ({ type, total: documents.filter((document) => document.type === type).length }));
+  const documentsByResponsible = responsibles.map((id) => ({ id, total: documents.filter((document) => document.responsibleId === id).length }));
+  const overallCompliance = metrics.vencidos + metrics.criticos > 0 ? "Crítica" : metrics.atencao > 0 ? "Atenção" : "Conforme";
 
   const handleDeactivate = (id: string) => {
     const docs = storageService.get("gsi_documents");
@@ -105,6 +117,12 @@ export const Documentos = () => {
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por documento, número ou órgão emissor..." resultCount={filteredDocs.length} />
 
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-3">
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option value="Todos">Todos os tipos</option>{types.map((type) => <option key={type}>{type}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={responsibleFilter} onChange={(event) => setResponsibleFilter(event.target.value)}><option value="Todos">Todos os responsáveis</option>{responsibles.map((id) => <option key={id} value={id}>{storageService.get("gsi_users").find((user) => user.id === id)?.name || id}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={scopeFilter} onChange={(event) => setScopeFilter(event.target.value)}><option value="Todos">Todas as abrangências</option><option value="Único">Vencimento único</option><option value="Periódico">Periódico</option><option value="Recorrente">Recorrente mensal</option></select>
+      </div>
+
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <MetricButton label="Todos" value={metrics.total} active={statusFilter === "Todos"} onClick={() => setStatusFilter("Todos")} />
@@ -113,6 +131,12 @@ export const Documentos = () => {
         <MetricButton label="Atenção (30d)" value={metrics.atencao} active={statusFilter === "Atenção"} valueClassName="text-amber-700" onClick={() => setStatusFilter("Atenção")} />
         <MetricButton label="Sem Anexo" value={metrics.semAnexo} active={statusFilter === "Falta Anexo"} onClick={() => setStatusFilter("Falta Anexo")} />
       </div>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="operational-card"><CardContent className="p-4"><p className="text-xs font-bold uppercase text-slate-600">Conformidade geral</p><p className={`mt-2 text-2xl font-bold ${overallCompliance === "Crítica" ? "text-red-700" : overallCompliance === "Atenção" ? "text-amber-700" : "text-green-700"}`}>{overallCompliance}</p><p className="mt-1 text-xs text-slate-500">Considera vencidos, críticos e documentos em atenção.</p></CardContent></Card>
+        <Card className="operational-card"><CardContent className="p-4"><p className="text-xs font-bold uppercase text-slate-600">Por tipo</p><div className="mt-2 space-y-1 text-sm">{documentsByType.map((item) => <div className="flex justify-between" key={item.type}><span>{item.type}</span><strong>{item.total}</strong></div>)}</div></CardContent></Card>
+        <Card className="operational-card"><CardContent className="p-4"><p className="text-xs font-bold uppercase text-slate-600">Por responsável</p><div className="mt-2 space-y-1 text-sm">{documentsByResponsible.map((item) => <div className="flex justify-between" key={item.id}><span className="truncate">{storageService.get("gsi_users").find((user) => user.id === item.id)?.name || item.id}</span><strong>{item.total}</strong></div>)}</div></CardContent></Card>
+      </section>
 
       {/* Cards Operacionais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -140,6 +164,7 @@ export const Documentos = () => {
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(doc.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Emissão:</span> {doc.issueDate ? format(parseISO(doc.issueDate), 'dd/MM/yyyy') : 'N/A'}</p>
                   <p><span className="font-medium text-slate-500">Vencimento:</span> {doc.expirationDate ? format(parseISO(doc.expirationDate), 'dd/MM/yyyy') : 'Não possui'}</p>
+                  <p><span className="font-medium text-slate-500">Abrangência:</span> {doc.scope || (doc.periodicity === "Único" ? "Único" : "Periódico")}</p>
                   {!(doc.attachments && doc.attachments.length > 0) && <div className="mt-2"><Badge variant="default" className="text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">Sem anexo</Badge></div>}
                 </div>
 

@@ -67,8 +67,8 @@ export const VisaoGeral = () => {
 
     const repoNecessaria = materials.filter((material: any) => (material.physicalBalance - (material.reservedBalance || 0)) <= material.minStock).length;
 
-    const docVencidos = docs.filter((document: any) => getDocumentStatus(document.expirationDate, document.status) === "Vencido").length;
-    const docCriticos = docs.filter((document: any) => getDocumentStatus(document.expirationDate, document.status) === "Crítico").length;
+    const docVencidos = docs.filter((document: any) => getDocumentStatus(document) === "Vencido").length;
+    const docCriticos = docs.filter((document: any) => getDocumentStatus(document) === "Crítico").length;
 
     setMetrics({
       manutencoesVencidas: prevAtrasadas,
@@ -99,6 +99,12 @@ export const VisaoGeral = () => {
     }
     if (docCriticos > 0) {
       decisionList.push({ title: `${docCriticos} documentos em situação crítica`, type: "Critical", link: "/documentos?status=Críticos" });
+    }
+    if (docVencidos > 0) {
+      decisionList.push({ title: `${docVencidos} documentos vencidos exigem regularização`, type: "Critical", link: "/documentos?status=Vencidos" });
+    }
+    if (prevAtrasadas > 0) {
+      decisionList.push({ title: `${prevAtrasadas} planos preventivos estão atrasados`, type: "Critical", link: "/preventivas?status=Atrasadas" });
     }
 
     setDecisions(decisionList);

@@ -126,6 +126,7 @@ export interface WorkOrder {
   priority: Priority;
   responsibleId?: string;
   providerId?: string;
+  estimatedValue?: number;
   technicalDescription: string;
   plannedDate?: string;
   deadline?: string;
@@ -177,6 +178,7 @@ export interface PreventivePlan {
   nextExecution: string;
   responsibleId?: string;
   providerId?: string;
+  estimatedValue?: number;
   templateId?: string;
   checklist: ChecklistItem[];
   status: "Ativo" | "Inativo";
@@ -185,6 +187,19 @@ export interface PreventivePlan {
   completedAt?: string;
   resolution?: string;
   active: boolean;
+}
+
+export interface MaintenanceExecution {
+  id: string;
+  planId?: string;
+  workOrderId?: string;
+  executedAt: string;
+  technicianId?: string;
+  status: string;
+  notes: string;
+  durationMinutes?: number;
+  attachments: Attachment[];
+  createdAt: string;
 }
 
 export type DocumentStatus = "Vigente" | "Atenção" | "Atenção" | "Crítico" | "Crítico" | "Vencido" | "Sem validade definida";
@@ -225,6 +240,8 @@ export interface Document {
   versions?: DocumentVersion[];
   alertDaysAttention?: number;
   alertDaysCritical?: number;
+  scope?: "Único" | "Periódico" | "Recorrente";
+  recurrenceDay?: number;
 }
 
 export interface Provider {
@@ -282,6 +299,7 @@ export interface StockMaterial {
   availableBalance: number;
   minStock: number;
   idealStock?: number;
+  unitPrice?: number;
   status: StockMaterialStatus;
   manufacturer?: string;
   model?: string;
@@ -368,6 +386,3 @@ export interface TechnicianUnavailability {
   createdBy: string;
   createdAt: string;
 }
-
-
-

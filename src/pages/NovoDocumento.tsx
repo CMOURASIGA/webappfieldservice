@@ -28,6 +28,8 @@ export const NovoDocumento = () => {
     issueDate: "",
     expirationDate: "",
     periodicity: "Anual",
+    scope: "Periódico",
+    recurrenceDay: 5,
     requiresART: false,
     alertDaysAttention: 30,
     alertDaysCritical: 15,
@@ -129,6 +131,15 @@ export const NovoDocumento = () => {
                 <option value="Bienal">Bienal</option>
                 <option value="Quinquenal">Quinquenal</option>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Select label="Regra de acompanhamento" name="scope" value={formData.scope} onChange={handleChange}>
+                <option value="Único">Vencimento único</option>
+                <option value="Periódico">Documento periódico</option>
+                <option value="Recorrente">Compromisso recorrente mensal</option>
+              </Select>
+              {formData.scope === "Recorrente" && <Input label="Dia de vencimento mensal" name="recurrenceDay" type="number" min="1" max="28" value={formData.recurrenceDay} onChange={handleChange} />}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

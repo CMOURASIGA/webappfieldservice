@@ -1,6 +1,6 @@
-﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate } from "../types";
+﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate, MaintenanceExecution, StockMovement } from "../types";
 
-const VERSION = "1.5.1";
+const VERSION = "1.6.0";
 
 interface DB {
   gsi_data_version: { version: string };
@@ -16,6 +16,7 @@ interface DB {
   gsi_categories: Category[];
   gsi_checklist_templates: ChecklistTemplate[];
   gsi_audit_log: AuditLog[];
+  gsi_maintenance_executions: MaintenanceExecution[];
   gsi_stock_materials: any[];
   gsi_stock_movements: any[];
   gsi_stock_requests: any[];
@@ -214,14 +215,22 @@ export const storageService = {
     this.set("gsi_requests", requests);
 
     const materials = [
-          { id: "mat-1", code: "MAT-001", name: "Lâmpada LED 40W Tubular", description: "Lâmpada tubular LED branca T8 120cm", category: "Elétrica", unit: "UN", unitId: "u-df", physicalBalance: 48, reservedBalance: 2, availableBalance: 46, minStock: 20, idealStock: 100, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-2", code: "MAT-002", name: "Parafuso Sextavado M8", description: "Parafuso sextavado zincado", category: "Ferragem", unit: "CX", unitId: "u-df", physicalBalance: 5, reservedBalance: 0, availableBalance: 5, minStock: 10, idealStock: 30, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-3", code: "MAT-003", name: "Filtro Ar Condicionado G4", description: "Filtro manta G4 para split/fancoil", category: "Climatização", unit: "M2", unitId: "u-df", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 5, idealStock: 15, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-4", code: "MAT-004", name: "Fita Isolante 3M", description: "Fita isolante preta antichama 20m", category: "Elétrica", unit: "RL", unitId: "u-df", physicalBalance: 12, reservedBalance: 0, availableBalance: 12, minStock: 10, idealStock: 25, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-5", code: "MAT-005", name: "Torneira Pia Cozinha Bica Móvel", description: "Torneira de bancada cromada bica alta", category: "Hidráulica", unit: "UN", unitId: "u-df", physicalBalance: 2, reservedBalance: 0, availableBalance: 2, minStock: 3, idealStock: 5, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-6", code: "MAT-006", name: "Tubo PVC Esgoto 50mm", description: "Tubo PVC esgoto barra 6m", category: "Hidráulica", unit: "BR", unitId: "u-df", physicalBalance: 20, reservedBalance: 0, availableBalance: 20, minStock: 5, idealStock: 20, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-1", code: "MAT-001", name: "Lâmpada LED 40W Tubular", description: "Lâmpada tubular LED branca T8 120cm", category: "Elétrica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 48, reservedBalance: 2, availableBalance: 46, minStock: 20, idealStock: 100, unitPrice: 18.9, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-2", code: "MAT-002", name: "Parafuso Sextavado M8", description: "Parafuso sextavado zincado", category: "Ferragem", unit: "CX", unitId: "u-df", locationId: "loc-2", physicalBalance: 5, reservedBalance: 0, availableBalance: 5, minStock: 10, idealStock: 30, unitPrice: 45, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-3", code: "MAT-003", name: "Filtro Ar Condicionado G4", description: "Filtro manta G4 para split/fancoil", category: "Climatização", unit: "M2", unitId: "u-df", locationId: "loc-2", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 5, idealStock: 15, unitPrice: 32, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-4", code: "MAT-004", name: "Fita Isolante 3M", description: "Fita isolante preta antichama 20m", category: "Elétrica", unit: "RL", unitId: "u-df", locationId: "loc-2", physicalBalance: 12, reservedBalance: 0, availableBalance: 12, minStock: 10, idealStock: 25, unitPrice: 16.5, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-5", code: "MAT-005", name: "Torneira Pia Cozinha Bica Móvel", description: "Torneira de bancada cromada bica alta", category: "Hidráulica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 2, reservedBalance: 0, availableBalance: 2, minStock: 3, idealStock: 5, unitPrice: 185, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-6", code: "MAT-006", name: "Tubo PVC Esgoto 50mm", description: "Tubo PVC esgoto barra 6m", category: "Hidráulica", unit: "BR", unitId: "u-df", locationId: "loc-2", physicalBalance: 20, reservedBalance: 0, availableBalance: 20, minStock: 5, idealStock: 20, unitPrice: 68, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
     this.set("gsi_stock_materials", materials as any);
+
+    const stockMovements: StockMovement[] = [
+      { id: "mov-demo-1", type: "Entrada", materialId: "mat-1", quantity: 50, previousBalance: 0, newBalance: 50, unitId: "u-df", locationId: "loc-2", sector: "Almoxarifado", userId: "usr-2", invoice: "NF-2026-1001", observations: "Recebimento mensal de lâmpadas LED.", date: new Date(Date.now() - 86400000 * 20).toISOString() },
+      { id: "mov-demo-2", type: "Saída", materialId: "mat-1", quantity: 2, previousBalance: 50, newBalance: 48, workOrderId: "os-1", unitId: "u-df", locationId: "loc-1", sector: "Recepção", userId: "usr-2", technicianId: "usr-4", observations: "Aplicação na OS de correção da recepção.", date: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: "mov-demo-3", type: "Saída", materialId: "mat-5", quantity: 1, previousBalance: 3, newBalance: 2, workOrderId: "os-6", unitId: "u-df", locationId: "loc-5", sector: "Copa", userId: "usr-2", technicianId: "usr-4", observations: "Material consumido na troca de torneira.", date: new Date(Date.now() - 86400000 * 7).toISOString() },
+      { id: "mov-demo-4", type: "Ajuste", materialId: "mat-2", quantity: 5, previousBalance: 10, newBalance: 5, unitId: "u-df", locationId: "loc-2", sector: "Almoxarifado", userId: "usr-2", observations: "Conferência física identificou divergência de inventário.", date: new Date(Date.now() - 86400000 * 2).toISOString() },
+    ];
+    this.set("gsi_stock_movements", stockMovements as any);
 
     const stockRequests = [
       {
@@ -434,6 +443,14 @@ export const storageService = {
         title: "Alvará de Funcionamento - DF",
         unitId: "u-df",
         issuer: "Prefeitura GDF",
+        regulatoryBody: "Prefeitura do Distrito Federal",
+        responsibleId: "usr-3",
+        issueDate: new Date(Date.now() - 86400000 * 350).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: false,
+        alertDaysAttention: 45,
+        alertDaysCritical: 15,
         number: "ALV-12345/2025",
         status: "Atenção",
         expirationDate: new Date(Date.now() + 86400000 * 15).toISOString(),
@@ -448,6 +465,14 @@ export const storageService = {
         title: "Auto de Vistoria do Corpo de Bombeiros (AVCB) - DF",
         unitId: "u-df",
         issuer: "CBMDF",
+        regulatoryBody: "Corpo de Bombeiros Militar do Distrito Federal",
+        responsibleId: "usr-3",
+        issueDate: new Date(Date.now() - 86400000 * 115).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: true,
+        alertDaysAttention: 60,
+        alertDaysCritical: 20,
         number: "AVCB-8877/2026",
         status: "Vigente",
         expirationDate: new Date(Date.now() + 86400000 * 250).toISOString(),
@@ -462,6 +487,14 @@ export const storageService = {
         title: "Laudo de SPDA - RJ",
         unitId: "u-rj",
         issuer: "Engenharia Externa Ltda",
+        regulatoryBody: "Conselho Regional de Engenharia",
+        responsibleId: "usr-2",
+        issueDate: new Date(Date.now() - 86400000 * 400).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: true,
+        alertDaysAttention: 30,
+        alertDaysCritical: 15,
         number: "LAU-SPDA-RJ-001",
         status: "Crítico",
         expirationDate: new Date(Date.now() - 86400000 * 10).toISOString(), // Vencido
@@ -471,6 +504,8 @@ export const storageService = {
         active: true
       }
     ];
+    docs.push({ id: "doc-4", type: "Contrato", title: "Contrato de Manutenção de Elevadores", unitId: "u-df", issuer: "Elevadores Capital S/A", regulatoryBody: "Gestão de Contratos CNC", number: "CTR-ELV-2026", issueDate: new Date(Date.now() - 86400000 * 60).toISOString(), expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(), periodicity: "Anual", scope: "Periódico", responsibleId: "usr-3", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-5", type: "Conta recorrente", title: "Renovação mensal de licença de descarte", unitId: "u-rj", issuer: "Prefeitura Municipal", regulatoryBody: "Controle Ambiental", number: "REC-AMB-RJ", periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 5, responsibleId: "usr-2", requiresART: false, alertDaysAttention: 10, alertDaysCritical: 3, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
     this.set("gsi_documents", docs);
 
     const plans: PreventivePlan[] = [
@@ -483,6 +518,12 @@ export const storageService = {
         type: "Preventiva",
         description: "Manutenção Mensal PMOC - Chiller A",
         periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 62).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 32).toISOString(),
+        locationId: "loc-2",
+        responsibleId: "usr-4",
+        providerId: "prov-1",
+        estimatedValue: 900,
         nextExecution: new Date(Date.now() - 86400000 * 2).toISOString(), // Atrasado e gerou a OS-2
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
@@ -499,6 +540,12 @@ export const storageService = {
         type: "Preventiva",
         description: "Termografia e Reaperto Semestral QGBT",
         periodicity: "semestral",
+        startDate: new Date(Date.now() - 86400000 * 350).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 170).toISOString(),
+        locationId: "loc-3",
+        responsibleId: "usr-4",
+        providerId: "prov-3",
+        estimatedValue: 1500,
         nextExecution: new Date(Date.now() + 86400000 * 30).toISOString(), 
         checklist: checklistTemplates[1].items.map(i => ({...i})),
         status: "Ativo",
@@ -515,6 +562,12 @@ export const storageService = {
         type: "Preventiva",
         description: "Manutenção Mensal PMOC - AC Auditório",
         periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 45).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 15).toISOString(),
+        locationId: "loc-6",
+        responsibleId: "usr-4",
+        providerId: "prov-1",
+        estimatedValue: 750,
         nextExecution: new Date(Date.now() + 86400000 * 15).toISOString(), 
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
@@ -524,6 +577,12 @@ export const storageService = {
       }
     ];
     this.set("gsi_preventive_plans", plans);
+
+    const maintenanceExecutions: MaintenanceExecution[] = [
+      { id: "exec-demo-1", planId: "plan-1", workOrderId: "os-2", executedAt: new Date(Date.now() - 86400000 * 32).toISOString(), technicianId: "usr-4", status: "Concluída", notes: "Limpeza do condensador, inspeção de pressão e troca parcial de filtro.", durationMinutes: 180, attachments: [], createdAt: new Date(Date.now() - 86400000 * 32).toISOString() },
+      { id: "exec-demo-2", planId: "plan-2", workOrderId: "os-5", executedAt: new Date(Date.now() - 86400000 * 170).toISOString(), technicianId: "usr-4", status: "Concluída", notes: "Termografia realizada sem ponto crítico. Reaperto dos barramentos concluído.", durationMinutes: 240, attachments: [], createdAt: new Date(Date.now() - 86400000 * 170).toISOString() },
+    ];
+    this.set("gsi_maintenance_executions", maintenanceExecutions);
 
     const providers: Provider[] = [
       {
@@ -744,5 +803,3 @@ export const storageService = {
     }
   }
 };
-
-

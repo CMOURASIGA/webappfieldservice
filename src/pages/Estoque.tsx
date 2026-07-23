@@ -3,12 +3,17 @@ import { ArrowRightLeft, PackageOpen, Plus, Search, ShoppingCart } from "lucide-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { storageService } from "../services/storageService";
-import { StockMaterial, StockRequest, Unit } from "../types";
+import { Location, StockMaterial, StockRequest, Unit } from "../types";
 import { MovimentacaoModal } from "./estoque/MovimentacaoModal";
 import { MovimentacoesHistorico } from "./estoque/MovimentacoesHistorico";
 import { NovaSolicitacaoModal } from "./estoque/NovaSolicitacaoModal";
@@ -21,6 +26,7 @@ export const Estoque = () => {
   const [materials, setMaterials] = useState<StockMaterial[]>([]);
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [searchParams] = useSearchParams();
   const initialStatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
@@ -30,11 +36,15 @@ export const Estoque = () => {
   const [movimentacaoType, setMovimentacaoType] = useState<"Entrada" | "Saída" | "Ajuste">("Entrada");
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Todas");
+  const [locationFilter, setLocationFilter] = useState("Todos");
+  const [editingMaterial, setEditingMaterial] = useState<StockMaterial | undefined>();
 
   const loadData = () => {
-    setMaterials((storageService.get("gsi_stock_materials") || []).map(reconcileMaterial));
+    setMaterials((storageService.get("gsi_stock_materials") || []).filter((material: StockMaterial) => material.active !== false).map(reconcileMaterial));
     setRequests(storageService.get("gsi_stock_requests") || []);
     setUnits(storageService.get("gsi_units") || []);
+    setLocations(storageService.get("gsi_locations") || []);
   };
 
   useEffect(() => {
@@ -49,18 +59,28 @@ export const Estoque = () => {
     abaixoMinimo: materials.filter((material) => material.physicalBalance < material.minStock).length,
     reservaMaior: materials.filter((material) => material.reservedBalance > material.physicalBalance).length,
     solicitacoesPendentes: getPendingStockRequests(requests).length,
+    valorTotal: materials.reduce((total, material) => total + Number(material.physicalBalance || 0) * Number(material.unitPrice || 0), 0),
   };
 
   const filteredMaterials = materials.filter((material) => {
     const term = searchTerm.trim().toLowerCase();
     if (term && ![material.name, material.code, material.description, material.category]
       .some((value) => value?.toLowerCase().includes(term))) return false;
+    if (categoryFilter !== "Todas" && material.category !== categoryFilter) return false;
+    if (locationFilter !== "Todos" && material.locationId !== locationFilter) return false;
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Reposição") return (material.physicalBalance - material.reservedBalance) <= material.minStock;
     if (statusFilter === "Abaixo Minimo") return material.physicalBalance < material.minStock;
     if (statusFilter === "Reserva Maior") return material.reservedBalance > material.physicalBalance;
     return true;
   });
+
+  const categories = [...new Set(materials.map((material) => material.category).filter(Boolean))];
+  const handleDeactivateMaterial = (material: StockMaterial) => {
+    if (!confirm(`Inativar ${material.name}? O histórico de movimentações será preservado.`)) return;
+    storageService.set("gsi_stock_materials", storageService.get("gsi_stock_materials").map((item) => item.id === material.id ? { ...item, active: false, updatedAt: new Date().toISOString() } : item));
+    loadData();
+  };
 
   return (
     <div className="space-y-6">
@@ -100,6 +120,23 @@ export const Estoque = () => {
         resultCount={filteredMaterials.length}
       />
 
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 shadow-1 md:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-xs font-bold uppercase text-slate-600">Categoria</label>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Todas">Todas as categorias</SelectItem>{categories.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-bold uppercase text-slate-600">Local / Almoxarifado</label>
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="Todos">Todos os locais</SelectItem>{locations.map((location) => <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <MetricButton label="Total de Itens" value={metrics.total} active={statusFilter === "Todos"} onClick={() => setStatusFilter("Todos")} />
         <MetricButton label="Reposição Necessária" value={metrics.reposicaoNecessaria} active={statusFilter === "Reposição"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Reposição")} />
@@ -107,6 +144,7 @@ export const Estoque = () => {
         <MetricButton label="Reserva maior que saldo" value={metrics.reservaMaior} active={statusFilter === "Reserva Maior"} valueClassName="text-red-700" onClick={() => setStatusFilter("Reserva Maior")} />
         <MetricButton label="Solicitações Pendentes" value={metrics.solicitacoesPendentes} onClick={() => navigate("/estoque/fila")} />
       </div>
+      <div className="rounded-xl border-2 border-slate-300 bg-white p-4 text-sm text-slate-700 shadow-1"><strong>Valor estimado do estoque:</strong> {metrics.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} <span className="ml-2 text-slate-500">Baseado no valor unitário cadastrado para cada material.</span></div>
 
       {statusFilter !== "Todos" && (
         <div className="flex items-center gap-2">
@@ -170,12 +208,16 @@ export const Estoque = () => {
                   <span>Minimo: {material.minStock}</span>
                   <span>Ideal: {material.idealStock || 0}</span>
                 </div>
+                {available <= material.minStock && <div className="mb-3 rounded-md border border-orange-300 bg-orange-50 p-2 text-xs text-orange-900"><strong>Reposição sugerida:</strong> {Math.max(0, Number(material.idealStock || material.minStock) - available)} {material.unit} para atingir o nível ideal.</div>}
               </CardContent>
 
               <CardFooter className="mt-3 border-t border-slate-100 px-4 pb-4 pt-3">
                 <CardFooterActions
                   onView={() => navigate(`/estoque/movimentacoes?materialId=${material.id}`)}
                   viewLabel="Histórico"
+                  onEdit={() => { setEditingMaterial(material); setShowNovoMaterial(true); }}
+                  onDelete={() => handleDeactivateMaterial(material)}
+                  deleteLabel="Inativar material"
                 >
                   <Button
                     variant="outline"
@@ -203,7 +245,7 @@ export const Estoque = () => {
         )}
       </div>
 
-      <NovoMaterialModal open={showNovoMaterial} onOpenChange={setShowNovoMaterial} onSuccess={loadData} />
+      <NovoMaterialModal open={showNovoMaterial} onOpenChange={(open) => { setShowNovoMaterial(open); if (!open) setEditingMaterial(undefined); }} onSuccess={loadData} material={editingMaterial} />
       <MovimentacaoModal initialType={movimentacaoType} open={showMovimentacao} onOpenChange={setShowMovimentacao} onSuccess={loadData} />
       <NovaSolicitacaoModal open={showSolicitacao} onOpenChange={setShowSolicitacao} onSuccess={loadData} initialMaterialId={selectedMaterialId} />
     </div>

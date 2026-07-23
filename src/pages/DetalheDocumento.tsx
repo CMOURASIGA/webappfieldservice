@@ -12,6 +12,7 @@ import { format, isValid, parseISO, differenceInDays } from "date-fns";
 import { ArrowLeft, FileText, Upload, X, Download, Clock, Pencil, History, ShieldAlert } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "../contexts/AuthContext";
+import { calcularStatusDocumento } from "../utils/documentStatus";
 
 export const DetalheDocumento = () => {
   const { id } = useParams();
@@ -184,7 +185,8 @@ export const DetalheDocumento = () => {
 
   if (!doc) return <div>Carregando...</div>;
 
-  const daysRemaining = doc.expirationDate ? differenceInDays(parseISO(doc.expirationDate), new Date()) : null;
+  const statusCalculation = calcularStatusDocumento(doc);
+  const daysRemaining = statusCalculation.diasRestantes ?? (statusCalculation.diasEmAtraso ? -statusCalculation.diasEmAtraso : null);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -196,7 +198,7 @@ export const DetalheDocumento = () => {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-[22px] font-semibold text-slate-900">{doc.title}</h1>
-              {getStatusBadge(doc.status)}
+              {getStatusBadge(statusCalculation.status)}
               {doc.requiresART && <Badge className="bg-blue-100 text-blue-700 border-transparent">ART</Badge>}
             </div>
             <p className="text-sm text-slate-500">{doc.number} • {doc.regulatoryBody || doc.issuer}</p>
