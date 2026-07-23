@@ -440,7 +440,7 @@ export const DetalheOrdem = () => {
             setModalTechId(order.responsibleId || order.providerId || "");
             setShowScheduleModal(true);
           }}><CalendarClock className="h-4 w-4" /> Programar</Button>
-          <Button variant="secondary" className="gap-2 border-slate-400 shadow-1" onClick={() => navigate(`/ordens/${order.id}/imprimir`)}><Printer className="w-4 h-4" /> Imprimir</Button>
+          <Button variant="secondary" className="gap-2 border-slate-400 shadow-1" onClick={() => window.open(`/ordens/${order.id}/imprimir`, "_blank", "noopener,noreferrer")}><Printer className="w-4 h-4" /> Imprimir</Button>
         </div>
       </div>
 
