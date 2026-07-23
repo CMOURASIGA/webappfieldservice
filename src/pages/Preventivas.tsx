@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Plus, Settings } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
-import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Preventivas = () => {
   const navigate = useNavigate();
@@ -23,6 +23,7 @@ export const Preventivas = () => {
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans") || []);
@@ -115,6 +116,9 @@ export const Preventivas = () => {
   };
   
   const filteredPlans = plans.filter(p => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term && ![p.code, p.description, p.periodicity, getUnitName(p.unitId), getAssetCode(p.assetId)]
+      .some((value) => value?.toLowerCase().includes(term))) return false;
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
     if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p)) === "Próxima";
@@ -140,6 +144,8 @@ export const Preventivas = () => {
           </>
         }
       />
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por manutenção, código, periodicidade, unidade ou ativo..." resultCount={filteredPlans.length} />
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

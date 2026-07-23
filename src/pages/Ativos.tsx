@@ -10,7 +10,7 @@ import { Textarea } from "../components/ui/Textarea";
 import { useAuth } from "../contexts/AuthContext";
 import { storageService } from "../services/storageService";
 import { Asset, Location, Unit } from "../types";
-import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 import { Plus } from "lucide-react";
 
 export const Ativos = () => {
@@ -20,6 +20,7 @@ export const Ativos = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<Partial<Asset>>({
     code: "",
     name: "",
@@ -130,6 +131,11 @@ export const Ativos = () => {
   };
 
   const filteredLocations = locations.filter((location) => location.unitId === formData.unitId);
+  const filteredAssets = assets.filter((asset) => {
+    const term = searchTerm.trim().toLowerCase();
+    return !term || [asset.name, asset.code, asset.category, asset.manufacturer, asset.patrimonyNumber]
+      .some((value) => value?.toLowerCase().includes(term));
+  });
 
   return (
     <div className="space-y-6">
@@ -140,10 +146,12 @@ export const Ativos = () => {
         actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Ativo</Button>}
       />
 
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por ativo, código, categoria, fabricante ou patrimônio..." resultCount={filteredAssets.length} />
+
       <Card className="p-4">
         <CardContent className="p-0">
             <div className="operational-grid">
-              {assets.map((asset) => (
+              {filteredAssets.map((asset) => (
                 <Card key={asset.id} className="operational-card flex h-full flex-col">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">

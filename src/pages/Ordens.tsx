@@ -8,7 +8,7 @@ import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { LayoutList, Kanban as KanbanIcon, Plus, Calendar } from "lucide-react";
-import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Ordens = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export const Ordens = () => {
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todas";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
@@ -102,6 +103,9 @@ export const Ordens = () => {
   };
 
   const filteredOrders = orders.filter(o => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term && ![o.number, o.technicalDescription, getUnitName(o.unitId), getLocationName(o.locationId), getUserName(o.responsibleId)]
+      .some((value) => value?.toLowerCase().includes(term))) return false;
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Abertas") return !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Sem Responsavel") return !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status);
@@ -125,6 +129,8 @@ export const Ordens = () => {
           </>
         }
       />
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por OS, descrição, unidade, local ou responsável..." resultCount={filteredOrders.length} />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-4">
         <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-md">

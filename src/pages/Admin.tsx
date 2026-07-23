@@ -92,7 +92,7 @@ export const Admin = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
+      <div className="page-title-panel">
         <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Administração e Configurações</h1>
         <p className="text-sm text-slate-500">Gerenciamento de dados e parâmetros do sistema.</p>
       </div>
@@ -204,5 +204,4 @@ export const Admin = () => {
     </div>
   );
 };
-
 

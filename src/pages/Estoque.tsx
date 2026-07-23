@@ -14,7 +14,7 @@ import { MovimentacoesHistorico } from "./estoque/MovimentacoesHistorico";
 import { NovaSolicitacaoModal } from "./estoque/NovaSolicitacaoModal";
 import { NovoMaterialModal } from "./estoque/NovoMaterialModal";
 import { getPendingStockRequests, getStockStatus, reconcileMaterial } from "../utils/stock";
-import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Estoque = () => {
   const navigate = useNavigate();
@@ -29,6 +29,7 @@ export const Estoque = () => {
   const [showSolicitacao, setShowSolicitacao] = useState(false);
   const [movimentacaoType, setMovimentacaoType] = useState<"Entrada" | "Saída" | "Ajuste">("Entrada");
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | undefined>();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadData = () => {
     setMaterials((storageService.get("gsi_stock_materials") || []).map(reconcileMaterial));
@@ -51,6 +52,9 @@ export const Estoque = () => {
   };
 
   const filteredMaterials = materials.filter((material) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term && ![material.name, material.code, material.description, material.category]
+      .some((value) => value?.toLowerCase().includes(term))) return false;
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Reposição") return (material.physicalBalance - material.reservedBalance) <= material.minStock;
     if (statusFilter === "Abaixo Minimo") return material.physicalBalance < material.minStock;
@@ -63,7 +67,8 @@ export const Estoque = () => {
       <OperationalPageHeader
         title="Gestão de Estoque"
         description="Controle de materiais, movimentações e necessidades de reposição."
-        backTo="/"
+        backTo={-1}
+        actionsBelow
         actions={
           <>
           <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}>
@@ -86,6 +91,13 @@ export const Estoque = () => {
           </Button>
           </>
         }
+      />
+
+      <SearchToolbar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        placeholder="Buscar por material, código, descrição ou categoria..."
+        resultCount={filteredMaterials.length}
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">

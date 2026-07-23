@@ -9,7 +9,7 @@ import { Select } from "../components/ui/Select";
 import { useAuth } from "../contexts/AuthContext";
 import { storageService } from "../services/storageService";
 import { Location, Unit } from "../types";
-import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 import { Plus } from "lucide-react";
 
 export const Locais = () => {
@@ -18,6 +18,7 @@ export const Locais = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<Partial<Location>>({});
 
   const loadData = () => {
@@ -92,6 +93,12 @@ export const Locais = () => {
     setIsDrawerOpen(false);
   };
 
+  const filteredLocations = locations.filter((location) => {
+    const term = searchTerm.trim().toLowerCase();
+    return !term || [location.name, location.code, location.type, location.area, location.floor, location.environment, getUnitName(location.unitId)]
+      .some((value) => value?.toLowerCase().includes(term));
+  });
+
   return (
     <div className="space-y-6">
       <OperationalPageHeader
@@ -101,10 +108,12 @@ export const Locais = () => {
         actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Local</Button>}
       />
 
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por local, código, tipo, unidade ou ambiente..." resultCount={filteredLocations.length} />
+
       <Card className="p-4">
         <CardContent className="p-0">
             <div className="operational-grid">
-              {locations.map((location) => (
+              {filteredLocations.map((location) => (
                 <Card key={location.id} className="operational-card flex h-full flex-col">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">

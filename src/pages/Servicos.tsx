@@ -8,7 +8,7 @@ import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { Plus, Calendar, Wrench } from "lucide-react";
-import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Servicos = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ export const Servicos = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("Todas");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setRequests(storageService.get("gsi_requests").sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
@@ -56,12 +57,17 @@ export const Servicos = () => {
     rejeitadas: requests.filter(r => r.status === "Rejeitada").length,
   };
 
-  const filteredRequests = statusFilter === "Todas"
+  const statusFilteredRequests = statusFilter === "Todas"
     ? requests
     : statusFilter === "Abertas" ? requests.filter(r => r.status === "Aberta" || r.status === "Rascunho")
     : statusFilter === "Em Triagem" ? requests.filter(r => r.status === "Em triagem" || r.status === "Aguardando informação")
     : statusFilter === "Convertidas" ? requests.filter(r => r.status === "Convertida em ordem")
     : requests.filter(r => r.status === "Rejeitada");
+  const filteredRequests = statusFilteredRequests.filter((request) => {
+    const term = searchTerm.trim().toLowerCase();
+    return !term || [request.title, request.protocol, request.description, getUnitName(request.unitId), getLocationName(request.locationId), getCategoryName(request.categoryId)]
+      .some((value) => value?.toLowerCase().includes(term));
+  });
 
   return (
     <div className="space-y-6">
@@ -78,6 +84,8 @@ export const Servicos = () => {
           </>
         }
       />
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por título, protocolo, descrição, unidade, local ou categoria..." resultCount={filteredRequests.length} />
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

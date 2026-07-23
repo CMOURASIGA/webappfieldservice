@@ -188,7 +188,7 @@ export const DetalheDocumento = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between gap-4">
+      <div className="page-title-panel flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
               <ArrowLeft  className="w-5 h-5" />

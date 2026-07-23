@@ -75,7 +75,7 @@
   }
 
   .operational-card {
-    @apply min-w-0 overflow-hidden border border-slate-300 bg-white shadow-sm transition-all hover:border-brand-700 hover:shadow-md;
+    @apply min-w-0 overflow-hidden border-2 border-slate-300 bg-white shadow-sm transition-all hover:border-brand-700 hover:shadow-md;
   }
 
   .operational-card-fields {
@@ -115,18 +115,28 @@
   }
 
   .agenda-grid-cell {
-    @apply border-b border-r border-slate-300;
+    @apply border-b-2 border-r-2 border-slate-400;
   }
 
   .system-form-section {
-    @apply rounded-xl border border-slate-300 bg-white shadow-sm;
+    @apply rounded-xl border-2 border-slate-300 bg-white shadow-sm;
   }
 
   .system-data-grid {
-    @apply overflow-hidden rounded-lg border border-slate-300;
+    @apply overflow-hidden rounded-lg border-2 border-slate-300;
   }
 
   .system-data-grid > * {
     @apply border-b border-slate-200;
+  }
+
+  .page-title-panel {
+    @apply rounded-xl border-2 border-slate-300 bg-brand-050 p-5 shadow-sm;
+  }
+
+  main input:not([type="checkbox"]):not([type="radio"]),
+  main textarea,
+  main select {
+    border-color: var(--color-gray-400) !important;
   }
 }

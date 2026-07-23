@@ -51,7 +51,7 @@ export const DetalheAtivo = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="page-title-panel mb-8 flex items-center gap-4">
         <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
               <ArrowLeft  className="w-5 h-5" />
             </Button>
@@ -62,7 +62,7 @@ export const DetalheAtivo = () => {
             <Badge className="bg-slate-100 text-slate-700">{asset.code}</Badge>
           </div>
           <p className="text-sm text-slate-500 mt-1 flex items-center gap-4">
-            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5"/> {unit?.name} {location ? `â€¢ ${location.name}` : ''}</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5"/> {unit?.name} {location ? `• ${location.name}` : ''}</span>
             <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5"/> {asset.category}</span>
           </p>
         </div>
@@ -130,7 +130,7 @@ export const DetalheAtivo = () => {
                         <p className="text-sm text-slate-700 line-clamp-2">{evt.title}</p>
                         <div className="flex justify-between items-end mt-3">
                           <Badge variant="default" className="text-[10px]">{evt.status}</Badge>
-                          <Link to={evt.link} className="text-xs font-medium text-brand-600 hover:text-brand-800">Ver detalhes â†’</Link>
+                          <Link to={evt.link} className="text-xs font-medium text-brand-600 hover:text-brand-800">Ver detalhes →</Link>
                         </div>
                       </div>
                     </div>
@@ -222,5 +222,4 @@ export const DetalheAtivo = () => {
     </div>
   );
 };
-
 

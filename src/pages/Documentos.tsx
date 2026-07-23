@@ -11,7 +11,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { getDocumentStatus } from "../utils/documentStatus";
 import { useAuth } from "../contexts/AuthContext";
-import { MetricButton } from "../components/ui/OperationalPage";
+import { MetricButton, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Documentos = () => {
   const navigate = useNavigate();
@@ -59,7 +59,11 @@ export const Documentos = () => {
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
     if (statusFilter === "Atenção") return getDocStatus(d) === "Atenção";
     if (statusFilter === "Falta Anexo") return !(d.attachments && d.attachments.length > 0);
+    if (statusFilter === "Vencimentos") return Boolean(d.expirationDate);
     return true;
+  }).sort((a, b) => {
+    if (statusFilter !== "Vencimentos") return 0;
+    return new Date(a.expirationDate || "2999-12-31").getTime() - new Date(b.expirationDate || "2999-12-31").getTime();
   });
 
   const handleDeactivate = (id: string) => {
@@ -94,17 +98,11 @@ export const Documentos = () => {
       
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="default" className="gap-2" onClick={() => setStatusFilter("Vencidos")}><Calendar className="w-4 h-4" /> Consultar vencimentos</Button>
-        </div>
-        <div className="w-full md:w-72">
-          <Input 
-            placeholder="Buscar por nome, código ou órgão..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
+          <Button variant="default" className="gap-2" onClick={() => setStatusFilter("Vencimentos")}><Calendar className="w-4 h-4" /> Consultar vencimentos</Button>
         </div>
       </div>
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por documento, número ou órgão emissor..." resultCount={filteredDocs.length} />
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
