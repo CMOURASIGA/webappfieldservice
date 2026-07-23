@@ -138,17 +138,17 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         type="button"
         key={item.href}
         onClick={() => goToModule(item.href)}
-        className={cn(
-          "flex items-center h-11 px-4 mx-2 rounded-md mb-1 transition-colors text-sm",
+          className={cn(
+          "sidebar-nav-link h-11 px-4 mx-2 rounded-md mb-1 transition-colors text-sm",
           isActive 
             ? "bg-white/15 text-slate-50 font-medium" 
             : "text-slate-50 hover:bg-white/10 hover:text-slate-50",
           isSubItem ? "pl-11 h-10" : ""
         )}
       >
-        {!isSubItem && <item.icon className="w-[18px] h-[18px] mr-2.5 " />}
-        {isSubItem && <div className="w-1.5 h-1.5 rounded-full bg-white/40 mr-3" />}
-        {item.label}
+        {!isSubItem && <item.icon className="sidebar-nav-link__icon w-[18px] h-[18px]" />}
+        {isSubItem && <div className="sidebar-nav-link__dot w-1.5 h-1.5 rounded-full bg-white/40" />}
+        <span className="sidebar-nav-link__label">{item.label}</span>
       </button>
     );
   };

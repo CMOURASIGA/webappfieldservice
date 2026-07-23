@@ -69,6 +69,37 @@
 @theme { --color-white: #ffffff; }
 .sidebar-text, .sidebar-text * { color: #ffffff !important; }
 
+.sidebar-nav-link {
+  display: grid !important;
+  width: calc(100% - 16px) !important;
+  min-height: 44px !important;
+  height: auto !important;
+  grid-template-columns: 20px minmax(0, 1fr) !important;
+  column-gap: 12px !important;
+  align-items: center !important;
+  text-align: left !important;
+}
+
+.sidebar-nav-link__icon {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin: 0 !important;
+}
+
+.sidebar-nav-link__dot {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: center !important;
+}
+
+.sidebar-nav-link__label {
+  grid-column: 2 !important;
+  min-width: 0 !important;
+  text-align: left !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+}
+
 @layer components {
   .operational-grid {
     @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3;
