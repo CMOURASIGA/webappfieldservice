@@ -25,6 +25,7 @@ export const Documentos = () => {
   const [typeFilter, setTypeFilter] = useState("Todos");
   const [responsibleFilter, setResponsibleFilter] = useState("Todos");
   const [scopeFilter, setScopeFilter] = useState("Todos");
+  const [regulatoryBodyFilter, setRegulatoryBodyFilter] = useState("Todos");
 
   const loadData = () => {
     setDocuments((storageService.get("gsi_documents") || []).filter((document: Document) => document.active !== false));
@@ -60,6 +61,7 @@ export const Documentos = () => {
     if (typeFilter !== "Todos" && d.type !== typeFilter) return false;
     if (responsibleFilter !== "Todos" && d.responsibleId !== responsibleFilter) return false;
     if (scopeFilter !== "Todos" && (d.scope || (d.periodicity === "Único" ? "Único" : "Periódico")) !== scopeFilter) return false;
+    if (regulatoryBodyFilter !== "Todos" && (d.regulatoryBody || d.issuer) !== regulatoryBodyFilter) return false;
     if (statusFilter === "Todos") return true;
     if (statusFilter === "Críticos") return getDocStatus(d) === "Crítico";
     if (statusFilter === "Vencidos") return getDocStatus(d) === "Vencido";
@@ -74,6 +76,7 @@ export const Documentos = () => {
 
   const types = [...new Set(documents.map((document) => document.type).filter(Boolean))];
   const responsibles = [...new Set(documents.map((document) => document.responsibleId).filter(Boolean))];
+  const regulatoryBodies = [...new Set(documents.map((document) => document.regulatoryBody || document.issuer).filter(Boolean))];
   const documentsByType = types.map((type) => ({ type, total: documents.filter((document) => document.type === type).length }));
   const documentsByResponsible = responsibles.map((id) => ({ id, total: documents.filter((document) => document.responsibleId === id).length }));
   const overallCompliance = metrics.vencidos + metrics.criticos > 0 ? "Crítica" : metrics.atencao > 0 ? "Atenção" : "Conforme";
@@ -117,10 +120,11 @@ export const Documentos = () => {
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por documento, número ou órgão emissor..." resultCount={filteredDocs.length} />
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option value="Todos">Todos os tipos</option>{types.map((type) => <option key={type}>{type}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={responsibleFilter} onChange={(event) => setResponsibleFilter(event.target.value)}><option value="Todos">Todos os responsáveis</option>{responsibles.map((id) => <option key={id} value={id}>{storageService.get("gsi_users").find((user) => user.id === id)?.name || id}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={scopeFilter} onChange={(event) => setScopeFilter(event.target.value)}><option value="Todos">Todas as abrangências</option><option value="Único">Vencimento único</option><option value="Periódico">Periódico</option><option value="Recorrente">Recorrente mensal</option></select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={regulatoryBodyFilter} onChange={(event) => setRegulatoryBodyFilter(event.target.value)}><option value="Todos">Todos os órgãos reguladores</option>{regulatoryBodies.map((body) => <option key={body}>{body}</option>)}</select>
       </div>
 
       {/* Indicadores Acionáveis */}

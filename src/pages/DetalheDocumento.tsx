@@ -125,6 +125,20 @@ export const DetalheDocumento = () => {
     navigate("/documentos");
   };
 
+  const handleRegisterCompetence = () => {
+    if (!doc || doc.scope !== "Recorrente") return;
+    const competence = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+    if (doc.recurrenceHistory?.some((entry) => entry.competence === competence)) return;
+    const docs = storageService.get("gsi_documents");
+    const idx = docs.findIndex((item) => item.id === doc.id);
+    if (idx === -1) return;
+    docs[idx].recurrenceHistory = [...(docs[idx].recurrenceHistory || []), { id: crypto.randomUUID(), competence, completedAt: new Date().toISOString() }];
+    docs[idx].updatedAt = new Date().toISOString();
+    storageService.set("gsi_documents", docs);
+    if (currentUser) storageService.logAudit(currentUser.id, "Registrou competência mensal", doc.id, "Document");
+    setDoc(docs[idx]);
+  };
+
   const [newVersion, setNewVersion] = useState({ version: "", observations: "" });
 
   useEffect(() => {
@@ -212,6 +226,7 @@ export const DetalheDocumento = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {doc.scope === "Recorrente" && <Card><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-semibold text-slate-900">Competência mensal</h3><p className="text-sm text-slate-600">Registre a conferência para manter o compromisso recorrente em dia neste mês.</p></div><Button variant="create" onClick={handleRegisterCompetence}>Registrar competência atual</Button></CardContent></Card>}
           <Card>
             <CardContent className="p-6">
               <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">Detalhes do Documento</h3>

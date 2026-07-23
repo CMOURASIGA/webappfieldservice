@@ -49,6 +49,9 @@ export const Estoque = () => {
 
   const metrics = {
     total: materials.length,
+    normal: materials.filter((material) => getStockStatus(material) === "Normal").length,
+    atencao: materials.filter((material) => getStockStatus(material) === "Atenção").length,
+    critico: materials.filter((material) => ["Crítico", "Sem saldo"].includes(getStockStatus(material))).length,
     reposicaoNecessaria: materials.filter((material) => (material.physicalBalance - material.reservedBalance) <= material.minStock).length,
     abaixoMinimo: materials.filter((material) => material.physicalBalance < material.minStock).length,
     reservaMaior: materials.filter((material) => material.reservedBalance > material.physicalBalance).length,
@@ -63,6 +66,10 @@ export const Estoque = () => {
     if (categoryFilter !== "Todas" && material.category !== categoryFilter) return false;
     if (locationFilter !== "Todos" && material.locationId !== locationFilter) return false;
     if (statusFilter === "Todos") return true;
+    if (statusFilter === "Normal" || statusFilter === "Atenção" || statusFilter === "Crítico") {
+      const materialStatus = getStockStatus(material);
+      return statusFilter === "Crítico" ? ["Crítico", "Sem saldo"].includes(materialStatus) : materialStatus === statusFilter;
+    }
     if (statusFilter === "Reposição") return (material.physicalBalance - material.reservedBalance) <= material.minStock;
     if (statusFilter === "Abaixo Minimo") return material.physicalBalance < material.minStock;
     if (statusFilter === "Reserva Maior") return material.reservedBalance > material.physicalBalance;
@@ -131,14 +138,17 @@ export const Estoque = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <MetricButton label="Total de Itens" value={metrics.total} active={statusFilter === "Todos"} onClick={() => setStatusFilter("Todos")} />
+        <MetricButton label="Normal" value={metrics.normal} active={statusFilter === "Normal"} valueClassName="text-green-700" onClick={() => setStatusFilter("Normal")} />
+        <MetricButton label="Atenção" value={metrics.atencao} active={statusFilter === "Atenção"} valueClassName="text-amber-700" onClick={() => setStatusFilter("Atenção")} />
+        <MetricButton label="Crítico / sem saldo" value={metrics.critico} active={statusFilter === "Crítico"} valueClassName="text-red-700" onClick={() => setStatusFilter("Crítico")} />
         <MetricButton label="Reposição Necessária" value={metrics.reposicaoNecessaria} active={statusFilter === "Reposição"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Reposição")} />
-        <MetricButton label="Abaixo do Mínimo" value={metrics.abaixoMinimo} active={statusFilter === "Abaixo Minimo"} valueClassName="text-red-700" onClick={() => setStatusFilter("Abaixo Minimo")} />
-        <MetricButton label="Reserva maior que saldo" value={metrics.reservaMaior} active={statusFilter === "Reserva Maior"} valueClassName="text-red-700" onClick={() => setStatusFilter("Reserva Maior")} />
         <MetricButton label="Solicitações Pendentes" value={metrics.solicitacoesPendentes} onClick={() => navigate("/estoque/fila")} />
       </div>
       <div className="rounded-xl border-2 border-slate-300 bg-white p-4 text-sm text-slate-700 shadow-1"><strong>Valor estimado do estoque:</strong> {metrics.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} <span className="ml-2 text-slate-500">Baseado no valor unitário cadastrado para cada material.</span></div>
+
+      {metrics.reposicaoNecessaria > 0 && <section className="rounded-xl border-2 border-orange-400 bg-orange-50 p-4 shadow-1"><div className="mb-3 flex items-center justify-between gap-3"><div><h2 className="font-bold text-orange-950">Reposição urgente</h2><p className="text-sm text-orange-800">Itens cujo saldo disponível exige compra ou reposição imediata.</p></div><Button variant="outline" onClick={() => setStatusFilter("Reposição")}>Ver todos</Button></div><div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">{materials.filter((material) => (material.physicalBalance - material.reservedBalance) <= material.minStock).map((material) => { const available = material.physicalBalance - material.reservedBalance; return <div key={material.id} className="rounded-lg border-2 border-orange-200 bg-white p-3 text-sm"><strong>{material.name}</strong><p className="mt-1 text-slate-600">Disponível: {available} {material.unit} | Mínimo: {material.minStock}</p><p className="mt-1 font-semibold text-orange-900">Sugestão: repor {Math.max(0, Number(material.idealStock || material.minStock) - available)} {material.unit}</p></div>; })}</div></section>}
 
       {statusFilter !== "Todos" && (
         <div className="flex items-center gap-2">

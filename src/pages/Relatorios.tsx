@@ -1,120 +1,52 @@
-﻿import React, { useMemo } from "react";
-import { Card, CardContent, CardHeader } from "@cnc-ti/layout-basic";
-import { ClipboardList, FileText, Package, Printer, ShieldAlert } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { BarChart3, FileText, Package, Printer, ShieldCheck, Wrench } from "lucide-react";
+import { Card, CardContent } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 import { storageService } from "../services/storageService";
 import { getDocumentStatus } from "../utils/documentStatus";
-import { getPendingStockRequests, reconcileMaterial, resolveOrderStatusFromMaterials } from "../utils/stock";
-import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { getStockStatus, reconcileMaterial } from "../utils/stock";
 import { printReport } from "../utils/reportExport";
 
+type ReportId = "estoque-posicao" | "estoque-consumo" | "estoque-reposicao" | "movimentacoes" | "manutencoes" | "execucoes" | "documentos-conformidade" | "documentos-vencimentos";
+const catalog: Array<{ id: ReportId; title: string; description: string; icon: any; area: string }> = [
+  { id: "estoque-posicao", title: "Posição de estoque", description: "Saldo físico, reserva, disponível e valor por material.", icon: Package, area: "Estoque" },
+  { id: "estoque-consumo", title: "Consumo e gasto", description: "Saídas por período, categoria e localização.", icon: BarChart3, area: "Estoque" },
+  { id: "estoque-reposicao", title: "Reposição urgente", description: "Itens críticos e sugestão de compra para o nível ideal.", icon: Package, area: "Estoque" },
+  { id: "movimentacoes", title: "Histórico de movimentações", description: "Entradas e saídas com material, responsável e setor.", icon: FileText, area: "Estoque" },
+  { id: "manutencoes", title: "Situação das manutenções", description: "Planos por status, tipo, periodicidade e custo estimado.", icon: Wrench, area: "Manutenções" },
+  { id: "execucoes", title: "Histórico de execuções", description: "Execuções, observações e evidências registradas nas OS.", icon: FileText, area: "Manutenções" },
+  { id: "documentos-conformidade", title: "Conformidade regulatória", description: "Indicadores por situação, tipo e responsável.", icon: ShieldCheck, area: "Documentos" },
+  { id: "documentos-vencimentos", title: "Vencimentos documentais", description: "Documentos vencidos, críticos e em atenção.", icon: FileText, area: "Documentos" },
+];
+
 export const Relatorios = () => {
-  const summary = useMemo(() => {
-    const orders = storageService.get("gsi_work_orders");
-    const materials = storageService.get("gsi_stock_materials").map(reconcileMaterial);
-    const requests = storageService.get("gsi_stock_requests");
-    const documents = storageService.get("gsi_documents");
-    const plans = storageService.get("gsi_preventive_plans");
-    const movements = storageService.get("gsi_stock_movements");
-    const thirtyDaysAgo = new Date(Date.now() - 86400000 * 30);
-
-    return {
-      openOrders: orders.filter((order) => {
-        const status = resolveOrderStatusFromMaterials(order);
-        return status !== "Concluída" && status !== "Cancelada";
-      }).length,
-      criticalMaterials: materials.filter((material) => (material.physicalBalance - material.reservedBalance) <= material.minStock).length,
-      pendingRequests: getPendingStockRequests(requests).length,
-      criticalDocuments: documents.filter((document) => {
-        const status = getDocumentStatus(document);
-        return status === "Crítico" || status === "Vencido";
-      }).length,
-      stockValue: materials.reduce((total, material) => total + Number(material.physicalBalance || 0) * Number(material.unitPrice || 0), 0),
-      monthlyConsumption: movements.filter((movement) => movement.type === "Saída" && new Date(movement.date) >= thirtyDaysAgo).reduce((total, movement) => total + Number(movement.quantity || 0), 0),
-      plansOverdue: plans.filter((plan) => new Date(plan.nextExecution) < new Date()).length,
-      plansByType: [...new Set(plans.map((plan) => plan.type))].map((type) => `${type}: ${plans.filter((plan) => plan.type === type).length}`),
-      plansByPeriodicity: [...new Set(plans.map((plan) => plan.periodicity))].map((periodicity) => `${periodicity}: ${plans.filter((plan) => plan.periodicity === periodicity).length}`),
-      preventiveEstimatedCost: plans.reduce((total, plan) => total + Number(plan.estimatedValue || 0), 0),
-      documentsValid: documents.filter((document) => getDocumentStatus(document) === "Vigente").length,
-      totalDocuments: documents.length,
-      documentsByType: [...new Set(documents.map((document) => document.type))].map((type) => `${type}: ${documents.filter((document) => document.type === type).length}`),
-      documentsByResponsible: [...new Set(documents.map((document) => document.responsibleId).filter(Boolean))].map((responsibleId) => `${storageService.get("gsi_users").find((user) => user.id === responsibleId)?.name || responsibleId}: ${documents.filter((document) => document.responsibleId === responsibleId).length}`),
-    };
-  }, []);
-
-  const cards = [
-    {
-      title: "Ordens em andamento",
-      value: summary.openOrders,
-      icon: ClipboardList,
-      description: "Ordens que ainda exigem ação operacional.",
-      colorClass: "text-blue-700 bg-blue-50",
-    },
-    {
-      title: "Materiais críticos",
-      value: summary.criticalMaterials,
-      icon: Package,
-      description: "Itens abaixo do mínimo ou em reposição necessária.",
-      colorClass: "text-orange-700 bg-orange-50",
-    },
-    {
-      title: "Solicitações pendentes",
-      value: summary.pendingRequests,
-      icon: FileText,
-      description: "Solicitações de estoque ainda não concluídas.",
-      colorClass: "text-slate-700 bg-slate-100",
-    },
-    {
-      title: "Documentos críticos",
-      value: summary.criticalDocuments,
-      icon: ShieldAlert,
-      description: "Documentos vencidos ou em janela crítica.",
-      colorClass: "text-red-700 bg-red-50",
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <OperationalPageHeader
-        title="Relatórios"
-        description="Leitura gerencial do estado atual do sistema com dados reais."
-        backTo="/"
-      />
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <Card key={card.title} className="border-slate-300 shadow-sm">
-            <CardContent className="min-h-40 p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-full ${card.colorClass}`}>
-                  <card.icon className="h-5 w-5" />
-                </div>
-                <span className="text-3xl font-bold text-slate-900">{card.value}</span>
-              </div>
-              <h2 className="font-semibold text-slate-900">{card.title}</h2>
-              <p className="mt-1 text-sm text-slate-500">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader><h2 className="font-semibold text-slate-900">Relatórios para apresentação</h2></CardHeader>
-        <CardContent className="grid gap-3 p-5 pt-0 md:grid-cols-3">
-          <button className="flex items-center justify-center gap-2 rounded-lg border-2 border-slate-400 bg-white px-4 py-3 text-sm font-semibold text-brand-900 hover:bg-brand-050" onClick={() => printReport("Relatório de Estoque", "Posição, consumo e reposição dos últimos 30 dias.", [{ label: "Valor estimado em estoque", value: summary.stockValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }, { label: "Itens críticos", value: summary.criticalMaterials }, { label: "Saídas nos últimos 30 dias", value: summary.monthlyConsumption }, { label: "Solicitações pendentes", value: summary.pendingRequests }])}><Printer className="h-4 w-4" /> Estoque em PDF</button>
-          <button className="flex items-center justify-center gap-2 rounded-lg border-2 border-slate-400 bg-white px-4 py-3 text-sm font-semibold text-brand-900 hover:bg-brand-050" onClick={() => printReport("Relatório de Manutenções", "Situação dos planos preventivos e ordens operacionais.", [{ label: "OS em andamento", value: summary.openOrders }, { label: "Planos atrasados", value: summary.plansOverdue }, { label: "Custo preventivo estimado", value: summary.preventiveEstimatedCost.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }, { label: "Distribuição por tipo", value: summary.plansByType.join(" | ") || "Sem dados" }, { label: "Distribuição por periodicidade", value: summary.plansByPeriodicity.join(" | ") || "Sem dados" }])}><Printer className="h-4 w-4" /> Manutenções em PDF</button>
-          <button className="flex items-center justify-center gap-2 rounded-lg border-2 border-slate-400 bg-white px-4 py-3 text-sm font-semibold text-brand-900 hover:bg-brand-050" onClick={() => printReport("Relatório de Conformidade", "Visão dos documentos regulatórios e prazos de validade.", [{ label: "Documentos vigentes", value: summary.documentsValid }, { label: "Documentos críticos", value: summary.criticalDocuments }, { label: "Total de documentos", value: summary.totalDocuments }, { label: "Por tipo", value: summary.documentsByType.join(" | ") || "Sem dados" }, { label: "Por responsável", value: summary.documentsByResponsible.join(" | ") || "Sem dados" }, { label: "Situação geral", value: summary.criticalDocuments ? "Atenção necessária" : "Conforme" }])}><Printer className="h-4 w-4" /> Conformidade em PDF</button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <h2 className="font-semibold text-slate-900">Escopo atual</h2>
-        </CardHeader>
-        <CardContent className="space-y-2 p-5 pt-0 text-sm text-slate-600">
-          <p>Esta tela apresenta números reais para acompanhamento rápido.</p>
-          <p>Os botões acima abrem uma versão pronta para impressão. No navegador, selecione “Salvar como PDF” para gerar o arquivo.</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const [selected, setSelected] = useState<ReportId>("estoque-posicao");
+  const [from, setFrom] = useState(""); const [to, setTo] = useState("");
+  const [unitId, setUnitId] = useState("Todos"); const [locationId, setLocationId] = useState("Todos");
+  const [category, setCategory] = useState("Todos"); const [status, setStatus] = useState("Todos");
+  const data = useMemo(() => ({
+    materials: storageService.get("gsi_stock_materials").map(reconcileMaterial), movements: storageService.get("gsi_stock_movements"), plans: storageService.get("gsi_preventive_plans"), executions: storageService.get("gsi_maintenance_executions"), documents: storageService.get("gsi_documents"), units: storageService.get("gsi_units"), locations: storageService.get("gsi_locations"), users: storageService.get("gsi_users"),
+  }), []);
+  const selectedReport = catalog.find((item) => item.id === selected)!;
+  const dates = (date?: string) => (!from || date >= from) && (!to || date <= to);
+  const unitName = (id?: string) => data.units.find((item: any) => item.id === id)?.name || "Geral";
+  const locationName = (id?: string) => data.locations.find((item: any) => item.id === id)?.name || "Não informado";
+  const paramsText = [from && `De: ${from}`, to && `Até: ${to}`, unitId !== "Todos" && `Unidade: ${unitName(unitId)}`, locationId !== "Todos" && `Local: ${locationName(locationId)}`, category !== "Todos" && `Categoria: ${category}`, status !== "Todos" && `Situação: ${status}`].filter(Boolean).join(" | ") || "Sem filtros adicionais";
+  const emit = () => {
+    const materialRows = data.materials.filter((m: any) => (unitId === "Todos" || m.unitId === unitId) && (locationId === "Todos" || m.locationId === locationId) && (category === "Todos" || m.category === category));
+    const planRows = data.plans.filter((p: any) => (unitId === "Todos" || p.unitId === unitId) && (locationId === "Todos" || p.locationId === locationId) && dates(p.nextExecution));
+    const docRows = data.documents.filter((d: any) => (unitId === "Todos" || d.unitId === unitId) && dates(d.expirationDate) && (status === "Todos" || getDocumentStatus(d) === status));
+    if (selected === "estoque-posicao") return printReport(selectedReport.title, paramsText, [{ label: "Itens listados", value: materialRows.length }, { label: "Valor estimado", value: materialRows.reduce((t: number, m: any) => t + m.physicalBalance * Number(m.unitPrice || 0), 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }], { headers: ["Código", "Material", "Disponível", "Situação", "Local"], rows: materialRows.map((m: any) => [m.code, m.name, m.physicalBalance - m.reservedBalance, getStockStatus(m), locationName(m.locationId)]) });
+    if (selected === "estoque-consumo" || selected === "movimentacoes") { const rows = data.movements.filter((m: any) => dates(m.date) && (selected === "movimentacoes" || m.type === "Saída")); return printReport(selectedReport.title, paramsText, [{ label: "Movimentações", value: rows.length }, { label: "Quantidade", value: rows.reduce((t: number, m: any) => t + Number(m.quantity || 0), 0) }], { headers: ["Data", "Tipo", "Material", "Quantidade", "Setor"], rows: rows.map((m: any) => [new Date(m.date).toLocaleDateString("pt-BR"), m.type, data.materials.find((x: any) => x.id === m.materialId)?.name || m.materialId, m.quantity, m.sector || "Não informado"]) }); }
+    if (selected === "estoque-reposicao") { const rows = materialRows.filter((m: any) => (m.physicalBalance - m.reservedBalance) <= m.minStock); return printReport(selectedReport.title, paramsText, [{ label: "Itens urgentes", value: rows.length }], { headers: ["Material", "Disponível", "Mínimo", "Sugestão"], rows: rows.map((m: any) => [m.name, m.physicalBalance - m.reservedBalance, m.minStock, Math.max(0, Number(m.idealStock || m.minStock) - (m.physicalBalance - m.reservedBalance))]) }); }
+    if (selected === "manutencoes") return printReport(selectedReport.title, paramsText, [{ label: "Planos", value: planRows.length }, { label: "Custo estimado", value: planRows.reduce((t: number, p: any) => t + Number(p.estimatedValue || 0), 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) }], { headers: ["Plano", "Tipo", "Periodicidade", "Próxima execução", "Unidade"], rows: planRows.map((p: any) => [p.code, p.type, p.periodicity, p.nextExecution || "Sem data", unitName(p.unitId)]) });
+    if (selected === "execucoes") { const rows = data.executions.filter((e: any) => dates(e.executedAt)); return printReport(selectedReport.title, paramsText, [{ label: "Execuções", value: rows.length }, { label: "Com anexo", value: rows.filter((e: any) => e.attachments?.length).length }], { headers: ["Data", "Plano / OS", "Status", "Evidências", "Observações"], rows: rows.map((e: any) => [new Date(e.executedAt).toLocaleDateString("pt-BR"), e.planId || e.workOrderId || "-", e.status, e.attachments?.length || 0, e.notes || "-"]) }); }
+    const isExpiry = selected === "documentos-vencimentos"; const rows = isExpiry ? docRows.filter((d: any) => ["Vencido", "Crítico", "Atenção"].includes(getDocumentStatus(d))) : docRows; return printReport(selectedReport.title, paramsText, [{ label: "Documentos", value: rows.length }, { label: "Em atenção", value: rows.filter((d: any) => ["Vencido", "Crítico", "Atenção"].includes(getDocumentStatus(d))).length }], { headers: ["Documento", "Tipo", "Situação", "Vencimento", "Órgão"], rows: rows.map((d: any) => [d.title, d.type, getDocumentStatus(d), d.expirationDate ? new Date(d.expirationDate).toLocaleDateString("pt-BR") : "Sem validade", d.regulatoryBody || d.issuer]) });
+  };
+  const categories = [...new Set(data.materials.map((m: any) => m.category).filter(Boolean))];
+  return <div className="space-y-6"><OperationalPageHeader title="Relatórios" description="Escolha o relatório, informe os parâmetros e gere uma versão pronta para imprimir ou salvar em PDF." backTo="/" />
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{catalog.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={`rounded-xl border-2 p-4 text-left shadow-1 transition ${selected === item.id ? "border-brand-700 bg-brand-50" : "border-slate-300 bg-white hover:border-brand-300"}`}><item.icon className="mb-3 h-5 w-5 text-brand-700" /><p className="text-xs font-bold uppercase text-slate-500">{item.area}</p><h2 className="mt-1 font-bold text-slate-900">{item.title}</h2><p className="mt-1 text-sm text-slate-600">{item.description}</p></button>)}</div>
+    <Card><CardContent className="p-5"><div className="mb-4"><h2 className="font-bold text-slate-900">Parâmetros: {selectedReport.title}</h2><p className="text-sm text-slate-600">Os filtros aplicados serão identificados no cabeçalho da emissão.</p></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><label className="text-sm font-semibold">Data inicial<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3" /></label><label className="text-sm font-semibold">Data final<input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3" /></label><label className="text-sm font-semibold">Unidade<select value={unitId} onChange={(e) => setUnitId(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3"><option value="Todos">Todas</option>{data.units.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></label><label className="text-sm font-semibold">Local<select value={locationId} onChange={(e) => setLocationId(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3"><option value="Todos">Todos</option>{data.locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label><label className="text-sm font-semibold">Categoria<select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3"><option value="Todos">Todas</option>{categories.map((item: any) => <option key={item}>{item}</option>)}</select></label><label className="text-sm font-semibold">Situação documental<select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 block h-10 w-full rounded-md border-2 border-slate-300 px-3"><option value="Todos">Todas</option><option>Vigente</option><option>Atenção</option><option>Crítico</option><option>Vencido</option></select></label></div><div className="mt-5 flex justify-end"><Button variant="create" onClick={emit} className="gap-2"><Printer className="h-4 w-4" /> Emitir relatório</Button></div></CardContent></Card>
+  </div>;
 };

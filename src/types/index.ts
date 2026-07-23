@@ -179,6 +179,8 @@ export interface PreventivePlan {
   responsibleId?: string;
   providerId?: string;
   estimatedValue?: number;
+  alertDaysAttention?: number;
+  alertDaysCritical?: number;
   templateId?: string;
   checklist: ChecklistItem[];
   status: "Ativo" | "Inativo";
@@ -242,6 +244,7 @@ export interface Document {
   alertDaysCritical?: number;
   scope?: "Único" | "Periódico" | "Recorrente";
   recurrenceDay?: number;
+  recurrenceHistory?: { id: string; competence: string; completedAt: string; notes?: string }[];
 }
 
 export interface Provider {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
-import { PreventivePlan, Unit, Asset, Provider, User } from "../types";
+import { PreventivePlan, Unit, Asset, Provider, Location } from "../types";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
@@ -20,6 +20,7 @@ export const Preventivas = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
@@ -28,6 +29,7 @@ export const Preventivas = () => {
   const [periodicityFilter, setPeriodicityFilter] = useState("Todas");
   const [unitFilter, setUnitFilter] = useState("Todas");
   const [providerFilter, setProviderFilter] = useState("Todos");
+  const [locationFilter, setLocationFilter] = useState("Todos");
   const [generatedOrderNumbers, setGeneratedOrderNumbers] = useState<string[]>([]);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
 
@@ -36,6 +38,7 @@ export const Preventivas = () => {
     setUnits(storageService.get("gsi_units") || []);
     setAssets(storageService.get("gsi_assets") || []);
     setProviders(storageService.get("gsi_providers") || []);
+    setLocations(storageService.get("gsi_locations") || []);
   }, []);
 
   const [showNovoPlano, setShowNovoPlano] = useState(false);
@@ -52,21 +55,22 @@ export const Preventivas = () => {
     return calculateNextExecution(plan.periodicity as any, plan.lastExecution, plan.startDate) || plan.nextExecution;
   };
 
-  const getStatus = (nextExecution?: string) => {
+  const getStatus = (nextExecution?: string, plan?: PreventivePlan) => {
     if (!nextExecution) return "Sem data";
     const date = parseISO(nextExecution);
     const days = differenceInDays(date, new Date());
     
     if (isPast(date) && !isToday(date)) return "Atrasada";
-    if (days >= 0 && days <= 30) return "Próxima";
+    if (days >= 0 && days <= (plan?.alertDaysAttention ?? 30)) return "Próxima";
     return "Em dia";
   };
 
   const metrics = {
     total: plans.length,
-    emDia: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Em dia").length,
-    proximas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Próxima").length,
-    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Atrasada").length,
+    emDia: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Em dia").length,
+    proximas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Próxima").length,
+    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Atrasada").length,
+    semData: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Sem data").length,
   };
 
   
@@ -81,7 +85,7 @@ export const Preventivas = () => {
     for (const plan of allPlans) {
       if (plan.status !== "Ativo") continue;
       
-      const status = getStatus(getComputedNextExecution(plan));
+      const status = getStatus(getComputedNextExecution(plan), plan);
       if (status === "Atrasada" || status === "Próxima") {
         // Check if it already has an open OS for this plan
         const hasOpenOs = allOrders.some((o: any) => o.preventivePlanId === plan.id && o.status !== "Concluída" && o.status !== "Cancelada");
@@ -145,10 +149,12 @@ export const Preventivas = () => {
     if (periodicityFilter !== "Todas" && p.periodicity !== periodicityFilter) return false;
     if (unitFilter !== "Todas" && p.unitId !== unitFilter) return false;
     if (providerFilter !== "Todos" && p.providerId !== providerFilter) return false;
+    if (locationFilter !== "Todos" && p.locationId !== locationFilter) return false;
     if (statusFilter === "Todas") return true;
-    if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
-    if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p)) === "Próxima";
-    if (statusFilter === "Atrasadas") return getStatus(getComputedNextExecution(p)) === "Atrasada";
+    if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p), p) === "Em dia";
+    if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p), p) === "Próxima";
+    if (statusFilter === "Atrasadas") return getStatus(getComputedNextExecution(p), p) === "Atrasada";
+    if (statusFilter === "Sem data") return getStatus(getComputedNextExecution(p), p) === "Sem data";
     return true;
   });
 
@@ -198,26 +204,28 @@ export const Preventivas = () => {
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por manutenção, código, periodicidade, unidade ou ativo..." resultCount={filteredPlans.length} />
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-5">
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option>Todos</option>{[...new Set(plans.map((plan) => plan.type).filter(Boolean))].map((type) => <option key={type}>{type}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={periodicityFilter} onChange={(event) => setPeriodicityFilter(event.target.value)}><option>Todas</option>{[...new Set(plans.map((plan) => plan.periodicity).filter(Boolean))].map((periodicity) => <option key={periodicity}>{periodicity}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)}><option value="Todas">Todas as unidades</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}><option value="Todos">Todos os prestadores</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)}><option value="Todos">Todos os locais</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select>
       </div>
 
       {/* Indicadores Acionáveis */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <MetricButton label="Total de Manutenções" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
         <MetricButton label="Em Dia" value={metrics.emDia} active={statusFilter === "Em dia"} valueClassName="text-green-700" onClick={() => setStatusFilter("Em dia")} />
         <MetricButton label="Atenção (30d)" value={metrics.proximas} active={statusFilter === "Próximas"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Próximas")} />
         <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
+        <MetricButton label="Sem data" value={metrics.semData} active={statusFilter === "Sem data"} onClick={() => setStatusFilter("Sem data")} />
       </div>
 
       {/* Cards Operacionais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPlans.map(plan => {
           const nextExec = getComputedNextExecution(plan);
-          const status = getStatus(nextExec);
+          const status = getStatus(nextExec, plan);
           let badgeClass = "bg-green-100 text-green-700";
           if (status === "Atrasada") badgeClass = "bg-red-100 text-red-700";
           else if (status === "Próxima") badgeClass = "bg-orange-100 text-orange-700";

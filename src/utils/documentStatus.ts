@@ -18,6 +18,10 @@ export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual:
     };
   }
   
+  const competence = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, "0")}`;
+  if (documento.scope === "Recorrente" && documento.recurrenceHistory?.some((entry) => entry.competence === competence)) {
+    return { status: "Vigente", diasRestantes: null, diasEmAtraso: null, nivel: "normal" };
+  }
   const expDate = documento.scope === "Recorrente"
     ? new Date(dataAtual.getFullYear(), dataAtual.getMonth(), documento.recurrenceDay || 5)
     : parseISO(documento.expirationDate!);

@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { MainLayout } from "./layouts/MainLayout";
 import { Agenda } from "./pages/Agenda";
 import { Admin } from "./pages/Admin";
+import { Alertas } from "./pages/Alertas";
 import { Ativos } from "./pages/Ativos";
 import { Auditoria } from "./pages/Auditoria";
 import { DetalheAtivo } from "./pages/DetalheAtivo";
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<VisaoGeral />} />
             <Route path="agenda" element={<Agenda />} />
+            <Route path="alertas" element={<Alertas />} />
             <Route path="servicos" element={<GestaoServicosDashboard />} />
             <Route path="servicos/corretivas" element={<Servicos />} />
             <Route path="servicos/nova" element={<NovoServico />} />

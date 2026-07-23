@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Wrench
+  ,BellRing
 } from "lucide-react";
 import {
   addMonths,
@@ -42,6 +43,8 @@ const navItems: { icon: any, label: string, href: string, subItems?: { label: st
   { icon: Wrench, label: "Gestão de Serviços", href: "/servicos" },
   { icon: PackageSearch, label: "Gestão de Estoque", href: "/estoque" },
   { icon: FileText, label: "Documentação Regulatória", href: "/documentos" },
+  { icon: BarChart3, label: "Relatórios", href: "/relatorios" },
+  { icon: BellRing, label: "Central de Alertas", href: "/alertas" },
 ];
 
 const adminItems: { icon: any, label: string, href: string, subItems?: { label: string, href: string }[] }[] = [
