@@ -65,13 +65,13 @@ export const MetricButton = ({ label, value, active, valueClassName, icon: Icon 
     )}
     {...props}
   >
-    <span className="flex items-start justify-between gap-3">
-      <span className="block text-xs font-bold uppercase tracking-wide text-slate-600">{label}</span>
-      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-brand-700", active && "bg-brand-900 text-white")}>
+    <span className="metric-card__header">
+      <span className="metric-card__label">{label}</span>
+      <span className={cn("metric-card__icon", active && "bg-brand-900 text-white")}>
         <Icon className="h-5 w-5" />
       </span>
     </span>
-    <span className={cn("mt-4 block text-3xl font-bold text-slate-950", valueClassName)}>{String(value).padStart(2, "0")}</span>
+    <span className={cn("metric-card__value", valueClassName)}>{String(value).padStart(2, "0")}</span>
   </button>
 );
 
