@@ -96,12 +96,19 @@ export const Preventivas = () => {
             number,
             preventivePlanId: plan.id,
             unitId: plan.unitId,
+            sector: plan.sector,
             locationId: plan.locationId || "",
             categoryId: plan.categoryId,
             assetId: plan.assetId || "",
+            type: "Preventiva",
             priority: "Média",
+            responsibleId: plan.responsibleId,
+            providerId: plan.providerId,
+            estimatedValue: plan.estimatedValue,
             description: plan.description,
             technicalDescription: "Manutenção Preventiva gerada automaticamente.\n" + "",
+            plannedDate: getComputedNextExecution(plan),
+            deadline: getComputedNextExecution(plan),
             source: "Preventiva",
             status: "Planejada",
             createdAt: new Date().toISOString(),
@@ -170,7 +177,7 @@ export const Preventivas = () => {
             <CheckCircle2 className="h-8 w-8 text-green-700" />
             <div>
               <h2 className="text-lg font-bold text-green-950">Ordens de Serviço criadas</h2>
-              <p className="mt-1 text-sm text-green-800">As manutenções pendentes foram convertidas em OS e já estão disponíveis para programação.</p>
+              <p className="mt-1 text-sm text-green-800">As OS receberam os dados já existentes no plano, como prestador externo, responsável, local, ativo, checklist e custo estimado. Complete apenas programação, materiais e informações de execução.</p>
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               {generatedOrderNumbers.map((number) => <span key={number} className="rounded-md border border-green-700 bg-white px-3 py-1.5 font-mono text-sm font-bold text-green-900">{number}</span>)}
@@ -234,6 +241,10 @@ export const Preventivas = () => {
                   <p><span className="font-medium text-slate-500">Ativo:</span> {getAssetCode(plan.assetId)}</p>
                   <p><span className="font-medium text-slate-500">Prestador:</span> {getProviderName(plan.providerId)}</p>
                   <p><span className="font-medium text-slate-500">Próx. Execução:</span> {nextExec ? format(parseISO(nextExec), "dd/MM/yyyy") : "N/A"}</p>
+                </div>
+
+                <div className="rounded-md border border-blue-300 bg-blue-50 p-2 text-xs text-blue-950">
+                  <strong>Ao gerar a OS:</strong> prestador, responsável, local, ativo, checklist e custo estimado são preenchidos a partir deste plano. Depois, atualize data e horário, materiais e dados da execução.
                 </div>
 
                 </CardContent>
