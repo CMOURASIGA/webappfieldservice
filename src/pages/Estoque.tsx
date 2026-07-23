@@ -14,9 +14,7 @@ import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { storageService } from "../services/storageService";
 import { Location, StockMaterial, StockRequest, Unit } from "../types";
-import { MovimentacaoModal } from "./estoque/MovimentacaoModal";
 import { MovimentacoesHistorico } from "./estoque/MovimentacoesHistorico";
-import { NovaSolicitacaoModal } from "./estoque/NovaSolicitacaoModal";
 import { NovoMaterialModal } from "./estoque/NovoMaterialModal";
 import { getPendingStockRequests, getStockStatus, reconcileMaterial } from "../utils/stock";
 import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
@@ -31,10 +29,6 @@ export const Estoque = () => {
   const initialStatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [showNovoMaterial, setShowNovoMaterial] = useState(false);
-  const [showMovimentacao, setShowMovimentacao] = useState(false);
-  const [showSolicitacao, setShowSolicitacao] = useState(false);
-  const [movimentacaoType, setMovimentacaoType] = useState<"Entrada" | "Saída" | "Ajuste">("Entrada");
-  const [selectedMaterialId, setSelectedMaterialId] = useState<string | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Todas");
   const [locationFilter, setLocationFilter] = useState("Todos");
@@ -91,13 +85,13 @@ export const Estoque = () => {
         actionsBelow
         actions={
           <>
-          <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Entrada"); setShowMovimentacao(true); }}>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes/nova?tipo=Entrada")}>
             <ArrowRightLeft className="w-4 h-4" /> Registrar Entrada
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => { setMovimentacaoType("Saída"); setShowMovimentacao(true); }}>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes/nova?tipo=Saída")}>
             <ArrowRightLeft className="w-4 h-4" /> Registrar Saída
           </Button>
-          <Button variant="outline" className="gap-2" onClick={() => { setSelectedMaterialId(undefined); setShowSolicitacao(true); }}>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/solicitacoes/nova")}>
             <PackageOpen className="w-4 h-4" /> Solicitar Material
           </Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/estoque/movimentacoes")}>
@@ -225,10 +219,7 @@ export const Estoque = () => {
                     className="card-action-button"
                     title="Solicitar material"
                     aria-label="Solicitar material"
-                    onClick={() => {
-                      setSelectedMaterialId(material.id);
-                      setShowSolicitacao(true);
-                    }}
+                    onClick={() => navigate(`/estoque/solicitacoes/nova?materialId=${material.id}`)}
                   >
                     <PackageOpen className="h-4 w-4" />
                   </Button>
@@ -246,8 +237,6 @@ export const Estoque = () => {
       </div>
 
       <NovoMaterialModal open={showNovoMaterial} onOpenChange={(open) => { setShowNovoMaterial(open); if (!open) setEditingMaterial(undefined); }} onSuccess={loadData} material={editingMaterial} />
-      <MovimentacaoModal initialType={movimentacaoType} open={showMovimentacao} onOpenChange={setShowMovimentacao} onSuccess={loadData} />
-      <NovaSolicitacaoModal open={showSolicitacao} onOpenChange={setShowSolicitacao} onSuccess={loadData} initialMaterialId={selectedMaterialId} />
     </div>
   );
 };

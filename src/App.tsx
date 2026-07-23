@@ -23,6 +23,8 @@ import { GestaoServicosDashboard } from "./pages/GestaoServicosDashboard";
 import { ImprimirOrdem } from "./pages/ImprimirOrdem";
 import { Locais } from "./pages/Locais";
 import { MovimentacoesHistorico } from "./pages/estoque/MovimentacoesHistorico";
+import { NovaMovimentacaoEstoque } from "./pages/estoque/NovaMovimentacaoEstoque";
+import { NovaSolicitacaoEstoque } from "./pages/estoque/NovaSolicitacaoEstoque";
 import { NovaOrdem } from "./pages/NovaOrdem";
 import { NovaPreventiva } from "./pages/NovaPreventiva";
 import { NovoDocumento } from "./pages/NovoDocumento";
@@ -59,7 +61,9 @@ export default function App() {
             <Route path="preventivas/:id/editar" element={<EditarPreventiva />} />
 
             <Route path="estoque" element={<Estoque />} />
+            <Route path="estoque/movimentacoes/nova" element={<NovaMovimentacaoEstoque />} />
             <Route path="estoque/movimentacoes" element={<MovimentacoesHistorico />} />
+            <Route path="estoque/solicitacoes/nova" element={<NovaSolicitacaoEstoque />} />
             <Route path="estoque/fila" element={<FilaEstoque />} />
 
             <Route path="ativos" element={<Ativos />} />
