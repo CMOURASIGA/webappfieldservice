@@ -9,6 +9,8 @@ import { Select } from "../components/ui/Select";
 import { useAuth } from "../contexts/AuthContext";
 import { storageService } from "../services/storageService";
 import { Location, Unit } from "../types";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
+import { Plus } from "lucide-react";
 
 export const Locais = () => {
   const { currentUser } = useAuth();
@@ -16,6 +18,7 @@ export const Locais = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<Partial<Location>>({});
 
   const loadData = () => {
@@ -90,22 +93,28 @@ export const Locais = () => {
     setIsDrawerOpen(false);
   };
 
+  const filteredLocations = locations.filter((location) => {
+    const term = searchTerm.trim().toLowerCase();
+    return !term || [location.name, location.code, location.type, location.area, location.floor, location.environment, getUnitName(location.unitId)]
+      .some((value) => value?.toLowerCase().includes(term));
+  });
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Locais</h1>
-          <p className="text-sm text-slate-500">Cadastro de predios, andares, areas e ambientes operacionais.</p>
-        </div>
-        <Button onClick={handleOpenNew}>+ Novo Local</Button>
-      </div>
+      <OperationalPageHeader
+        title="Locais"
+        description="Cadastro de prédios, andares, áreas e ambientes operacionais."
+        backTo="/servicos"
+        actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Local</Button>}
+      />
 
-      <Card>
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por local, código, tipo, unidade ou ambiente..." resultCount={filteredLocations.length} />
+
+      <Card className="p-4">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {locations.map((location) => (
-                <Card key={location.id} className="hover:shadow-md transition-shadow">
+            <div className="operational-grid">
+              {filteredLocations.map((location) => (
+                <Card key={location.id} className="operational-card flex h-full flex-col">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -121,12 +130,12 @@ export const Locais = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-2 flex-1">
-                      <div>
+                    <div className="operational-card-fields mt-2 flex-1">
+                      <div className="operational-card-field border-b-0">
                         <p className="text-xs text-slate-400">Unidade</p>
                         <p className="font-medium text-slate-700">{getUnitName(location.unitId)}</p>
                       </div>
-                      <div>
+                      <div className="operational-card-field border-b-0 border-r-0">
                         <p className="text-xs text-slate-400">Detalhes</p>
                         <p className="font-medium text-slate-700 text-xs">
                           {location.area && <span className="block">Area: {location.area}</span>}
@@ -137,7 +146,7 @@ export const Locais = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-0 pb-5 px-5">
+                  <CardFooter className="mt-auto border-t border-slate-200 px-5 py-4">
                     <CardFooterActions
                       viewLink={`/locais/${location.id}`}
                       viewLabel="Ver detalhes"
@@ -151,18 +160,16 @@ export const Locais = () => {
                 </Card>
               ))}
             </div>
-
             {locations.length === 0 && (
               <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
                 Nenhum local encontrado.
               </div>
             )}
-          </div>
         </CardContent>
       </Card>
 
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} title={editingLocation ? "Editar Local" : "Novo Local"}>
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-4 rounded-lg border border-slate-300 bg-slate-50/70 p-4">
           <Input label="Codigo do Local" required value={formData.code || ""} onChange={(event) => setFormData({ ...formData, code: event.target.value })} />
           <Input
             label="Nome do Local"

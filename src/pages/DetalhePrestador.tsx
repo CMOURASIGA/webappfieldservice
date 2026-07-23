@@ -66,7 +66,7 @@ export const DetalheTécnico = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-title-panel flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Técnico: {provider.name}</h1>
           <p className="text-sm text-slate-500">Detalhes e histórico de atendimentos.</p>

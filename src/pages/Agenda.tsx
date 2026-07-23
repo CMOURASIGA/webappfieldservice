@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, PreventivePlan, Document, User, Unit, TechnicianWorkSchedule, TechnicianUnavailability, Provider } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
@@ -19,10 +19,12 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { NovoCompromissoModal } from "./agenda/NovoCompromissoModal";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 
 type ViewMode = "Semana" | "Dia" | "Lista" | "Equipe";
 
 export const Agenda = () => {
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("Semana");
   const [currentDate, setCurrentDate] = useState(new Date());
   
@@ -65,6 +67,22 @@ export const Agenda = () => {
   useEffect(() => {
     refreshData();
   }, []);
+
+  useEffect(() => {
+    const periodo = searchParams.get("periodo");
+    const selectedDate = searchParams.get("data");
+    if (periodo === "dia" && selectedDate) {
+      const parsedDate = parseISO(selectedDate);
+      if (isValid(parsedDate)) setCurrentDate(parsedDate);
+      setViewMode("Dia");
+    } else if (periodo === "hoje") {
+      setCurrentDate(new Date());
+      setViewMode("Dia");
+    } else if (periodo === "semana") {
+      setCurrentDate(new Date());
+      setViewMode("Semana");
+    }
+  }, [searchParams]);
 
   const technicians = users.filter(u => u.role === "Executor/Técnico" || u.role === "Administrador");
   const executors = [
@@ -201,12 +219,12 @@ export const Agenda = () => {
     const scheduled = getScheduledOrders();
     
     return (
-      <div className="border border-slate-200 rounded-lg bg-white overflow-hidden flex flex-col h-[calc(100vh-250px)]">
+      <div className="agenda-grid flex h-[calc(100vh-250px)] flex-col border-2 border-slate-500">
         {/* Header Days */}
-        <div className="flex border-b border-slate-200 bg-slate-50">
-          <div className="w-16 flex-shrink-0 border-r border-slate-200"></div>
+        <div className="flex border-b-2 border-slate-300 bg-slate-100">
+          <div className="w-16 flex-shrink-0 border-r-2 border-slate-500"></div>
           {weekDays.map(day => (
-            <div key={day.toISOString()} className={`flex-1 text-center py-2 border-r border-slate-200 ${isToday(day) ? 'bg-brand-50' : ''}`}>
+            <div key={day.toISOString()} className={`flex-1 border-r-2 border-slate-500 py-2 text-center last:border-r-0 ${isToday(day) ? 'bg-brand-100' : ''}`}>
               <div className="text-xs text-slate-500 uppercase">{format(day, 'EEE', { locale: ptBR })}</div>
               <div className={`text-lg font-medium ${isToday(day) ? 'text-brand-700' : 'text-slate-800'}`}>
                 {format(day, 'dd')}
@@ -219,14 +237,14 @@ export const Agenda = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="relative">
             {hours.map(hour => (
-              <div key={hour} className="flex border-b border-slate-100 min-h-[60px]">
-                <div className="w-16 flex-shrink-0 border-r border-slate-200 text-xs text-slate-500 text-center py-2 bg-slate-50">
+              <div key={hour} className="flex min-h-[60px] border-b-2 border-slate-400 last:border-b-0">
+                <div className="w-16 flex-shrink-0 border-r-2 border-slate-500 bg-slate-100 py-2 text-center text-xs font-semibold text-slate-600">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
                 {weekDays.map(day => (
                   <div 
                     key={`${day.toISOString()}-${hour}`} 
-                    className={`flex-1 border-r border-slate-100 relative transition-colors ${isToday(day) ? 'bg-brand-50/20' : ''}`}
+                    className={`relative flex-1 border-r-2 border-slate-500 transition-colors last:border-r-0 ${isToday(day) ? 'bg-brand-50/50' : ''}`}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => handleDrop(e, day, hour)}
                   >
@@ -429,12 +447,12 @@ export const Agenda = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Agenda Semanal</h1>
-          <p className="text-sm text-slate-500">Gestão e programação da equipe técnica.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <OperationalPageHeader
+        title="Agenda Semanal"
+        description="Gestão e programação da equipe técnica."
+        backTo="/"
+        actions={
+          <>
           <Button variant={viewMode === "Semana" ? "primary" : "secondary"} onClick={() => setViewMode("Semana")}>
             <CalendarDays className="w-4 h-4 mr-2" /> Semana
           </Button>
@@ -450,10 +468,11 @@ export const Agenda = () => {
           <Button variant="secondary" className="border-brand-200 text-brand-700 bg-brand-50" onClick={() => setShowUnavailModal(true)}>
             + Ausência/Folga
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-4 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-300 bg-white p-3 shadow-sm">
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-md">
           <Button variant="ghost" size="sm" className="h-8 px-2" onClick={handlePrev}>
             <ChevronLeft className="w-4 h-4" />
@@ -511,7 +530,7 @@ export const Agenda = () => {
 
         {/* Unscheduled Sidebar */}
         {showUnscheduled && (
-          <div className="w-80 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg p-4 h-[calc(100vh-250px)] overflow-y-auto shadow-inner">
+          <div className="h-[calc(100vh-250px)] w-80 flex-shrink-0 overflow-y-auto rounded-lg border border-slate-300 bg-slate-50 p-4 shadow-inner">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-800">Aguardando Programação</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowUnscheduled(false)} className="p-2 h-6 w-6">

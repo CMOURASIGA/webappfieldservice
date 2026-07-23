@@ -9,11 +9,15 @@ import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Drawer } from "../components/ui/Drawer";
 import { useAuth } from "../contexts/AuthContext";
+import { Request } from "../types";
+import { FormGrid, OperationalPageHeader } from "../components/ui/OperationalPage";
+import { MapPinPlus, Save, X } from "lucide-react";
 
 export const NovaOrdem = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const sourceState = location.state as any;
+  const sourceState = location.state as { sourceRequest?: Request } | null;
+  const sourceRequest = sourceState?.sourceRequest;
   const { currentUser } = useAuth();
   
   const [units, setUnits] = useState<Unit[]>([]);
@@ -48,6 +52,20 @@ export const NovaOrdem = () => {
     setProviders(storageService.get("gsi_providers").filter(p => p.status === "Ativo" && p.active !== false));
   }, []);
 
+  useEffect(() => {
+    if (!sourceRequest) return;
+    setFormData((current) => ({
+      ...current,
+      unitId: sourceRequest.unitId || current.unitId,
+      locationId: sourceRequest.locationId || current.locationId,
+      assetId: sourceRequest.assetId || current.assetId,
+      type: "Corretiva",
+      categoryId: sourceRequest.categoryId || current.categoryId,
+      priority: sourceRequest.suggestedPriority || current.priority,
+      technicalDescription: sourceRequest.description || current.technicalDescription,
+    }));
+  }, [sourceRequest]);
+
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
   const filteredAssets = assets.filter(a => (!formData.locationId || a.locationId === formData.locationId));
 
@@ -58,6 +76,7 @@ export const NovaOrdem = () => {
     const newOs: WorkOrder = {
       id: crypto.randomUUID(),
       number: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      requestId: sourceRequest?.id,
       unitId: formData.unitId,
       locationId: formData.locationId,
       assetId: formData.assetId || undefined,
@@ -80,10 +99,21 @@ export const NovaOrdem = () => {
     const orders = storageService.get("gsi_work_orders");
     orders.push(newOs);
     storageService.set("gsi_work_orders", orders);
+
+    if (sourceRequest) {
+      const requests = storageService.get("gsi_requests");
+      const requestIndex = requests.findIndex((request) => request.id === sourceRequest.id);
+      if (requestIndex !== -1) {
+        requests[requestIndex].status = "Convertida em ordem";
+        requests[requestIndex].updatedAt = new Date().toISOString();
+        storageService.set("gsi_requests", requests);
+      }
+      storageService.logAudit(currentUser.id, "Manutenção convertida em OS", sourceRequest.id, "Request", sourceRequest.status, "Convertida em ordem");
+    }
     
     storageService.logAudit(currentUser.id, "Ordem Criada", newOs.id, "WorkOrder");
 
-    navigate("/ordens");
+    navigate(`/ordens/${newOs.id}`, { state: { createdOrderNumber: newOs.number } });
   };
 
   const handleSaveNewLocation = (e: React.FormEvent) => {
@@ -111,10 +141,17 @@ export const NovaOrdem = () => {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Ordem de Serviço</h1>
-        <p className="text-sm text-slate-500">Crie uma OS manual não vinculada a uma manutenção corretiva.</p>
-      </div>
+      <OperationalPageHeader
+        title={sourceRequest ? `Gerar OS da ${sourceRequest.protocol}` : "Nova Ordem de Serviço"}
+        description={sourceRequest ? "Os dados da manutenção foram preenchidos automaticamente. Complete apenas o que estiver faltando." : "Crie uma ordem de serviço manual."}
+        backTo={sourceRequest ? `/servicos/${sourceRequest.id}` : "/ordens"}
+      />
+
+      {sourceRequest && (
+        <div className="rounded-lg border-2 border-blue-300 bg-blue-50 p-4 text-sm text-blue-900">
+          <strong>Origem vinculada:</strong> {sourceRequest.title}. Unidade, local, ativo, categoria, prioridade e descrição foram reaproveitados quando disponíveis.
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -122,7 +159,7 @@ export const NovaOrdem = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormGrid>
               <Select
                 label="Unidade"
                 required
@@ -133,14 +170,16 @@ export const NovaOrdem = () => {
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-slate-700">Local/Ambiente</label>
-                  <button 
+                  <Button
                     type="button" 
-                    className="text-xs text-brand-600 hover:text-brand-700 font-medium disabled:text-slate-400 disabled:cursor-not-allowed"
+                    variant="secondary"
+                    size="sm"
+                    className="h-8 gap-1 px-2"
                     disabled={!formData.unitId}
                     onClick={() => setIsLocationDrawerOpen(true)}
                   >
-                    + Novo local
-                  </button>
+                    <MapPinPlus className="h-4 w-4" /> Novo local
+                  </Button>
                 </div>
                 <Select
                   required
@@ -204,7 +243,7 @@ export const NovaOrdem = () => {
                 value={formData.deadline}
                 onChange={e => setFormData({ ...formData, deadline: e.target.value })}
               />
-            </div>
+            </FormGrid>
 
             <Textarea
               label="Descrição Técnica"
@@ -214,12 +253,12 @@ export const NovaOrdem = () => {
               onChange={e => setFormData({ ...formData, technicalDescription: e.target.value })}
             />
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button type="button" variant="secondary" onClick={() => navigate("/ordens")}>
-                Cancelar
+            <div className="operational-form-actions -mx-6 -mb-6">
+              <Button type="button" variant="secondary" className="gap-2 border-slate-400" onClick={() => navigate(sourceRequest ? `/servicos/${sourceRequest.id}` : "/ordens")}>
+                <X className="h-4 w-4" /> Cancelar
               </Button>
-              <Button type="submit">
-                Criar OS
+              <Button type="submit" className="gap-2 shadow-2">
+                <Save className="h-4 w-4" /> Criar OS
               </Button>
             </div>
           </form>
@@ -231,7 +270,7 @@ export const NovaOrdem = () => {
         onClose={() => setIsLocationDrawerOpen(false)}
         title="Novo Local/Ambiente"
       >
-        <form onSubmit={handleSaveNewLocation} className="space-y-4">
+        <form onSubmit={handleSaveNewLocation} className="space-y-4 rounded-lg border border-slate-300 bg-slate-50/70 p-4">
           <Input
             label="Nome do Local"
             required
@@ -251,9 +290,9 @@ export const NovaOrdem = () => {
               { value: "Edifício", label: "Edifício" }
             ]}
           />
-          <div className="pt-4 flex justify-end gap-2 border-t border-slate-200 mt-6">
-            <Button type="button" variant="secondary" onClick={() => setIsLocationDrawerOpen(false)}>Cancelar</Button>
-            <Button type="submit">Salvar Local</Button>
+          <div className="operational-form-actions -mx-4 -mb-4">
+            <Button type="button" variant="secondary" className="gap-2 border-slate-400" onClick={() => setIsLocationDrawerOpen(false)}><X className="h-4 w-4" /> Cancelar</Button>
+            <Button type="submit" className="gap-2 shadow-2"><Save className="h-4 w-4" /> Salvar Local</Button>
           </div>
         </form>
       </Drawer>

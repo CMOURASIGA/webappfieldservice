@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertCircle, ArrowLeft, Clock, XCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { AlertCircle, Clock, XCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import {
 } from "@cnc-ti/layout-basic";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 import { Card, CardContent } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useAuth } from "../contexts/AuthContext";
@@ -24,7 +25,6 @@ import { StockRequest, StockMaterial, User, WorkOrder } from "../types";
 import { getPendingStockRequests, reconcileMaterial, updateOrderMaterialAvailability } from "../utils/stock";
 
 export const FilaEstoque = () => {
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState<StockRequest[]>([]);
   const [orders, setOrders] = useState<WorkOrder[]>([]);
@@ -282,15 +282,11 @@ export const FilaEstoque = () => {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" className="h-9 w-9 p-2" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="mb-1 text-[22px] font-semibold text-slate-900">Fila de Solicitacoes</h1>
-          <p className="text-sm text-slate-500">Gestao de materiais pendentes, compras e itens nao cadastrados.</p>
-        </div>
-      </div>
+      <OperationalPageHeader
+        title="Fila de Solicitações"
+        description="Gestão de materiais pendentes, compras e itens não cadastrados."
+        backTo="/estoque"
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className="border-t-4 border-t-purple-500">
@@ -300,11 +296,11 @@ export const FilaEstoque = () => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                   <AlertCircle className="h-4 w-4" />
                 </div>
-                Nao Cadastrados ({unregisteredRequests.length})
+                Não Cadastrados ({unregisteredRequests.length})
               </h2>
             </div>
             <div className="space-y-3">
-              {unregisteredRequests.length > 0 ? unregisteredRequests.map(renderRequest) : <p className="py-6 text-center text-sm text-slate-500">Nenhuma solicitacao pendente.</p>}
+              {unregisteredRequests.length > 0 ? unregisteredRequests.map(renderRequest) : <p className="py-6 text-center text-sm text-slate-500">Nenhuma solicitação pendente.</p>}
             </div>
           </CardContent>
         </Card>
@@ -320,7 +316,7 @@ export const FilaEstoque = () => {
               </h2>
             </div>
             <div className="space-y-3">
-              {registeredRequests.length > 0 ? registeredRequests.map(renderRequest) : <p className="py-6 text-center text-sm text-slate-500">Nenhum material pendente de reposicao.</p>}
+              {registeredRequests.length > 0 ? registeredRequests.map(renderRequest) : <p className="py-6 text-center text-sm text-slate-500">Nenhum material pendente de reposição.</p>}
             </div>
           </CardContent>
         </Card>

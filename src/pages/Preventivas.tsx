@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { storageService } from "../services/storageService";
-import { PreventivePlan, Unit, Asset, Provider, User } from "../types";
+import { PreventivePlan, Unit, Asset, Provider, Location } from "../types";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
-import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
+import { Button } from "@cnc-ti/layout-basic";
 import { format, isValid, parseISO, isPast, isToday, differenceInDays } from "date-fns";
 import { calculateNextExecution } from "../utils/preventiveCalc";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { Plus, Settings } from "lucide-react";
+import { CheckCircle2, Plus, Settings, X } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Preventivas = () => {
   const navigate = useNavigate();
@@ -19,15 +20,25 @@ export const Preventivas = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todos";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("Todos");
+  const [periodicityFilter, setPeriodicityFilter] = useState("Todas");
+  const [unitFilter, setUnitFilter] = useState("Todas");
+  const [providerFilter, setProviderFilter] = useState("Todos");
+  const [locationFilter, setLocationFilter] = useState("Todos");
+  const [generatedOrderNumbers, setGeneratedOrderNumbers] = useState<string[]>([]);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setPlans(storageService.get("gsi_preventive_plans") || []);
     setUnits(storageService.get("gsi_units") || []);
     setAssets(storageService.get("gsi_assets") || []);
     setProviders(storageService.get("gsi_providers") || []);
+    setLocations(storageService.get("gsi_locations") || []);
   }, []);
 
   const [showNovoPlano, setShowNovoPlano] = useState(false);
@@ -38,26 +49,28 @@ export const Preventivas = () => {
   };
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
+  const getProviderName = (id?: string) => providers.find((provider) => provider.id === id)?.name || "Não atribuído";
   
   const getComputedNextExecution = (plan: PreventivePlan) => {
     return calculateNextExecution(plan.periodicity as any, plan.lastExecution, plan.startDate) || plan.nextExecution;
   };
 
-  const getStatus = (nextExecution?: string) => {
+  const getStatus = (nextExecution?: string, plan?: PreventivePlan) => {
     if (!nextExecution) return "Sem data";
     const date = parseISO(nextExecution);
     const days = differenceInDays(date, new Date());
     
     if (isPast(date) && !isToday(date)) return "Atrasada";
-    if (days >= 0 && days <= 30) return "Próxima";
+    if (days >= 0 && days <= (plan?.alertDaysAttention ?? 30)) return "Próxima";
     return "Em dia";
   };
 
   const metrics = {
     total: plans.length,
-    emDia: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Em dia").length,
-    proximas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Próxima").length,
-    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p)) === "Atrasada").length,
+    emDia: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Em dia").length,
+    proximas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Próxima").length,
+    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Atrasada").length,
+    semData: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Sem data").length,
   };
 
   
@@ -66,16 +79,16 @@ export const Preventivas = () => {
     const allOrders = storageService.get("gsi_work_orders") || [];
     
     // Find a plan that needs an OS and doesn't have an active one
-    let createdOsCount = 0;
+    const createdNumbers: string[] = [];
     let newOrders = [...allOrders];
     
     for (const plan of allPlans) {
       if (plan.status !== "Ativo") continue;
       
-      const status = getStatus(getComputedNextExecution(plan));
+      const status = getStatus(getComputedNextExecution(plan), plan);
       if (status === "Atrasada" || status === "Próxima") {
         // Check if it already has an open OS for this plan
-        const hasOpenOs = allOrders.some((o: any) => o.source === "Preventiva" && o.status !== "Concluída" && o.status !== "Cancelada" && o.unitId === plan.unitId && o.assetId === plan.assetId);
+        const hasOpenOs = allOrders.some((o: any) => o.preventivePlanId === plan.id && o.status !== "Concluída" && o.status !== "Cancelada");
         
         if (!hasOpenOs) {
           const year = new Date().getFullYear();
@@ -85,92 +98,141 @@ export const Preventivas = () => {
           const newOrder = {
             id: uuidv4(),
             number,
+            preventivePlanId: plan.id,
             unitId: plan.unitId,
+            sector: plan.sector,
             locationId: plan.locationId || "",
             categoryId: plan.categoryId,
             assetId: plan.assetId || "",
+            type: "Preventiva",
             priority: "Média",
+            responsibleId: plan.responsibleId,
+            providerId: plan.providerId,
+            estimatedValue: plan.estimatedValue,
             description: plan.description,
             technicalDescription: "Manutenção Preventiva gerada automaticamente.\n" + "",
+            plannedDate: getComputedNextExecution(plan),
+            deadline: getComputedNextExecution(plan),
             source: "Preventiva",
-            status: "Aguardando atendimento",
+            status: "Planejada",
             createdAt: new Date().toISOString(),
             createdBy: "Sistema",
             materials: [],
+            checklist: plan.checklist.map((item) => ({ ...item, result: null })),
+            observations: `OS gerada automaticamente do plano ${plan.code}.`,
+            attachments: [],
+            updatedAt: new Date().toISOString(),
+            active: true,
           };
           
           newOrders.push(newOrder as any);
-          createdOsCount++;
+          createdNumbers.push(number);
         }
       }
     }
     
-    if (createdOsCount > 0) {
+    if (createdNumbers.length > 0) {
       storageService.set("gsi_work_orders", newOrders);
-      alert(`OS criada com sucesso. Foram geradas ${createdOsCount} ordens de serviço.`);
+      setGeneratedOrderNumbers(createdNumbers);
+      setGenerationMessage(null);
     } else {
-      alert("Nenhuma manutenção pendente sem OS foi encontrada.");
+      setGeneratedOrderNumbers([]);
+      setGenerationMessage("Nenhuma manutenção pendente sem OS foi encontrada.");
     }
   };
   
   const filteredPlans = plans.filter(p => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term && ![p.code, p.description, p.periodicity, getUnitName(p.unitId), getAssetCode(p.assetId)]
+      .some((value) => value?.toLowerCase().includes(term))) return false;
+    if (typeFilter !== "Todos" && p.type !== typeFilter) return false;
+    if (periodicityFilter !== "Todas" && p.periodicity !== periodicityFilter) return false;
+    if (unitFilter !== "Todas" && p.unitId !== unitFilter) return false;
+    if (providerFilter !== "Todos" && p.providerId !== providerFilter) return false;
+    if (locationFilter !== "Todos" && p.locationId !== locationFilter) return false;
     if (statusFilter === "Todas") return true;
-    if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p)) === "Em dia";
-    if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p)) === "Próxima";
-    if (statusFilter === "Atrasadas") return getStatus(getComputedNextExecution(p)) === "Atrasada";
+    if (statusFilter === "Em dia") return getStatus(getComputedNextExecution(p), p) === "Em dia";
+    if (statusFilter === "Próximas") return getStatus(getComputedNextExecution(p), p) === "Próxima";
+    if (statusFilter === "Atrasadas") return getStatus(getComputedNextExecution(p), p) === "Atrasada";
+    if (statusFilter === "Sem data") return getStatus(getComputedNextExecution(p), p) === "Sem data";
     return true;
   });
 
   return (
     <div className="space-y-6">
       
-      {/* Ações Rápidas */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => navigate("/preventivas/nova")} className="gap-2">
-          <Plus className="w-4 h-4" /> Nova Manutenção Preventiva
-        </Button>
-        <Button variant="outline" className="gap-2" onClick={handleGerarOSPendentes}>
-          <Settings className="w-4 h-4" /> Gerar OS Pendentes
-        </Button>
-      </div>
+      <OperationalPageHeader
+        title="Manutenções Preventivas"
+        description="Gestão de rotinas e calendários de manutenção."
+        backTo="/servicos"
+        actions={
+          <>
+            <Button onClick={() => navigate("/preventivas/nova")} className="gap-2">
+              <Plus className="w-4 h-4" /> Nova Manutenção Preventiva
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={handleGerarOSPendentes}>
+              <Settings className="w-4 h-4" /> Gerar OS Pendentes
+            </Button>
+          </>
+        }
+      />
 
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenções Preventivas</h1>
-        <p className="text-sm text-slate-500">Gestão de rotinas e calendários de manutenção.</p>
+      {generatedOrderNumbers.length > 0 && (
+        <section className="mx-auto max-w-3xl rounded-xl border-2 border-green-500 bg-green-50 px-6 py-5 text-center shadow-2" role="status">
+          <div className="flex flex-col items-center gap-3">
+            <CheckCircle2 className="h-8 w-8 text-green-700" />
+            <div>
+              <h2 className="text-lg font-bold text-green-950">Ordens de Serviço criadas</h2>
+              <p className="mt-1 text-sm text-green-800">As OS receberam os dados já existentes no plano, como prestador externo, responsável, local, ativo, checklist e custo estimado. Complete apenas programação, materiais e informações de execução.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {generatedOrderNumbers.map((number) => <span key={number} className="rounded-md border border-green-700 bg-white px-3 py-1.5 font-mono text-sm font-bold text-green-900">{number}</span>)}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              <Button variant="create" onClick={() => navigate("/ordens")}>Ver Ordens de Serviço</Button>
+              <Button variant="outline" className="gap-2" onClick={() => setGeneratedOrderNumbers([])}><X className="h-4 w-4" /> Fechar</Button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {generationMessage && (
+        <div className="mx-auto max-w-3xl rounded-xl border-2 border-amber-400 bg-amber-50 px-5 py-4 text-center text-sm font-medium text-amber-900" role="status">
+          {generationMessage}
+        </div>
+      )}
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por manutenção, código, periodicidade, unidade ou ativo..." resultCount={filteredPlans.length} />
+
+      <div className="grid grid-cols-1 gap-3 rounded-xl border-2 border-slate-300 bg-white p-4 md:grid-cols-2 xl:grid-cols-5">
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option>Todos</option>{[...new Set(plans.map((plan) => plan.type).filter(Boolean))].map((type) => <option key={type}>{type}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={periodicityFilter} onChange={(event) => setPeriodicityFilter(event.target.value)}><option>Todas</option>{[...new Set(plans.map((plan) => plan.periodicity).filter(Boolean))].map((periodicity) => <option key={periodicity}>{periodicity}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)}><option value="Todas">Todas as unidades</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}><option value="Todos">Todos os prestadores</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}</select>
+        <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)}><option value="Todos">Todos os locais</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select>
       </div>
 
       {/* Indicadores Acionáveis */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button onClick={() => setStatusFilter("Todas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Total de Manutenções</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Em dia")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Em dia" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Em Dia</p>
-          <p className="text-2xl font-bold text-green-600">{metrics.emDia}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Próximas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Próximas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atenção (30d)</p>
-          <p className="text-2xl font-bold text-orange-500">{metrics.proximas}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Atrasadas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atrasadas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atrasadas</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.atrasadas}</p>
-        </button>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <MetricButton label="Total de Manutenções" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
+        <MetricButton label="Em Dia" value={metrics.emDia} active={statusFilter === "Em dia"} valueClassName="text-green-700" onClick={() => setStatusFilter("Em dia")} />
+        <MetricButton label="Atenção (30d)" value={metrics.proximas} active={statusFilter === "Próximas"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Próximas")} />
+        <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
+        <MetricButton label="Sem data" value={metrics.semData} active={statusFilter === "Sem data"} onClick={() => setStatusFilter("Sem data")} />
       </div>
 
       {/* Cards Operacionais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPlans.map(plan => {
           const nextExec = getComputedNextExecution(plan);
-          const status = getStatus(nextExec);
+          const status = getStatus(nextExec, plan);
           let badgeClass = "bg-green-100 text-green-700";
           if (status === "Atrasada") badgeClass = "bg-red-100 text-red-700";
           else if (status === "Próxima") badgeClass = "bg-orange-100 text-orange-700";
           else if (status === "Sem data") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
-            <Card key={plan.id} className="hover:border-brand-300 transition-colors flex flex-col">
+            <Card key={plan.id} className="operational-card flex flex-col">
               <CardContent className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <div className="pr-2">
@@ -185,7 +247,12 @@ export const Preventivas = () => {
                 <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1 mt-2">
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(plan.unitId)}</p>
                   <p><span className="font-medium text-slate-500">Ativo:</span> {getAssetCode(plan.assetId)}</p>
+                  <p><span className="font-medium text-slate-500">Prestador:</span> {getProviderName(plan.providerId)}</p>
                   <p><span className="font-medium text-slate-500">Próx. Execução:</span> {nextExec ? format(parseISO(nextExec), "dd/MM/yyyy") : "N/A"}</p>
+                </div>
+
+                <div className="rounded-md border border-blue-300 bg-blue-50 p-2 text-xs text-blue-950">
+                  <strong>Ao gerar a OS:</strong> prestador, responsável, local, ativo, checklist e custo estimado são preenchidos a partir deste plano. Depois, atualize data e horário, materiais e dados da execução.
                 </div>
 
                 </CardContent>

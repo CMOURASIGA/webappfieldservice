@@ -48,7 +48,7 @@ export const DetalheLocal = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
+      <div className="page-title-panel mb-8 flex items-center gap-4">
         <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
               <ArrowLeft  className="w-5 h-5" />
             </Button>

@@ -10,6 +10,8 @@ import { Textarea } from "../components/ui/Textarea";
 import { useAuth } from "../contexts/AuthContext";
 import { storageService } from "../services/storageService";
 import { Asset, Location, Unit } from "../types";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
+import { Plus } from "lucide-react";
 
 export const Ativos = () => {
   const { currentUser } = useAuth();
@@ -18,6 +20,7 @@ export const Ativos = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<Partial<Asset>>({
     code: "",
     name: "",
@@ -128,23 +131,28 @@ export const Ativos = () => {
   };
 
   const filteredLocations = locations.filter((location) => location.unitId === formData.unitId);
+  const filteredAssets = assets.filter((asset) => {
+    const term = searchTerm.trim().toLowerCase();
+    return !term || [asset.name, asset.code, asset.category, asset.manufacturer, asset.patrimonyNumber]
+      .some((value) => value?.toLowerCase().includes(term));
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Ativos</h1>
-          <p className="text-sm text-slate-500">Gestao do patrimonio e dos equipamentos vinculados as unidades.</p>
-        </div>
-        <Button onClick={handleOpenNew}>+ Novo Ativo</Button>
-      </div>
+      <OperationalPageHeader
+        title="Ativos"
+        description="Gestão do patrimônio e dos equipamentos vinculados às unidades."
+        backTo="/servicos"
+        actions={<Button onClick={handleOpenNew} className="gap-2"><Plus className="h-4 w-4" /> Novo Ativo</Button>}
+      />
 
-      <Card>
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por ativo, código, categoria, fabricante ou patrimônio..." resultCount={filteredAssets.length} />
+
+      <Card className="p-4">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {assets.map((asset) => (
-                <Card key={asset.id} className="hover:shadow-md transition-shadow">
+            <div className="operational-grid">
+              {filteredAssets.map((asset) => (
+                <Card key={asset.id} className="operational-card flex h-full flex-col">
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -157,16 +165,16 @@ export const Ativos = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm mt-2 flex-1">
-                      <div>
+                    <div className="operational-card-fields mt-2 flex-1">
+                      <div className="operational-card-field">
                         <p className="text-xs text-slate-400">Local</p>
                         <p className="font-medium text-slate-700">{getLocationName(asset.locationId)}</p>
                       </div>
-                      <div>
+                      <div className="operational-card-field border-r-0">
                         <p className="text-xs text-slate-400">Unidade</p>
                         <p className="font-medium text-slate-700">{getUnitName(asset.unitId)}</p>
                       </div>
-                      <div className="col-span-2">
+                      <div className="operational-card-field col-span-2 border-b-0 border-r-0">
                         <p className="text-xs text-slate-400">Patrimonio / Fabricante</p>
                         <p className="font-medium text-slate-700">
                           {asset.patrimonyNumber || "-"} {asset.manufacturer && <span className="text-slate-500 font-normal">/ {asset.manufacturer}</span>}
@@ -174,7 +182,7 @@ export const Ativos = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="pt-0 pb-5 px-5">
+                  <CardFooter className="mt-auto border-t border-slate-200 px-5 py-4">
                     <CardFooterActions
                       viewLink={`/ativos/${asset.id}`}
                       viewLabel="Ver detalhes"
@@ -188,18 +196,16 @@ export const Ativos = () => {
                 </Card>
               ))}
             </div>
-
             {assets.length === 0 && (
               <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
                 Nenhum ativo encontrado.
               </div>
             )}
-          </div>
         </CardContent>
       </Card>
 
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} title={editingAsset ? "Editar Ativo" : "Novo Ativo"}>
-        <form onSubmit={handleSave} className="space-y-4">
+        <form onSubmit={handleSave} className="space-y-4 rounded-lg border border-slate-300 bg-slate-50/70 p-4">
           <Input label="Codigo do Ativo" required value={formData.code || ""} onChange={(event) => setFormData({ ...formData, code: event.target.value })} />
           <Input
             label="Nome do Ativo"

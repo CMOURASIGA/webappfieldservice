@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../types";
-import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
+import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
-import { LayoutList, Kanban as KanbanIcon, Plus, Calendar, Clock, AlertCircle } from "lucide-react";
+import { LayoutList, Kanban as KanbanIcon, Plus, Calendar } from "lucide-react";
+import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Ordens = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export const Ordens = () => {
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todas";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
@@ -101,6 +103,9 @@ export const Ordens = () => {
   };
 
   const filteredOrders = orders.filter(o => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term && ![o.number, o.technicalDescription, getUnitName(o.unitId), getLocationName(o.locationId), getUserName(o.responsibleId)]
+      .some((value) => value?.toLowerCase().includes(term))) return false;
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Abertas") return !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Sem Responsavel") return !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status);
@@ -113,16 +118,19 @@ export const Ordens = () => {
     <div className="space-y-6">
       
       {/* Ações Rápidas no Topo */}
-      <PageHeader>
-        <PageHeaderTitleContent>
-          <PageHeaderTitle title="Ordens de Serviço" />
-          <p className="text-sm text-slate-500">Acompanhamento e execução operacional.</p>
-        </PageHeaderTitleContent>
-        <PageHeaderActionsContainer>
-          <Button variant="outline" className="gap-2" onClick={() => navigate("/agenda")}><Calendar className="w-4 h-4" /> Ver Agenda</Button>
-          <Button variant="create" className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="w-4 h-4" /> Nova OS</Button>
-        </PageHeaderActionsContainer>
-      </PageHeader>
+      <OperationalPageHeader
+        title="Ordens de Serviço"
+        description="Acompanhamento e execução operacional."
+        backTo="/servicos"
+        actions={
+          <>
+            <Button variant="secondary" className="gap-2" onClick={() => navigate("/agenda")}><Calendar className="h-4 w-4" /> Ver Agenda</Button>
+            <Button variant="create" className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="h-4 w-4" /> Nova OS</Button>
+          </>
+        }
+      />
+
+      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por OS, descrição, unidade, local ou responsável..." resultCount={filteredOrders.length} />
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-4">
         <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-md">
@@ -145,34 +153,19 @@ export const Ordens = () => {
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <button onClick={() => setStatusFilter("Todas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Todas</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Abertas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Abertas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Em Aberto</p>
-          <p className="text-2xl font-bold text-slate-900">{metrics.emAberto}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Sem Responsavel")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Sem Responsavel" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Sem Técnico</p>
-          <p className="text-2xl font-bold text-brand-600">{metrics.semResponsavel}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Falta Material")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Falta Material" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Falta Material</p>
-          <p className="text-2xl font-bold text-orange-600">{metrics.faltaMaterial}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Atrasadas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Atrasadas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Atrasadas</p>
-          <p className="text-2xl font-bold text-red-600">{metrics.atrasadas}</p>
-        </button>
+        <MetricButton label="Todas" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
+        <MetricButton label="Em Aberto" value={metrics.emAberto} active={statusFilter === "Abertas"} onClick={() => setStatusFilter("Abertas")} />
+        <MetricButton label="Sem Técnico" value={metrics.semResponsavel} active={statusFilter === "Sem Responsavel"} valueClassName="text-brand-700" onClick={() => setStatusFilter("Sem Responsavel")} />
+        <MetricButton label="Falta Material" value={metrics.faltaMaterial} active={statusFilter === "Falta Material"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Falta Material")} />
+        <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
       </div>
 
       {viewMode === "list" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="operational-grid">
           {filteredOrders.map(order => {
             const conditions = getConditionLabels(order);
             return (
-              <Card key={order.id} className="hover:border-brand-300 transition-colors">
+              <Card key={order.id} className="operational-card flex h-full flex-col">
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -192,15 +185,15 @@ export const Ordens = () => {
                     </div>
                   )}
 
-                  <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1">
-                    <p><span className="font-medium">Unidade:</span> {getUnitName(order.unitId)}</p>
-                    <p><span className="font-medium">Local:</span> {getLocationName(order.locationId)}</p>
-                    <p><span className="font-medium">Técnico:</span> {getUserName(order.responsibleId)}</p>
-                    <p><span className="font-medium">Prazo:</span> {order.deadline ? format(parseISO(order.deadline), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
+                  <div className="operational-card-fields mb-4 flex-1 text-xs text-slate-700">
+                    <p className="operational-card-field"><span className="block font-semibold">Unidade</span> {getUnitName(order.unitId)}</p>
+                    <p className="operational-card-field border-r-0"><span className="block font-semibold">Local</span> {getLocationName(order.locationId)}</p>
+                    <p className="operational-card-field border-b-0"><span className="block font-semibold">Técnico</span> {getUserName(order.responsibleId)}</p>
+                    <p className="operational-card-field border-b-0 border-r-0"><span className="block font-semibold">Prazo</span> {order.deadline ? format(parseISO(order.deadline), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
                   </div>
 
                   </CardContent>
-                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
                     <div className="flex w-full items-center justify-between">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(order.priority)}`}>
                         {order.priority}
@@ -216,24 +209,28 @@ export const Ordens = () => {
           })}
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-6">
+        <div className="flex overflow-x-auto rounded-xl border-2 border-slate-400 bg-white pb-6">
           {KANBAN_COLUMNS.map(col => {
             const colOrders = filteredOrders.filter(o => getKanbanColumn(o.status) === col);
             return (
-              <div key={col} className="flex-none w-80 bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col">
-                <div className="flex justify-between items-center mb-4">
+              <div key={col} className="flex w-80 flex-none flex-col border-r-2 border-slate-400 bg-slate-50 last:border-r-0">
+                <div className="mb-4 flex items-center justify-between border-b-2 border-slate-400 bg-slate-100 p-4">
                   <h3 className="font-semibold text-slate-700">{col}</h3>
                   <span className="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{colOrders.length}</span>
                 </div>
                 
-                <div className="space-y-3 overflow-y-auto flex-1 pr-1 min-h-[300px] max-h-[600px]">
+                <div className="min-h-[300px] max-h-[600px] flex-1 space-y-3 overflow-y-auto px-4 pb-4">
                   {colOrders.map(order => {
                     const conditions = getConditionLabels(order);
                     return (
                       <div key={order.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-brand-300" onClick={() => navigate(`/ordens/${order.id}`)}>
                         <div className="flex justify-between items-start mb-1">
                           <p className="text-xs font-mono text-slate-500">{order.number}</p>
-                          <span className={`w-2 h-2 rounded-full ${order.priority === 'Urgente' ? 'bg-red-500' : order.priority === 'Alta' ? 'bg-orange-500' : 'bg-blue-500'}`}></span>
+                          <span
+                            className={`h-3 w-3 rounded-full ring-2 ring-white ${order.priority === 'Urgente' ? 'bg-red-500' : order.priority === 'Alta' ? 'bg-orange-500' : 'bg-blue-500'}`}
+                            title={`Prioridade: ${order.priority}`}
+                            aria-label={`Prioridade: ${order.priority}`}
+                          />
                         </div>
                         <h4 className="font-medium text-slate-900 text-sm mb-2 line-clamp-2">{order.technicalDescription}</h4>
                         

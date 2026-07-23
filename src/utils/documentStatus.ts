@@ -9,16 +9,7 @@ export interface DocumentStatusResult {
 }
 
 export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual: Date = new Date()): DocumentStatusResult => {
-  if (documento.status === "Crítico") {
-    return {
-      status: "Crítico",
-      diasRestantes: null,
-      diasEmAtraso: null,
-      nivel: "high"
-    };
-  }
-
-  if (!documento.expirationDate) {
+  if (!documento.expirationDate && documento.scope !== "Recorrente") {
     return {
       status: "Sem validade definida",
       diasRestantes: null,
@@ -27,7 +18,13 @@ export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual:
     };
   }
   
-  const expDate = parseISO(documento.expirationDate);
+  const competence = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, "0")}`;
+  if (documento.scope === "Recorrente" && documento.recurrenceHistory?.some((entry) => entry.competence === competence)) {
+    return { status: "Vigente", diasRestantes: null, diasEmAtraso: null, nivel: "normal" };
+  }
+  const expDate = documento.scope === "Recorrente"
+    ? new Date(dataAtual.getFullYear(), dataAtual.getMonth(), documento.recurrenceDay || 5)
+    : parseISO(documento.expirationDate!);
   
   if (isPast(expDate) && expDate.getTime() < dataAtual.getTime() && expDate.toDateString() !== dataAtual.toDateString()) {
     const dias = differenceInDays(dataAtual, expDate);
@@ -40,7 +37,9 @@ export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual:
   }
   
   const dias = differenceInDays(expDate, dataAtual);
-  if (dias <= 15) {
+  const criticalDays = documento.alertDaysCritical ?? 15;
+  const attentionDays = documento.alertDaysAttention ?? 30;
+  if (dias <= criticalDays) {
     return {
       status: "Crítico",
       diasRestantes: dias,
@@ -48,7 +47,7 @@ export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual:
       nivel: "high"
     };
   }
-  if (dias <= 30) {
+  if (dias <= attentionDays) {
     return {
       status: "Atenção",
       diasRestantes: dias,
@@ -65,6 +64,9 @@ export const calcularStatusDocumento = (documento: Partial<Document>, dataAtual:
   };
 };
 
-export const getDocumentStatus = (expirationDate?: string, currentStatus?: string): DocumentStatus => {
-  return calcularStatusDocumento({ expirationDate, status: currentStatus as DocumentStatus }).status;
+export const getDocumentStatus = (documentOrExpiration?: Partial<Document> | string, currentStatus?: string): DocumentStatus => {
+  const document: Partial<Document> = typeof documentOrExpiration === "string" || !documentOrExpiration
+    ? { expirationDate: typeof documentOrExpiration === "string" ? documentOrExpiration : undefined, status: currentStatus as DocumentStatus }
+    : documentOrExpiration;
+  return calcularStatusDocumento(document).status;
 };

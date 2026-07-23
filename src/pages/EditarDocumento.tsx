@@ -69,7 +69,7 @@ export const EditarDocumento = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
+      <div className="page-title-panel flex items-center gap-4">
         <Link to={`/documentos/${formData.id}`}>
           <Button variant="ghost" className="p-2"><ArrowLeft className="w-5 h-5" /></Button>
         </Link>
@@ -123,6 +123,15 @@ export const EditarDocumento = () => {
                 <option value="Bienal">Bienal</option>
                 <option value="Quinquenal">Quinquenal</option>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Select label="Regra de acompanhamento" name="scope" value={formData.scope || (formData.periodicity === "Único" ? "Único" : "Periódico")} onChange={handleChange}>
+                <option value="Único">Vencimento único</option>
+                <option value="Periódico">Documento periódico</option>
+                <option value="Recorrente">Compromisso recorrente mensal</option>
+              </Select>
+              {formData.scope === "Recorrente" && <Input label="Dia de vencimento mensal" name="recurrenceDay" type="number" min="1" max="28" value={formData.recurrenceDay || 1} onChange={handleChange} />}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -31,7 +31,7 @@ export const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
       <div 
         className="fixed inset-y-0 right-0 w-full max-w-[420px] bg-white shadow-xl z-50 flex flex-col transform transition-transform duration-300"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <div className="flex items-center justify-between border-b border-slate-300 bg-brand-050 px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
           <button 
             onClick={onClose} 
@@ -40,7 +40,7 @@ export const Drawer = ({ isOpen, onClose, title, children }: DrawerProps) => {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
           {children}
         </div>
       </div>

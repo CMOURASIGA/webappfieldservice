@@ -1,9 +1,7 @@
 import { addDays, addMonths, addYears, parseISO, format, isValid } from "date-fns";
 
-type Periodicity = "Diária" | "Semanal" | "Quinzenal" | "Mensal" | "Trimestral" | "Semestral" | "Anual";
-
 export const calculateNextExecution = (
-  periodicity: Periodicity,
+  periodicity: string,
   lastExecution?: string,
   startDate?: string
 ): string | undefined => {
@@ -15,26 +13,26 @@ export const calculateNextExecution = (
 
   let nextDate = baseDate;
 
-  switch (periodicity) {
-    case "Diária":
+  switch (periodicity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+    case "diaria":
       nextDate = addDays(baseDate, 1);
       break;
-    case "Semanal":
+    case "semanal":
       nextDate = addDays(baseDate, 7);
       break;
-    case "Quinzenal":
+    case "quinzenal":
       nextDate = addDays(baseDate, 15);
       break;
-    case "Mensal":
+    case "mensal":
       nextDate = addMonths(baseDate, 1);
       break;
-    case "Trimestral":
+    case "trimestral":
       nextDate = addMonths(baseDate, 3);
       break;
-    case "Semestral":
+    case "semestral":
       nextDate = addMonths(baseDate, 6);
       break;
-    case "Anual":
+    case "anual":
       nextDate = addYears(baseDate, 1);
       break;
   }

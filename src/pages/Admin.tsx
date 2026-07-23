@@ -12,7 +12,7 @@ export const Admin = () => {
   const [message, setMessage] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCatName, setNewCatName] = useState("");
-  const [newCatType, setNewCatType] = useState<any>("ServiÃ§o");
+  const [newCatType, setNewCatType] = useState<any>("Serviço");
 
   useEffect(() => {
     loadCategories();
@@ -34,7 +34,7 @@ export const Admin = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setMessage("ExportaÃ§Ã£o realizada com sucesso.");
+      setMessage("Exportação realizada com sucesso.");
     } catch (e) {
       setMessage("Erro ao exportar dados.");
     }
@@ -47,7 +47,7 @@ export const Admin = () => {
     }
     try {
       storageService.importJSON(importData);
-      setMessage("ImportaÃ§Ã£o concluÃ­da. Recarregue a pÃ¡gina.");
+      setMessage("Importação concluída. Recarregue a página.");
       setTimeout(() => window.location.reload(), 1500);
     } catch (e) {
       setMessage("Erro ao importar dados. Verifique o formato JSON.");
@@ -55,9 +55,9 @@ export const Admin = () => {
   };
 
   const handleRestore = () => {
-    if (confirm("Tem certeza que deseja restaurar os dados de demonstraÃ§Ã£o? TODOS os dados atuais serÃ£o perdidos.")) {
+    if (confirm("Tem certeza que deseja restaurar os dados de demonstração? TODOS os dados atuais serão perdidos.")) {
       storageService.restoreDefaults();
-      setMessage("Dados restaurados. Recarregue a pÃ¡gina.");
+      setMessage("Dados restaurados. Recarregue a página.");
       setTimeout(() => window.location.reload(), 1500);
     }
   };
@@ -92,9 +92,9 @@ export const Admin = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">AdministraÃ§Ã£o e ConfiguraÃ§Ãµes</h1>
-        <p className="text-sm text-slate-500">Gerenciamento de dados e parÃ¢metros do sistema.</p>
+      <div className="page-title-panel">
+        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Administração e Configurações</h1>
+        <p className="text-sm text-slate-500">Gerenciamento de dados e parâmetros do sistema.</p>
       </div>
 
       {message && (
@@ -123,8 +123,8 @@ export const Admin = () => {
                 value={newCatType} 
                 onChange={e => setNewCatType(e.target.value)}
                 options={[
-                  { value: "ServiÃ§o", label: "ServiÃ§o" },
-                  { value: "ServiÃ§o", label: "ServiÃ§o" },
+                  { value: "Serviço", label: "Serviço" },
+                  { value: "Serviço", label: "Serviço" },
                   { value: "Preventiva", label: "Preventiva" },
                   { value: "Documento", label: "Documento" },
                 ]}
@@ -140,7 +140,7 @@ export const Admin = () => {
                   <th className="px-4 py-3 border-b border-slate-200 font-medium">Nome</th>
                   <th className="px-4 py-3 border-b border-slate-200 font-medium">Tipo</th>
                   <th className="px-4 py-3 border-b border-slate-200 font-medium w-[100px]">Status</th>
-                  <th className="px-4 py-3 border-b border-slate-200 font-medium w-[100px] text-right">AÃ§Ãµes</th>
+                  <th className="px-4 py-3 border-b border-slate-200 font-medium w-[100px] text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -174,7 +174,7 @@ export const Admin = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">
-              FaÃ§a backup dos dados atuais em um arquivo JSON para seguranÃ§a ou transferÃªncia, ou restaure o sistema para o conjunto de dados inicial de demonstraÃ§Ã£o.
+              Faça backup dos dados atuais em um arquivo JSON para segurança ou transferência, ou restaure o sistema para o conjunto de dados inicial de demonstração.
             </p>
             <div className="flex gap-3">
               <Button onClick={handleExport}>Exportar Backup (JSON)</Button>
@@ -189,7 +189,7 @@ export const Admin = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">
-              Cole o conteÃºdo de um backup JSON previamente exportado para sobrescrever os dados atuais. Cuidado: esta aÃ§Ã£o Ã© irreversÃ­vel.
+              Cole o conteúdo de um backup JSON previamente exportado para sobrescrever os dados atuais. Cuidado: esta ação é irreversível.
             </p>
             <textarea
               className="w-full min-h-[120px] p-3 text-xs font-mono border border-slate-300 rounded-md bg-slate-50 focus:border-blue-700 outline-none"
@@ -204,5 +204,4 @@ export const Admin = () => {
     </div>
   );
 };
-
 

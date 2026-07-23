@@ -46,17 +46,17 @@ export const CardFooterActions = ({
   const renderViewButton = () => {
     if (viewLink) {
       return (
-        <Link to={viewLink}>
-          <Button variant="secondary" size="sm" className="gap-2">
-            <Eye className="w-4 h-4" /> {viewLabel}
+        <Link to={viewLink} title={viewLabel} aria-label={viewLabel}>
+          <Button variant="primary" size="sm" className="card-action-button shadow-1" title={viewLabel} aria-label={viewLabel}>
+            <Eye className="w-4 h-4" />
           </Button>
         </Link>
       );
     }
     if (onView) {
       return (
-        <Button variant="secondary" size="sm" className="gap-2" onClick={onView}>
-          <Eye className="w-4 h-4" /> {viewLabel}
+        <Button variant="primary" size="sm" className="card-action-button shadow-1" onClick={onView} title={viewLabel} aria-label={viewLabel}>
+          <Eye className="w-4 h-4" />
         </Button>
       );
     }
@@ -64,17 +64,17 @@ export const CardFooterActions = ({
   };
 
   return (
-    <div className="flex items-center justify-end gap-2 w-full ">
-      <div className="mr-auto">
+    <div className="card-action-bar">
+      <div className="card-action-cell card-action-primary">
         {renderViewButton()}
       </div>
-      {children}
+      {children && <div className="card-action-cell card-action-custom">{children}</div>}
       
       {onHistory && (
-        <Button 
+        <Button
           variant="secondary" 
           size="sm" 
-          className="w-8 h-8 rounded p-0 text-slate-500 hover:text-slate-700"
+          className="card-action-button"
           onClick={onHistory}
           title={historyLabel}
           aria-label={historyLabel}
@@ -84,10 +84,10 @@ export const CardFooterActions = ({
       )}
       
       {onPrint && (
-        <Button 
+        <Button
           variant="secondary" 
           size="sm" 
-          className="w-8 h-8 rounded p-0 text-slate-500 hover:text-slate-700"
+          className="card-action-button"
           onClick={onPrint}
           title={printLabel}
           aria-label={printLabel}
@@ -99,10 +99,10 @@ export const CardFooterActions = ({
       {(onEdit || editLink) && (
         editLink ? (
           <Link to={editLink}>
-            <Button 
+            <Button
               variant="secondary" 
               size="sm" 
-              className="w-8 h-8 rounded p-0 text-slate-500 hover:text-slate-700"
+              className="card-action-button"
               title={editLabel}
               aria-label={editLabel}
             >
@@ -110,10 +110,10 @@ export const CardFooterActions = ({
             </Button>
           </Link>
         ) : (
-          <Button 
+          <Button
             variant="secondary" 
             size="sm" 
-            className="w-8 h-8 rounded p-0 text-slate-500 hover:text-slate-700"
+            className="card-action-button"
             onClick={onEdit}
             title={editLabel}
             aria-label={editLabel}
@@ -125,10 +125,10 @@ export const CardFooterActions = ({
       
       {onDelete && (
         <>
-        <Button 
+        <Button
           variant="secondary" 
           size="sm" 
-          className="w-8 h-8 rounded p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+          className="card-action-button text-red-700 hover:bg-red-50"
           onClick={() => setIsDeleteDialogOpen(true)}
           title={deleteLabel}
           aria-label={deleteLabel}

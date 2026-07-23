@@ -73,6 +73,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
   const units = storageService.get("gsi_units") || [];
   const locations = storageService.get("gsi_locations") || [];
   const users = storageService.get("gsi_users") || [];
+  const orders = (storageService.get("gsi_work_orders") || []).filter((order: WorkOrder) => !["Concluída", "Cancelada"].includes(order.status));
 
   const materialOptions = useMemo(
     () =>
@@ -197,7 +198,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
         </DialogHeader>
 
         <form id="movimentacao-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Tipo de Movimentacao *</label>
               <Select onValueChange={(value) => setValue("type", value)} value={selectedType}>
@@ -225,7 +226,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">{selectedType === "Ajuste" ? "Novo saldo fisico *" : "Quantidade *"}</label>
               <Input type="number" step="0.01" {...register("quantity")} />
@@ -243,7 +244,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Local / Armazem</label>
               <Select onValueChange={(value) => setValue("locationId", value)} value={watch("locationId")}>
@@ -260,7 +261,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
           </div>
 
           {selectedType === "Entrada" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Fornecedor</label>
                 <Input {...register("providerId")} placeholder="Nome do fornecedor" />
@@ -273,7 +274,7 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
           )}
 
           {selectedType === "Saída" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tecnico / retirante</label>
                 <Select onValueChange={(value) => setValue("technicianId", value)} value={watch("technicianId")}>
@@ -285,7 +286,14 @@ export const MovimentacaoModal = ({ open, onOpenChange, onSuccess, initialType =
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Ordem de servico</label>
-                <Input {...register("workOrderId")} placeholder="Ex: os-1" />
+                <Select onValueChange={(value) => setValue("workOrderId", value)} value={watch("workOrderId")}>
+                  <SelectTrigger><SelectValue placeholder="Selecione a OS de destino" /></SelectTrigger>
+                  <SelectContent>
+                    {orders.map((order: WorkOrder) => (
+                      <SelectItem key={order.id} value={order.id}>{order.number} - {order.technicalDescription}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

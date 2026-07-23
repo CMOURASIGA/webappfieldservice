@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,9 +38,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  material?: StockMaterial;
 }
 
-export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
+export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: Props) => {
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -52,28 +53,41 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
   const locations = storageService.get("gsi_locations") || [];
   const categories = storageService.get("gsi_categories") || [];
 
+  useEffect(() => {
+    if (!open) return;
+    if (material) {
+      reset({ ...material });
+    } else {
+      reset({ minStock: 0, idealStock: 0, unitPrice: 0 });
+    }
+  }, [material, open, reset]);
+
   const onSubmit = (data: any) => {
     const materials = storageService.get("gsi_stock_materials") || [];
     
     // Check if code already exists
-    if (materials.some(m => m.code === data.code)) {
+    if (materials.some(m => m.code === data.code && m.id !== material?.id)) {
       alert("Já existe um material com este código.");
       return;
     }
 
     const newMaterial: StockMaterial = {
-      id: "mat-" + Date.now(),
+      ...(material || {}),
+      id: material?.id || "mat-" + Date.now(),
       ...data,
-      physicalBalance: 0,
-      reservedBalance: 0,
-      availableBalance: 0,
-      status: "Normal",
-      active: true,
-      createdAt: new Date().toISOString(),
+      physicalBalance: material?.physicalBalance ?? 0,
+      reservedBalance: material?.reservedBalance ?? 0,
+      availableBalance: material?.availableBalance ?? 0,
+      status: material?.status || "Normal",
+      active: material?.active ?? true,
+      createdAt: material?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    storageService.set("gsi_stock_materials", [...materials, newMaterial]);
+    const nextMaterials = material
+      ? materials.map((item) => item.id === material.id ? newMaterial : item)
+      : [...materials, newMaterial];
+    storageService.set("gsi_stock_materials", nextMaterials);
     reset();
     onSuccess();
     onOpenChange(false);
@@ -83,7 +97,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo Material</DialogTitle>
+          <DialogTitle>{material ? "Editar Material" : "Novo Material"}</DialogTitle>
         </DialogHeader>
         
         <form id="novo-material-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -161,6 +175,11 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
               <Input type="number" {...register("idealStock")} />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Valor unitário estimado</label>
+            <Input type="number" min="0" step="0.01" {...register("unitPrice")} placeholder="0,00" />
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -176,7 +195,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess }: Props) => {
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button variant="create" type="submit" form="novo-material-form">Salvar</Button>
+          <Button variant="create" type="submit" form="novo-material-form">{material ? "Salvar alterações" : "Salvar"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

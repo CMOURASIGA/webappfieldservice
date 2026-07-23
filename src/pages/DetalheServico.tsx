@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { Request, Unit, Location, Category, User, WorkOrder } from "../types";
+import { Request, Unit, Location, Category, User } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
@@ -38,47 +38,12 @@ export const DetalheServico = () => {
 
   const handleConvert = () => {
     if (!currentUser) return;
-
-    const newOs: WorkOrder = {
-      id: crypto.randomUUID(),
-      number: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-      requestId: request.id,
-      unitId: request.unitId,
-      locationId: request.locationId,
-      type: "Corretiva",
-      categoryId: request.categoryId,
-      priority: request.suggestedPriority,
-      technicalDescription: request.description,
-      status: "Planejada",
-      checklist: [],
-      observations: "",
-      attachments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      active: true,
-    };
-
-    const orders = storageService.get("gsi_work_orders");
-    orders.push(newOs);
-    storageService.set("gsi_work_orders", orders);
-
-    const reqs = storageService.get("gsi_requests");
-    const idx = reqs.findIndex(r => r.id === request.id);
-    if (idx !== -1) {
-      reqs[idx].status = "Convertida em ordem";
-      reqs[idx].updatedAt = new Date().toISOString();
-      storageService.set("gsi_requests", reqs);
-    }
-
-    storageService.logAudit(currentUser.id, "Manutenção convertida em OS", request.id, "Request", request.status, "Convertida em ordem");
-    storageService.logAudit(currentUser.id, "OS Criada a partir de Manutenção Corretiva", newOs.id, "WorkOrder");
-
-    navigate(`/ordens/${newOs.id}`);
+    navigate("/ordens/nova", { state: { sourceRequest: request } });
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-title-panel flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenção: {request.protocol}</h1>
           <p className="text-sm text-slate-500">Detalhes da solicitação.</p>

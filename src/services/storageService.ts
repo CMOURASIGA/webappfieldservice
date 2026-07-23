@@ -1,6 +1,6 @@
-﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate } from "../types";
+﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate, MaintenanceExecution, StockMovement } from "../types";
 
-const VERSION = "1.5.1";
+const VERSION = "1.6.0";
 
 interface DB {
   gsi_data_version: { version: string };
@@ -16,6 +16,7 @@ interface DB {
   gsi_categories: Category[];
   gsi_checklist_templates: ChecklistTemplate[];
   gsi_audit_log: AuditLog[];
+  gsi_maintenance_executions: MaintenanceExecution[];
   gsi_stock_materials: any[];
   gsi_stock_movements: any[];
   gsi_stock_requests: any[];
@@ -66,9 +67,9 @@ export const storageService = {
     this.set("gsi_data_version", { version: VERSION });
 
     const units: Unit[] = [
-      { id: "u-df", name: "Sede - BrasÃ­lia", sigla: "DF", city: "BrasÃ­lia", active: true },
+      { id: "u-df", name: "Sede - Brasília", sigla: "DF", city: "Brasília", active: true },
       { id: "u-rj", name: "Regional - Rio de Janeiro", sigla: "RJ", city: "Rio de Janeiro", active: true },
-      { id: "u-sp", name: "EscritÃ³rio - SÃ£o Paulo", sigla: "SP", city: "SÃ£o Paulo", active: true },
+      { id: "u-sp", name: "Escritório - São Paulo", sigla: "SP", city: "São Paulo", active: true },
     ];
     this.set("gsi_units", units);
 
@@ -76,32 +77,32 @@ export const storageService = {
       { id: "usr-1", name: "Ana Silva (Solicitante)", email: "ana.silva@cnc.br", role: "Solicitante", unitId: "u-df", active: true },
       { id: "usr-2", name: "Carlos Mendes (Op GSI)", email: "carlos.mendes@cnc.br", role: "Operador GSI", unitId: "u-df", active: true },
       { id: "usr-3", name: "Mariana Costa (Gestor GSI)", email: "mariana.costa@cnc.br", role: "Gestor GSI", active: true },
-      { id: "usr-4", name: "JoÃ£o Pereira (TÃ©cnico DF)", email: "joao.pereira@cnc.br", role: "Executor/TÃ©cnico", unitId: "u-df", active: true },
-      { id: "usr-6", name: "Roberto Alves (TÃ©cnico RJ)", email: "roberto.alves@cnc.br", role: "Executor/TÃ©cnico", unitId: "u-rj", active: true },
+      { id: "usr-4", name: "João Pereira (Técnico DF)", email: "joao.pereira@cnc.br", role: "Executor/Técnico", unitId: "u-df", active: true },
+      { id: "usr-6", name: "Roberto Alves (Técnico RJ)", email: "roberto.alves@cnc.br", role: "Executor/Técnico", unitId: "u-rj", active: true },
       { id: "usr-7", name: "Luciana Lima (Solicitante SP)", email: "luciana.lima@cnc.br", role: "Solicitante", unitId: "u-sp", active: true },
       { id: "usr-5", name: "Admin (Admin)", email: "admin@cnc.br", role: "Administrador", active: true },
     ];
     this.set("gsi_users", users);
 
     const locations: Location[] = [
-      { id: "loc-1", unitId: "u-df", type: "Ambiente", name: "RecepÃ§Ã£o Principal", code: "DF-REC-01", floor: "TÃ©rreo", active: true },
-      { id: "loc-2", unitId: "u-df", type: "Ambiente", name: "Sala TÃ©cnica Ar", code: "DF-TEC-01", floor: "Cobertura", active: true },
-      { id: "loc-4", unitId: "u-df", type: "Ambiente", name: "Sala de ReuniÃµes 1", code: "DF-SAL-01", floor: "1Âº Andar", active: true },
-      { id: "loc-5", unitId: "u-df", type: "Ambiente", name: "Copa 2Âº Andar", code: "DF-COP-02", floor: "2Âº Andar", active: true },
-      { id: "loc-3", unitId: "u-rj", type: "Ambiente", name: "AuditÃ³rio Principal", code: "RJ-AUD-01", floor: "TÃ©rreo", active: true },
-      { id: "loc-6", unitId: "u-rj", type: "Ambiente", name: "Diretoria", code: "RJ-DIR-01", floor: "3Âº Andar", active: true },
-      { id: "loc-7", unitId: "u-sp", type: "Ambiente", name: "Coworking Central", code: "SP-COW-01", floor: "Andar Ãšnico", active: true },
+      { id: "loc-1", unitId: "u-df", type: "Ambiente", name: "Recepção Principal", code: "DF-REC-01", floor: "Térreo", active: true },
+      { id: "loc-2", unitId: "u-df", type: "Ambiente", name: "Sala Técnica Ar", code: "DF-TEC-01", floor: "Cobertura", active: true },
+      { id: "loc-4", unitId: "u-df", type: "Ambiente", name: "Sala de Reuniões 1", code: "DF-SAL-01", floor: "1º Andar", active: true },
+      { id: "loc-5", unitId: "u-df", type: "Ambiente", name: "Copa 2º Andar", code: "DF-COP-02", floor: "2º Andar", active: true },
+      { id: "loc-3", unitId: "u-rj", type: "Ambiente", name: "Auditório Principal", code: "RJ-AUD-01", floor: "Térreo", active: true },
+      { id: "loc-6", unitId: "u-rj", type: "Ambiente", name: "Diretoria", code: "RJ-DIR-01", floor: "3º Andar", active: true },
+      { id: "loc-7", unitId: "u-sp", type: "Ambiente", name: "Coworking Central", code: "SP-COW-01", floor: "Andar anico", active: true },
     ];
     this.set("gsi_locations", locations);
 
     const categories: Category[] = [
-      { id: "cat-1", name: "ClimatizaÃ§Ã£o", type: "ServiÃ§o", active: true },
-      { id: "cat-2", name: "ElÃ©trica", type: "ServiÃ§o", active: true },
-      { id: "cat-3", name: "Civil", type: "ServiÃ§o", active: true },
-      { id: "cat-4", name: "HidrÃ¡ulica", type: "ServiÃ§o", active: true },
-      { id: "cat-5", name: "MobiliÃ¡rio", type: "ServiÃ§o", active: true },
-      { id: "cat-6", name: "AlvarÃ¡ e LicenÃ§as", type: "Documento", active: true },
-      { id: "cat-7", name: "Laudos TÃ©cnicos", type: "Documento", active: true },
+      { id: "cat-1", name: "Climatização", type: "Serviço", active: true },
+      { id: "cat-2", name: "Elétrica", type: "Serviço", active: true },
+      { id: "cat-3", name: "Civil", type: "Serviço", active: true },
+      { id: "cat-4", name: "Hidráulica", type: "Serviço", active: true },
+      { id: "cat-5", name: "Mobiliário", type: "Serviço", active: true },
+      { id: "cat-6", name: "Alvará e Licenças", type: "Documento", active: true },
+      { id: "cat-7", name: "Laudos Técnicos", type: "Documento", active: true },
     ];
     this.set("gsi_categories", categories);
 
@@ -110,27 +111,27 @@ export const storageService = {
         id: "chk-1",
         name: "Checklist de Ar-Condicionado (Mensal)",
         categoryId: "cat-1",
-        description: "InspeÃ§Ã£o preventiva padrÃ£o para aparelhos de ar-condicionado e condensadoras.",
+        description: "Inspeção preventiva padrão para aparelhos de ar-condicionado e condensadoras.",
         active: true,
         items: [
           { id: "ci-1", description: "Verificar e limpar filtros de ar", required: true },
-          { id: "ci-2", description: "Verificar pressÃ£o do gÃ¡s refrigerante", required: true },
-          { id: "ci-3", description: "Verificar estado do isolamento tÃ©rmico", required: false },
+          { id: "ci-2", description: "Verificar pressão do gás refrigerante", required: true },
+          { id: "ci-3", description: "Verificar estado do isolamento térmico", required: false },
           { id: "ci-4", description: "Limpeza da condensadora", required: true },
-          { id: "ci-5", description: "Medir corrente elÃ©trica do compressor", required: false },
+          { id: "ci-5", description: "Medir corrente elétrica do compressor", required: false },
         ]
       },
       {
         id: "chk-2",
-        name: "Checklist de Quadro ElÃ©trico (Semestral)",
+        name: "Checklist de Quadro Elétrico (Semestral)",
         categoryId: "cat-2",
-        description: "Reaperto e termografia em quadros elÃ©tricos de baixa tensÃ£o.",
+        description: "Reaperto e termografia em quadros elétricos de baixa tensão.",
         active: true,
         items: [
-          { id: "ci-6", description: "Inspecionar estado fÃ­sico dos disjuntores e cabos", required: true },
-          { id: "ci-7", description: "Realizar reaperto das conexÃµes (Torque)", required: true },
+          { id: "ci-6", description: "Inspecionar estado físico dos disjuntores e cabos", required: true },
+          { id: "ci-7", description: "Realizar reaperto das conexões (Torque)", required: true },
           { id: "ci-8", description: "Limpeza interna do quadro a seco", required: true },
-          { id: "ci-9", description: "MediÃ§Ã£o de temperatura (Termografia)", required: false },
+          { id: "ci-9", description: "Medição de temperatura (Termografia)", required: false },
         ]
       }
     ];
@@ -138,10 +139,10 @@ export const storageService = {
 
     const assets: Asset[] = [
       { id: "ast-1", code: "AC-DF-001", name: "Ar Condicionado Central Chiller A", category: "cat-1", unitId: "u-df", locationId: "loc-2", manufacturer: "Carrier", model: "30XW", criticality: "Alta", status: "Ativo", active: true },
-      { id: "ast-2", code: "EL-DF-001", name: "Quadro ElÃ©trico TÃ©rreo (QGBT)", category: "cat-2", unitId: "u-df", locationId: "loc-1", manufacturer: "Siemens", criticality: "Alta", status: "Ativo", active: true },
-      { id: "ast-3", code: "AC-DF-002", name: "Split 18.000 BTUs ReuniÃµes", category: "cat-1", unitId: "u-df", locationId: "loc-4", manufacturer: "LG", model: "Dual Inverter", criticality: "MÃ©dia", status: "Ativo", active: true },
-      { id: "ast-4", code: "HD-DF-001", name: "Bomba D\'Ã¡gua Recalque B1", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Schneider", criticality: "Alta", status: "Em manutenÃ§Ã£o", active: true },
-      { id: "ast-5", code: "AC-RJ-001", name: "Ar Condicionado Central AuditÃ³rio", category: "cat-1", unitId: "u-rj", locationId: "loc-3", manufacturer: "Trane", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-2", code: "EL-DF-001", name: "Quadro Elétrico Térreo (QGBT)", category: "cat-2", unitId: "u-df", locationId: "loc-1", manufacturer: "Siemens", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-3", code: "AC-DF-002", name: "Split 18.000 BTUs Reuniões", category: "cat-1", unitId: "u-df", locationId: "loc-4", manufacturer: "LG", model: "Dual Inverter", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-4", code: "HD-DF-001", name: "Bomba D\'água Recalque B1", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Schneider", criticality: "Alta", status: "Em manutenção", active: true },
+      { id: "ast-5", code: "AC-RJ-001", name: "Ar Condicionado Central Auditório", category: "cat-1", unitId: "u-rj", locationId: "loc-3", manufacturer: "Trane", criticality: "Alta", status: "Ativo", active: true },
     ];
     this.set("gsi_assets", assets);
 
@@ -154,8 +155,8 @@ export const storageService = {
         locationId: "loc-1",
         categoryId: "cat-1",
         title: "Ar condicionado pingando",
-        description: "O aparelho da recepÃ§Ã£o principal estÃ¡ pingando Ã¡gua no chÃ£o prÃ³ximo ao sofÃ¡.",
-        suggestedPriority: "MÃ©dia",
+        description: "O aparelho da recepção principal está pingando água no chão próximo ao sofá.",
+        suggestedPriority: "Média",
         status: "Convertida em ordem",
         attachments: [],
         createdAt: new Date(Date.now() - 172800000).toISOString(),
@@ -170,7 +171,7 @@ export const storageService = {
         locationId: "loc-5",
         categoryId: "cat-4",
         title: "Vazamento pia da copa",
-        description: "A torneira da copa do 2Âº andar nÃ£o fecha direito e estÃ¡ vazando muita Ã¡gua.",
+        description: "A torneira da copa do 2º andar não fecha direito e está vazando muita água.",
         suggestedPriority: "Alta",
         status: "Aberta",
         attachments: [],
@@ -186,7 +187,7 @@ export const storageService = {
         locationId: "loc-7",
         categoryId: "cat-2",
         title: "Tomadas sem energia",
-        description: "Metade das mesas do coworking estÃ£o sem energia nas tomadas. Os computadores estÃ£o descarregando.",
+        description: "Metade das mesas do coworking estão sem energia nas tomadas. Os computadores estão descarregando.",
         suggestedPriority: "Urgente",
         status: "Em triagem",
         attachments: [],
@@ -202,9 +203,9 @@ export const storageService = {
         locationId: "loc-4",
         categoryId: "cat-5",
         title: "Cadeira quebrada",
-        description: "A cadeira da ponta na sala de reuniÃµes 1 estÃ¡ com a rodinha quebrada e pende para o lado.",
+        description: "A cadeira da ponta na sala de reuniões 1 está com a rodinha quebrada e pende para o lado.",
         suggestedPriority: "Baixa",
-        status: "Aguardando informaÃ§Ã£o",
+        status: "Aguardando informação",
         attachments: [],
         createdAt: new Date(Date.now() - 10000000).toISOString(),
         updatedAt: new Date(Date.now() - 2000000).toISOString(),
@@ -214,14 +215,22 @@ export const storageService = {
     this.set("gsi_requests", requests);
 
     const materials = [
-          { id: "mat-1", code: "MAT-001", name: "LÃ¢mpada LED 40W Tubular", description: "LÃ¢mpada tubular LED branca T8 120cm", category: "ElÃ©trica", unit: "UN", unitId: "u-df", physicalBalance: 48, reservedBalance: 2, availableBalance: 46, minStock: 20, idealStock: 100, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-2", code: "MAT-002", name: "Parafuso Sextavado M8", description: "Parafuso sextavado zincado", category: "Ferragem", unit: "CX", unitId: "u-df", physicalBalance: 5, reservedBalance: 0, availableBalance: 5, minStock: 10, idealStock: 30, status: "CrÃ­tico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-3", code: "MAT-003", name: "Filtro Ar Condicionado G4", description: "Filtro manta G4 para split/fancoil", category: "ClimatizaÃ§Ã£o", unit: "M2", unitId: "u-df", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 5, idealStock: 15, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-4", code: "MAT-004", name: "Fita Isolante 3M", description: "Fita isolante preta antichama 20m", category: "ElÃ©trica", unit: "RL", unitId: "u-df", physicalBalance: 12, reservedBalance: 0, availableBalance: 12, minStock: 10, idealStock: 25, status: "AtenÃ§Ã£o", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-5", code: "MAT-005", name: "Torneira Pia Cozinha Bica MÃ³vel", description: "Torneira de bancada cromada bica alta", category: "HidrÃ¡ulica", unit: "UN", unitId: "u-df", physicalBalance: 2, reservedBalance: 0, availableBalance: 2, minStock: 3, idealStock: 5, status: "CrÃ­tico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-          { id: "mat-6", code: "MAT-006", name: "Tubo PVC Esgoto 50mm", description: "Tubo PVC esgoto barra 6m", category: "HidrÃ¡ulica", unit: "BR", unitId: "u-df", physicalBalance: 20, reservedBalance: 0, availableBalance: 20, minStock: 5, idealStock: 20, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-1", code: "MAT-001", name: "Lâmpada LED 40W Tubular", description: "Lâmpada tubular LED branca T8 120cm", category: "Elétrica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 48, reservedBalance: 2, availableBalance: 46, minStock: 20, idealStock: 100, unitPrice: 18.9, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-2", code: "MAT-002", name: "Parafuso Sextavado M8", description: "Parafuso sextavado zincado", category: "Ferragem", unit: "CX", unitId: "u-df", locationId: "loc-2", physicalBalance: 5, reservedBalance: 0, availableBalance: 5, minStock: 10, idealStock: 30, unitPrice: 45, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-3", code: "MAT-003", name: "Filtro Ar Condicionado G4", description: "Filtro manta G4 para split/fancoil", category: "Climatização", unit: "M2", unitId: "u-df", locationId: "loc-2", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 5, idealStock: 15, unitPrice: 32, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-4", code: "MAT-004", name: "Fita Isolante 3M", description: "Fita isolante preta antichama 20m", category: "Elétrica", unit: "RL", unitId: "u-df", locationId: "loc-2", physicalBalance: 12, reservedBalance: 0, availableBalance: 12, minStock: 10, idealStock: 25, unitPrice: 16.5, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-5", code: "MAT-005", name: "Torneira Pia Cozinha Bica Móvel", description: "Torneira de bancada cromada bica alta", category: "Hidráulica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 2, reservedBalance: 0, availableBalance: 2, minStock: 3, idealStock: 5, unitPrice: 185, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-6", code: "MAT-006", name: "Tubo PVC Esgoto 50mm", description: "Tubo PVC esgoto barra 6m", category: "Hidráulica", unit: "BR", unitId: "u-df", locationId: "loc-2", physicalBalance: 20, reservedBalance: 0, availableBalance: 20, minStock: 5, idealStock: 20, unitPrice: 68, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
     this.set("gsi_stock_materials", materials as any);
+
+    const stockMovements: StockMovement[] = [
+      { id: "mov-demo-1", type: "Entrada", materialId: "mat-1", quantity: 50, previousBalance: 0, newBalance: 50, unitId: "u-df", locationId: "loc-2", sector: "Almoxarifado", userId: "usr-2", invoice: "NF-2026-1001", observations: "Recebimento mensal de lâmpadas LED.", date: new Date(Date.now() - 86400000 * 20).toISOString() },
+      { id: "mov-demo-2", type: "Saída", materialId: "mat-1", quantity: 2, previousBalance: 50, newBalance: 48, workOrderId: "os-1", unitId: "u-df", locationId: "loc-1", sector: "Recepção", userId: "usr-2", technicianId: "usr-4", observations: "Aplicação na OS de correção da recepção.", date: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: "mov-demo-3", type: "Saída", materialId: "mat-5", quantity: 1, previousBalance: 3, newBalance: 2, workOrderId: "os-6", unitId: "u-df", locationId: "loc-5", sector: "Copa", userId: "usr-2", technicianId: "usr-4", observations: "Material consumido na troca de torneira.", date: new Date(Date.now() - 86400000 * 7).toISOString() },
+      { id: "mov-demo-4", type: "Ajuste", materialId: "mat-2", quantity: 5, previousBalance: 10, newBalance: 5, unitId: "u-df", locationId: "loc-2", sector: "Almoxarifado", userId: "usr-2", observations: "Conferência física identificou divergência de inventário.", date: new Date(Date.now() - 86400000 * 2).toISOString() },
+    ];
+    this.set("gsi_stock_movements", stockMovements as any);
 
     const stockRequests = [
       {
@@ -234,7 +243,7 @@ export const storageService = {
         requesterId: "usr-4",
         assetId: "ast-1",
         locationId: "loc-2",
-        status: "Aguardando anÃ¡lise",
+        status: "Aguardando análise",
         createdAt: new Date(Date.now() - 3600000).toISOString(),
         updatedAt: new Date(Date.now() - 3600000).toISOString()
       },
@@ -242,14 +251,14 @@ export const storageService = {
         id: "sreq-2",
         workOrderId: "os-3",
         isUnregistered: true,
-        suggestedDescription: "VÃ¡lvula Hydra Max 1 1/2",
+        suggestedDescription: "Válvula Hydra Max 1 1/2",
         quantity: 1,
         estimatedUnit: "UN",
-        justification: "PeÃ§a especÃ­fica para reparo do banheiro da diretoria. NÃ£o hÃ¡ substituto no estoque atual.",
+        justification: "Peça específica para reparo do banheiro da diretoria. Não há substituto no estoque atual.",
         priority: "Urgente",
         requesterId: "usr-4",
         locationId: "loc-1",
-        status: "Aguardando anÃ¡lise",
+        status: "Aguardando análise",
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         updatedAt: new Date(Date.now() - 86400000).toISOString()
       }
@@ -265,9 +274,9 @@ export const storageService = {
         locationId: "loc-1",
         type: "Corretiva",
         categoryId: "cat-1",
-        priority: "MÃ©dia",
-        technicalDescription: "Desobstruir dreno do split da recepÃ§Ã£o principal.",
-        status: "Em execuÃ§Ã£o",
+        priority: "Média",
+        technicalDescription: "Desobstruir dreno do split da recepção principal.",
+        status: "Em execução",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
@@ -277,12 +286,12 @@ export const storageService = {
             description: "Tubo PVC Esgoto 50mm",
             type: "BR",
             quantity: 1,
-            classification: "ObrigatÃ³rio",
-            availability: "DisponÃ­vel",
+            classification: "Obrigatório",
+            availability: "Disponível",
             isUnregistered: false,
           }
         ] as any,
-        observations: "Dreno estava obstruÃ­do com lodo. NecessÃ¡rio adaptar nova tubulaÃ§Ã£o de caÃ­da.",
+        observations: "Dreno estava obstruído com lodo. Necessário adaptar nova tubulação de caída.",
         attachments: [],
         createdAt: new Date(Date.now() - 170000000).toISOString(),
         updatedAt: new Date().toISOString(),
@@ -298,12 +307,12 @@ export const storageService = {
         type: "Preventiva",
         categoryId: "cat-1",
         priority: "Alta",
-        technicalDescription: "ManutenÃ§Ã£o mensal preventiva do Chiller A.",
+        technicalDescription: "Manutenção mensal preventiva do Chiller A.",
         status: "Aguardando material",
         responsibleId: "usr-4",
         checklist: [
-          { id: "ci-1", description: "Verificar e limpar filtros de ar", required: true, result: "NÃ£o se aplica" },
-          { id: "ci-2", description: "Verificar pressÃ£o do gÃ¡s refrigerante", required: true, result: null }
+          { id: "ci-1", description: "Verificar e limpar filtros de ar", required: true, result: "Não se aplica" },
+          { id: "ci-2", description: "Verificar pressão do gás refrigerante", required: true, result: null }
         ],
         materials: [
           {
@@ -312,12 +321,12 @@ export const storageService = {
             description: "Filtro Ar Condicionado G4",
             type: "M2",
             quantity: 4,
-            classification: "ObrigatÃ³rio",
-            availability: "IndisponÃ­vel",
+            classification: "Obrigatório",
+            availability: "Indisponível",
             isUnregistered: false,
           }
         ] as any,
-        observations: "NecessÃ¡rio trocar os filtros G4, mas estoque zerado.",
+        observations: "Necessário trocar os filtros G4, mas estoque zerado.",
         attachments: [],
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         updatedAt: new Date().toISOString(),
@@ -331,19 +340,19 @@ export const storageService = {
         type: "Corretiva",
         categoryId: "cat-4",
         priority: "Urgente",
-        technicalDescription: "Substituir vÃ¡lvula de descarga da recepÃ§Ã£o.",
+        technicalDescription: "Substituir válvula de descarga da recepção.",
         status: "Aguardando estoque",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
           {
             id: "omat-3",
-            description: "VÃ¡lvula Hydra Max 1 1/2",
+            description: "Válvula Hydra Max 1 1/2",
             quantity: 1,
-            classification: "ObrigatÃ³rio",
-            availability: "Aguardando validaÃ§Ã£o",
+            classification: "Obrigatório",
+            availability: "Aguardando validação",
             isUnregistered: true,
-            justification: "PeÃ§a especÃ­fica para reparo. Sem estoque."
+            justification: "Peça específica para reparo. Sem estoque."
           }
         ] as any,
         observations: "",
@@ -361,12 +370,12 @@ export const storageService = {
         type: "Corretiva",
         categoryId: "cat-1",
         priority: "Alta",
-        technicalDescription: "Verificar ruÃ­do no ventilador do AC do AuditÃ³rio",
+        technicalDescription: "Verificar ruído no ventilador do AC do Auditório",
         status: "Planejada",
         responsibleId: "usr-6",
         checklist: [],
         materials: [],
-        observations: "Ordem gerada direto pelo gestor apÃ³s ronda diÃ¡ria.",
+        observations: "Ordem gerada direto pelo gestor após ronda diária.",
         attachments: [],
         createdAt: new Date(Date.now() - 7200000).toISOString(),
         updatedAt: new Date().toISOString(),
@@ -380,15 +389,15 @@ export const storageService = {
         assetId: "ast-2",
         type: "Preventiva",
         categoryId: "cat-2",
-        priority: "MÃ©dia",
-        technicalDescription: "ManutenÃ§Ã£o semestral do QGBT. Reaperto e limpeza.",
+        priority: "Média",
+        technicalDescription: "Manutenção semestral do QGBT. Reaperto e limpeza.",
         status: "Programada",
         responsibleId: "usr-4",
         providerId: "prov-3",
         deadline: new Date(Date.now() + 259200000).toISOString(),
         checklist: [],
         materials: [],
-        observations: "Aguardando janela de desligamento de energia programada para sÃ¡bado de manhÃ£.",
+        observations: "Aguardando janela de desligamento de energia programada para sábado de manhã.",
         attachments: [],
         createdAt: new Date(Date.now() - 172800000).toISOString(),
         updatedAt: new Date().toISOString(),
@@ -401,24 +410,24 @@ export const storageService = {
         locationId: "loc-5",
         type: "Corretiva",
         categoryId: "cat-4",
-        priority: "MÃ©dia",
+        priority: "Média",
         technicalDescription: "Troca da torneira da copa",
-        status: "ConcluÃ­da",
+        status: "Concluída",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
             {
                 id: "omat-6",
                 materialId: "mat-5",
-                description: "Torneira Pia Cozinha Bica MÃ³vel",
+                description: "Torneira Pia Cozinha Bica Móvel",
                 type: "UN",
                 quantity: 1,
-                classification: "ObrigatÃ³rio",
+                classification: "Obrigatório",
                 availability: "Consumido",
                 isUnregistered: false,
             }
         ] as any,
-        observations: "Torneira substituÃ­da e testada.",
+        observations: "Torneira substituída e testada.",
         attachments: [],
         createdAt: new Date(Date.now() - 864000000).toISOString(),
         updatedAt: new Date(Date.now() - 600000000).toISOString(),
@@ -431,11 +440,19 @@ export const storageService = {
       {
         id: "doc-1",
         type: "cat-6",
-        title: "AlvarÃ¡ de Funcionamento - DF",
+        title: "Alvará de Funcionamento - DF",
         unitId: "u-df",
         issuer: "Prefeitura GDF",
+        regulatoryBody: "Prefeitura do Distrito Federal",
+        responsibleId: "usr-3",
+        issueDate: new Date(Date.now() - 86400000 * 350).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: false,
+        alertDaysAttention: 45,
+        alertDaysCritical: 15,
         number: "ALV-12345/2025",
-        status: "AtenÃ§Ã£o",
+        status: "Atenção",
         expirationDate: new Date(Date.now() + 86400000 * 15).toISOString(),
         attachments: [],
         createdAt: new Date(Date.now() - 86400000 * 300).toISOString(),
@@ -448,6 +465,14 @@ export const storageService = {
         title: "Auto de Vistoria do Corpo de Bombeiros (AVCB) - DF",
         unitId: "u-df",
         issuer: "CBMDF",
+        regulatoryBody: "Corpo de Bombeiros Militar do Distrito Federal",
+        responsibleId: "usr-3",
+        issueDate: new Date(Date.now() - 86400000 * 115).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: true,
+        alertDaysAttention: 60,
+        alertDaysCritical: 20,
         number: "AVCB-8877/2026",
         status: "Vigente",
         expirationDate: new Date(Date.now() + 86400000 * 250).toISOString(),
@@ -462,8 +487,16 @@ export const storageService = {
         title: "Laudo de SPDA - RJ",
         unitId: "u-rj",
         issuer: "Engenharia Externa Ltda",
+        regulatoryBody: "Conselho Regional de Engenharia",
+        responsibleId: "usr-2",
+        issueDate: new Date(Date.now() - 86400000 * 400).toISOString(),
+        periodicity: "Anual",
+        scope: "Periódico",
+        requiresART: true,
+        alertDaysAttention: 30,
+        alertDaysCritical: 15,
         number: "LAU-SPDA-RJ-001",
-        status: "CrÃ­tico",
+        status: "Crítico",
         expirationDate: new Date(Date.now() - 86400000 * 10).toISOString(), // Vencido
         attachments: [],
         createdAt: new Date(Date.now() - 86400000 * 400).toISOString(),
@@ -471,6 +504,8 @@ export const storageService = {
         active: true
       }
     ];
+    docs.push({ id: "doc-4", type: "Contrato", title: "Contrato de Manutenção de Elevadores", unitId: "u-df", issuer: "Elevadores Capital S/A", regulatoryBody: "Gestão de Contratos CNC", number: "CTR-ELV-2026", issueDate: new Date(Date.now() - 86400000 * 60).toISOString(), expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(), periodicity: "Anual", scope: "Periódico", responsibleId: "usr-3", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-5", type: "Conta recorrente", title: "Renovação mensal de licença de descarte", unitId: "u-rj", issuer: "Prefeitura Municipal", regulatoryBody: "Controle Ambiental", number: "REC-AMB-RJ", periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 5, responsibleId: "usr-2", requiresART: false, alertDaysAttention: 10, alertDaysCritical: 3, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
     this.set("gsi_documents", docs);
 
     const plans: PreventivePlan[] = [
@@ -481,8 +516,14 @@ export const storageService = {
         assetId: "ast-1",
         categoryId: "cat-1",
         type: "Preventiva",
-        description: "ManutenÃ§Ã£o Mensal PMOC - Chiller A",
+        description: "Manutenção Mensal PMOC - Chiller A",
         periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 62).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 32).toISOString(),
+        locationId: "loc-2",
+        responsibleId: "usr-4",
+        providerId: "prov-1",
+        estimatedValue: 900,
         nextExecution: new Date(Date.now() - 86400000 * 2).toISOString(), // Atrasado e gerou a OS-2
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
@@ -499,6 +540,12 @@ export const storageService = {
         type: "Preventiva",
         description: "Termografia e Reaperto Semestral QGBT",
         periodicity: "semestral",
+        startDate: new Date(Date.now() - 86400000 * 350).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 170).toISOString(),
+        locationId: "loc-3",
+        responsibleId: "usr-4",
+        providerId: "prov-3",
+        estimatedValue: 1500,
         nextExecution: new Date(Date.now() + 86400000 * 30).toISOString(), 
         checklist: checklistTemplates[1].items.map(i => ({...i})),
         status: "Ativo",
@@ -513,8 +560,14 @@ export const storageService = {
         assetId: "ast-5",
         categoryId: "cat-1",
         type: "Preventiva",
-        description: "ManutenÃ§Ã£o Mensal PMOC - AC AuditÃ³rio",
+        description: "Manutenção Mensal PMOC - AC Auditório",
         periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 45).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 15).toISOString(),
+        locationId: "loc-6",
+        responsibleId: "usr-4",
+        providerId: "prov-1",
+        estimatedValue: 750,
         nextExecution: new Date(Date.now() + 86400000 * 15).toISOString(), 
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
@@ -525,14 +578,20 @@ export const storageService = {
     ];
     this.set("gsi_preventive_plans", plans);
 
+    const maintenanceExecutions: MaintenanceExecution[] = [
+      { id: "exec-demo-1", planId: "plan-1", workOrderId: "os-2", executedAt: new Date(Date.now() - 86400000 * 32).toISOString(), technicianId: "usr-4", status: "Concluída", notes: "Limpeza do condensador, inspeção de pressão e troca parcial de filtro.", durationMinutes: 180, attachments: [], createdAt: new Date(Date.now() - 86400000 * 32).toISOString() },
+      { id: "exec-demo-2", planId: "plan-2", workOrderId: "os-5", executedAt: new Date(Date.now() - 86400000 * 170).toISOString(), technicianId: "usr-4", status: "Concluída", notes: "Termografia realizada sem ponto crítico. Reaperto dos barramentos concluído.", durationMinutes: 240, attachments: [], createdAt: new Date(Date.now() - 86400000 * 170).toISOString() },
+    ];
+    this.set("gsi_maintenance_executions", maintenanceExecutions);
+
     const providers: Provider[] = [
       {
         id: "prov-1",
-        name: "Clima TÃ©cnica BrasÃ­lia Ltda",
-        contactName: "JoÃ£o Silva",
+        name: "Clima Técnica Brasília Ltda",
+        contactName: "João Silva",
         phone: "(61) 99999-1111",
         email: "contato@climatecnica.com.br",
-        specialty: "ClimatizaÃ§Ã£o",
+        specialty: "Climatização",
         unitId: "u-df",
         status: "Ativo",
         createdAt: new Date().toISOString(),
@@ -553,11 +612,11 @@ export const storageService = {
       },
       {
         id: "prov-3",
-        name: "SoluÃ§Ãµes ElÃ©tricas e Laudos RJ",
+        name: "Soluções Elétricas e Laudos RJ",
         contactName: "Carlos Pereira",
         phone: "(21) 97777-3333",
         email: "contato@eletricarj.com.br",
-        specialty: "ElÃ©trica / Eng. ElÃ©trica",
+        specialty: "Elétrica / Eng. Elétrica",
         unitId: "u-rj",
         status: "Ativo",
         createdAt: new Date().toISOString(),
@@ -566,7 +625,7 @@ export const storageService = {
       },
       {
         id: "prov-4",
-        name: "ManutenÃ§Ã£o Predial Alfa",
+        name: "Manutenção Predial Alfa",
         contactName: "Ana Paula",
         phone: "(61) 96666-4444",
         email: "alfa@manutencao.com.br",
@@ -579,11 +638,11 @@ export const storageService = {
       },
       {
         id: "prov-5",
-        name: "Fortaleza HidrÃ¡ulica",
-        contactName: "JosÃ© Ramos",
+        name: "Fortaleza Hidráulica",
+        contactName: "José Ramos",
         phone: "(11) 95555-5555",
         email: "contato@fortalezahidraulica.com.br",
-        specialty: "HidrÃ¡ulica",
+        specialty: "Hidráulica",
         unitId: "u-sp",
         status: "Ativo",
         createdAt: new Date().toISOString(),
@@ -592,7 +651,7 @@ export const storageService = {
       }
     ];
     this.set("gsi_providers", providers);
-    // === INÃCIO MOCK AGENDA E EQUIPE (VISÃƒO SEMANAL) ===
+    // === INÍCIO MOCK AGENDA E EQUIPE (VISÒO SEMANAL) ===
     const now = new Date();
     const startOfWeekDate = new Date(now);
     const dayOfWeek = now.getDay();
@@ -606,12 +665,12 @@ export const storageService = {
     const thursday = new Date(startOfWeekDate); thursday.setDate(monday.getDate() + 3);
     const friday = new Date(startOfWeekDate); friday.setDate(monday.getDate() + 4);
 
-    // Garantir tÃ©cnicos com nomes claros
+    // Garantir técnicos com nomes claros
     const currentUsers = this.get("gsi_users");
     const tecs = [
-      { id: "tec-1", name: "JoÃ£o Silva", email: "joao@gsi.com", role: "Executor/TÃ©cnico", active: true },
-      { id: "tec-2", name: "Ana Costa", email: "ana@gsi.com", role: "Executor/TÃ©cnico", active: true },
-      { id: "tec-3", name: "Carlos Souza", email: "carlos@gsi.com", role: "Executor/TÃ©cnico", active: true }
+      { id: "tec-1", name: "João Silva", email: "joao@gsi.com", role: "Executor/Técnico", active: true },
+      { id: "tec-2", name: "Ana Costa", email: "ana@gsi.com", role: "Executor/Técnico", active: true },
+      { id: "tec-3", name: "Carlos Souza", email: "carlos@gsi.com", role: "Executor/Técnico", active: true }
     ];
     
     tecs.forEach(t => {
@@ -619,10 +678,10 @@ export const storageService = {
     });
     this.set("gsi_users", currentUsers);
 
-    // Ordens de ServiÃ§o distribuÃ­das na semana atual
+    // Ordens de Serviço distribuídas na semana atual
     const currentOrders = this.get("gsi_work_orders");
     
-    // OS 1: JoÃ£o - Segunda 08:00 Ã s 10:00
+    // OS 1: João - Segunda 08:00 às 10:00
     if(currentOrders[0]) {
       const d = new Date(monday); d.setHours(8, 0, 0, 0);
       const end = new Date(d); end.setHours(10, 0, 0, 0);
@@ -630,10 +689,10 @@ export const storageService = {
       currentOrders[0].plannedStart = d.toISOString();
       currentOrders[0].plannedEnd = end.toISOString();
       currentOrders[0].estimatedDurationMinutes = 120;
-      currentOrders[0].scheduleStatus = "ConcluÃ­da";
+      currentOrders[0].scheduleStatus = "Concluída";
     }
 
-    // OS 2: Ana - TerÃ§a 09:00 Ã s 12:00
+    // OS 2: Ana - Terça 09:00 às 12:00
     if(currentOrders[1]) {
       const d = new Date(tuesday); d.setHours(9, 0, 0, 0);
       const end = new Date(d); end.setHours(12, 0, 0, 0);
@@ -644,7 +703,7 @@ export const storageService = {
       currentOrders[1].scheduleStatus = "Programada";
     }
 
-    // OS 3: JoÃ£o - Quarta 14:00 Ã s 16:00
+    // OS 3: João - Quarta 14:00 às 16:00
     if(currentOrders[2]) {
       const d = new Date(wednesday); d.setHours(14, 0, 0, 0);
       const end = new Date(d); end.setHours(16, 0, 0, 0);
@@ -652,10 +711,10 @@ export const storageService = {
       currentOrders[2].plannedStart = d.toISOString();
       currentOrders[2].plannedEnd = end.toISOString();
       currentOrders[2].estimatedDurationMinutes = 120;
-      currentOrders[2].scheduleStatus = "Confirmada pelo tÃ©cnico";
+      currentOrders[2].scheduleStatus = "Confirmada pelo técnico";
     }
 
-    // OS 4: Clima TÃ©cnica - Quinta 10:00 Ã s 15:00 (ReprogramaÃ§Ã£o)
+    // OS 4: Clima Técnica - Quinta 10:00 às 15:00 (Reprogramação)
     if(currentOrders[3]) {
       const d = new Date(thursday); d.setHours(10, 0, 0, 0);
       const end = new Date(d); end.setHours(15, 0, 0, 0);
@@ -664,16 +723,16 @@ export const storageService = {
       currentOrders[3].plannedStart = d.toISOString();
       currentOrders[3].plannedEnd = end.toISOString();
       currentOrders[3].estimatedDurationMinutes = 300;
-      currentOrders[3].scheduleStatus = "ReprogramaÃ§Ã£o necessÃ¡ria";
+      currentOrders[3].scheduleStatus = "Reprogramação necessária";
       currentOrders[3].scheduleNotes = "Falta de material";
     }
 
-    // OS 5: NÃ£o programada (aparecerÃ¡ na aba lateral 'NÃ£o Programadas')
+    // OS 5: Não programada (aparecerá na aba lateral 'Não Programadas')
     if(currentOrders[4]) {
       currentOrders[4].plannedStart = undefined;
       currentOrders[4].plannedEnd = undefined;
       currentOrders[4].estimatedDurationMinutes = undefined;
-      currentOrders[4].scheduleStatus = "NÃ£o programada";
+      currentOrders[4].scheduleStatus = "Não programada";
       currentOrders[4].responsibleId = undefined;
     }
 
@@ -684,11 +743,11 @@ export const storageService = {
       {
         id: "unav-1",
         technicianId: "tec-3",
-        type: "FÃ©rias",
+        type: "Férias",
         startAt: new Date(monday).toISOString(),
         endAt: new Date(wednesday).toISOString(), // Carlos fora de seg a qua
         allDay: true,
-        reason: "FÃ©rias regulares",
+        reason: "Férias regulares",
         createdBy: "usr-5",
         createdAt: new Date().toISOString()
       },
@@ -744,5 +803,3 @@ export const storageService = {
     }
   }
 };
-
-

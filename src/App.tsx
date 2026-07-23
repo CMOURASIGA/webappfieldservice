@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { MainLayout } from "./layouts/MainLayout";
 import { Agenda } from "./pages/Agenda";
 import { Admin } from "./pages/Admin";
+import { Alertas } from "./pages/Alertas";
 import { Ativos } from "./pages/Ativos";
 import { Auditoria } from "./pages/Auditoria";
 import { DetalheAtivo } from "./pages/DetalheAtivo";
@@ -23,6 +24,8 @@ import { GestaoServicosDashboard } from "./pages/GestaoServicosDashboard";
 import { ImprimirOrdem } from "./pages/ImprimirOrdem";
 import { Locais } from "./pages/Locais";
 import { MovimentacoesHistorico } from "./pages/estoque/MovimentacoesHistorico";
+import { NovaMovimentacaoEstoque } from "./pages/estoque/NovaMovimentacaoEstoque";
+import { NovaSolicitacaoEstoque } from "./pages/estoque/NovaSolicitacaoEstoque";
 import { NovaOrdem } from "./pages/NovaOrdem";
 import { NovaPreventiva } from "./pages/NovaPreventiva";
 import { NovoDocumento } from "./pages/NovoDocumento";
@@ -44,6 +47,7 @@ export default function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<VisaoGeral />} />
             <Route path="agenda" element={<Agenda />} />
+            <Route path="alertas" element={<Alertas />} />
             <Route path="servicos" element={<GestaoServicosDashboard />} />
             <Route path="servicos/corretivas" element={<Servicos />} />
             <Route path="servicos/nova" element={<NovoServico />} />
@@ -59,7 +63,9 @@ export default function App() {
             <Route path="preventivas/:id/editar" element={<EditarPreventiva />} />
 
             <Route path="estoque" element={<Estoque />} />
+            <Route path="estoque/movimentacoes/nova" element={<NovaMovimentacaoEstoque />} />
             <Route path="estoque/movimentacoes" element={<MovimentacoesHistorico />} />
+            <Route path="estoque/solicitacoes/nova" element={<NovaSolicitacaoEstoque />} />
             <Route path="estoque/fila" element={<FilaEstoque />} />
 
             <Route path="ativos" element={<Ativos />} />

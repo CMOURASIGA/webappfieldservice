@@ -12,6 +12,7 @@ import { format, isValid, parseISO, differenceInDays } from "date-fns";
 import { ArrowLeft, FileText, Upload, X, Download, Clock, Pencil, History, ShieldAlert } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "../contexts/AuthContext";
+import { calcularStatusDocumento } from "../utils/documentStatus";
 
 export const DetalheDocumento = () => {
   const { id } = useParams();
@@ -124,6 +125,20 @@ export const DetalheDocumento = () => {
     navigate("/documentos");
   };
 
+  const handleRegisterCompetence = () => {
+    if (!doc || doc.scope !== "Recorrente") return;
+    const competence = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+    if (doc.recurrenceHistory?.some((entry) => entry.competence === competence)) return;
+    const docs = storageService.get("gsi_documents");
+    const idx = docs.findIndex((item) => item.id === doc.id);
+    if (idx === -1) return;
+    docs[idx].recurrenceHistory = [...(docs[idx].recurrenceHistory || []), { id: crypto.randomUUID(), competence, completedAt: new Date().toISOString() }];
+    docs[idx].updatedAt = new Date().toISOString();
+    storageService.set("gsi_documents", docs);
+    if (currentUser) storageService.logAudit(currentUser.id, "Registrou competência mensal", doc.id, "Document");
+    setDoc(docs[idx]);
+  };
+
   const [newVersion, setNewVersion] = useState({ version: "", observations: "" });
 
   useEffect(() => {
@@ -184,11 +199,12 @@ export const DetalheDocumento = () => {
 
   if (!doc) return <div>Carregando...</div>;
 
-  const daysRemaining = doc.expirationDate ? differenceInDays(parseISO(doc.expirationDate), new Date()) : null;
+  const statusCalculation = calcularStatusDocumento(doc);
+  const daysRemaining = statusCalculation.diasRestantes ?? (statusCalculation.diasEmAtraso ? -statusCalculation.diasEmAtraso : null);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between gap-4">
+      <div className="page-title-panel flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button  variant="ghost" className="p-2" onClick={() => navigate(-1)}>
               <ArrowLeft  className="w-5 h-5" />
@@ -196,7 +212,7 @@ export const DetalheDocumento = () => {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-[22px] font-semibold text-slate-900">{doc.title}</h1>
-              {getStatusBadge(doc.status)}
+              {getStatusBadge(statusCalculation.status)}
               {doc.requiresART && <Badge className="bg-blue-100 text-blue-700 border-transparent">ART</Badge>}
             </div>
             <p className="text-sm text-slate-500">{doc.number} • {doc.regulatoryBody || doc.issuer}</p>
@@ -210,6 +226,7 @@ export const DetalheDocumento = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {doc.scope === "Recorrente" && <Card><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-semibold text-slate-900">Competência mensal</h3><p className="text-sm text-slate-600">Registre a conferência para manter o compromisso recorrente em dia neste mês.</p></div><Button variant="create" onClick={handleRegisterCompetence}>Registrar competência atual</Button></CardContent></Card>}
           <Card>
             <CardContent className="p-6">
               <h3 className="text-sm font-semibold text-slate-800 mb-4 uppercase tracking-wider">Detalhes do Documento</h3>

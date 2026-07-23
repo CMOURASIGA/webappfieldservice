@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { Unit, Location, Asset, PreventivePlan, Category, Provider, ChecklistTemplate, ChecklistItem } from "../types";
+import { Unit, Location, Asset, PreventivePlan, Category, Provider, ChecklistTemplate, ChecklistItem, User } from "../types";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
@@ -9,6 +9,7 @@ import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
 import { format, isValid, addDays } from "date-fns";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const NovaPreventiva = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export const NovaPreventiva = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [formData, setFormData] = useState({
     unitId: currentUser?.unitId || "",
@@ -32,6 +34,8 @@ export const NovaPreventiva = () => {
     periodicity: "mensal",
     nextExecution: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
     providerId: "",
+    responsibleId: "",
+    estimatedValue: "",
   });
 
   const [checklistItems, setChecklistItems] = useState<{id: string, description: string, required: boolean}[]>([{ id: crypto.randomUUID(), description: "", required: true }]);
@@ -43,6 +47,7 @@ export const NovaPreventiva = () => {
     setProviders(storageService.get("gsi_providers").filter(p => p.status === "Ativo" && p.active !== false));
     setCategories(storageService.get("gsi_categories").filter(c => c.active !== false));
     setTemplates(storageService.get("gsi_checklist_templates")?.filter(t => t.active) || []);
+    setUsers(storageService.get("gsi_users").filter((user) => user.active));
   }, []);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
@@ -93,8 +98,11 @@ export const NovaPreventiva = () => {
       templateId: formData.templateId || undefined,
       description: formData.description,
       periodicity: formData.periodicity,
+      startDate: new Date(formData.nextExecution).toISOString(),
       nextExecution: new Date(formData.nextExecution).toISOString(),
       providerId: formData.providerId,
+      responsibleId: formData.responsibleId || undefined,
+      estimatedValue: Number(formData.estimatedValue || 0),
       checklist: validChecklist,
       status: "Ativo",
       createdAt: new Date().toISOString(),
@@ -112,10 +120,11 @@ export const NovaPreventiva = () => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Nova Manutenção Preventiva</h1>
-        <p className="text-sm text-slate-500">Cadastre uma nova rotina de manutenção preventiva.</p>
-      </div>
+      <OperationalPageHeader
+        title="Nova Manutenção Preventiva"
+        description="Cadastre uma nova rotina de manutenção preventiva."
+        backTo="/preventivas"
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -164,6 +173,12 @@ export const NovaPreventiva = () => {
                 onChange={e => setFormData({ ...formData, providerId: e.target.value })}
                 options={providers.map(p => ({ value: p.id, label: p.name }))}
               />
+              <Select
+                label="Responsável interno"
+                value={formData.responsibleId}
+                onChange={e => setFormData({ ...formData, responsibleId: e.target.value })}
+                options={[{ value: "", label: "Não atribuído" }, ...users.map((user) => ({ value: user.id, label: user.name }))]}
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Select
                   label="Periodicidade"
@@ -187,6 +202,7 @@ export const NovaPreventiva = () => {
                   onChange={e => setFormData({ ...formData, nextExecution: e.target.value })}
                 />
               </div>
+              <Input type="number" min="0" step="0.01" label="Valor estimado" value={formData.estimatedValue} onChange={e => setFormData({ ...formData, estimatedValue: e.target.value })} />
             </div>
             <div className="mt-6">
               <Textarea
