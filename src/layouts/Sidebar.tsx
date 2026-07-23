@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Inbox, 
@@ -93,6 +93,10 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
   const leadingBlankDays = getDay(startOfMonth(calendarMonth));
   const hasSchedule = (day: Date) => scheduledDates.some((scheduledDate) => isSameDay(scheduledDate, day));
   const openDay = (day: Date) => navigate(`/agenda?periodo=dia&data=${format(day, "yyyy-MM-dd")}`);
+  const goToModule = (href: string) => {
+    if (location.pathname !== href) navigate(href);
+    if (setMobileMenuOpen) setMobileMenuOpen(false);
+  };
 
   const renderLink = (item: any, isSubItem = false) => {
     if (item.subItems) {
@@ -130,9 +134,10 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
     const isActive = location.pathname === item.href || (item.href !== "/" && location.pathname.startsWith(item.href + "/"));
     
     return (
-      <Link
+      <button
+        type="button"
         key={item.href}
-        to={item.href}
+        onClick={() => goToModule(item.href)}
         className={cn(
           "flex items-center h-11 px-4 mx-2 rounded-md mb-1 transition-colors text-sm",
           isActive 
@@ -144,7 +149,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         {!isSubItem && <item.icon className="w-[18px] h-[18px] mr-2.5 " />}
         {isSubItem && <div className="w-1.5 h-1.5 rounded-full bg-white/40 mr-3" />}
         {item.label}
-      </Link>
+      </button>
     );
   };
 
