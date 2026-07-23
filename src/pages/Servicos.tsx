@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Request, Unit, Location, Category } from "../types";
-import { Button, PageHeader, PageHeaderTitle, PageHeaderTitleContent, PageHeaderActionsContainer } from "@cnc-ti/layout-basic";
+import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
-import { Plus, Calendar, Wrench, Search, Clock, AlertCircle } from "lucide-react";
+import { Plus, Calendar, Wrench } from "lucide-react";
+import { MetricButton, OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const Servicos = () => {
   const navigate = useNavigate();
@@ -65,51 +66,31 @@ export const Servicos = () => {
   return (
     <div className="space-y-6">
       
-      {/* Ações Rápidas no Topo */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => navigate("/servicos/nova")} className="gap-2">
-          <Plus className="w-4 h-4" /> Nova Manutenção
-        </Button>
-        <Button variant="outline" onClick={() => navigate("/preventivas/nova")} className="gap-2">
-          <Calendar className="w-4 h-4" /> Nova Preventiva
-        </Button>
-        <Button variant="outline" onClick={() => navigate("/ordens/nova")} className="gap-2">
-          <Wrench className="w-4 h-4" /> Nova OS
-        </Button>
-        <Button variant="outline" onClick={() => navigate("/agenda")} className="gap-2">
-          <Calendar className="w-4 h-4" /> Ver Agenda
-        </Button>
-      </div>
-
-      <div>
-        <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Manutenção Corretiva</h1>
-        <p className="text-sm text-slate-500">Gestão e acompanhamento de solicitações e necessidades.</p>
-      </div>
+      <OperationalPageHeader
+        title="Manutenção Corretiva"
+        description="Gestão e acompanhamento de solicitações e necessidades."
+        backTo="/servicos"
+        actions={
+          <>
+            <Button onClick={() => navigate("/servicos/nova")} className="gap-2"><Plus className="h-4 w-4" /> Nova Manutenção</Button>
+            <Button variant="secondary" onClick={() => navigate("/ordens/nova")} className="gap-2"><Wrench className="h-4 w-4" /> Nova OS</Button>
+            <Button variant="secondary" onClick={() => navigate("/agenda")} className="gap-2"><Calendar className="h-4 w-4" /> Ver Agenda</Button>
+          </>
+        }
+      />
 
       {/* Indicadores Acionáveis */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <button onClick={() => setStatusFilter("Todas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Todas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Todos</p>
-          <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Abertas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Abertas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Abertos</p>
-          <p className="text-2xl font-bold text-slate-900">{stats.abertas}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Em Triagem")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Em Triagem" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Sem Planejamento</p>
-          <p className="text-2xl font-bold text-blue-600">{stats.emTriagem}</p>
-        </button>
-        <button onClick={() => setStatusFilter("Convertidas")} className={`p-4 rounded-xl border text-left transition-colors ${statusFilter === "Convertidas" ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-white hover:border-brand-300"}`}>
-          <p className="text-sm font-medium text-slate-600 mb-1">Convertidos em OS</p>
-          <p className="text-2xl font-bold text-green-600">{stats.convertidas}</p>
-        </button>
+        <MetricButton label="Todos" value={stats.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
+        <MetricButton label="Abertos" value={stats.abertas} active={statusFilter === "Abertas"} onClick={() => setStatusFilter("Abertas")} />
+        <MetricButton label="Sem Planejamento" value={stats.emTriagem} active={statusFilter === "Em Triagem"} valueClassName="text-blue-700" onClick={() => setStatusFilter("Em Triagem")} />
+        <MetricButton label="Convertidos em OS" value={stats.convertidas} active={statusFilter === "Convertidas"} valueClassName="text-green-700" onClick={() => setStatusFilter("Convertidas")} />
       </div>
       
       {/* Cards Operacionais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="operational-grid">
         {filteredRequests.map(req => (
-          <Card key={req.id} className="hover:border-brand-300 transition-colors">
+          <Card key={req.id} className="operational-card flex h-full flex-col">
             <CardContent className="p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <div>
@@ -119,20 +100,20 @@ export const Servicos = () => {
                 {getStatusBadge(req.status)}
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
+              <div className="operational-card-fields">
+                <div className="operational-card-field">
                   <p className="text-xs text-slate-500">Unidade</p>
                   <p className="font-medium text-slate-700 truncate">{getUnitName(req.unitId)}</p>
                 </div>
-                <div>
+                <div className="operational-card-field border-r-0">
                   <p className="text-xs text-slate-500">Local</p>
                   <p className="font-medium text-slate-700 truncate">{getLocationName(req.locationId)}</p>
                 </div>
-                <div>
+                <div className="operational-card-field border-b-0">
                   <p className="text-xs text-slate-500">Data</p>
                   <p className="font-medium text-slate-700">{(isValid(parseISO(req.createdAt)) ? format(parseISO(req.createdAt), 'dd/MM/yyyy') : 'Inválida')}</p>
                 </div>
-                <div>
+                <div className="operational-card-field border-b-0 border-r-0">
                   <p className="text-xs text-slate-500">Prioridade</p>
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(req.suggestedPriority)}`}>
                     {req.suggestedPriority}
@@ -141,13 +122,14 @@ export const Servicos = () => {
               </div>
               
               </CardContent>
-                <CardFooter className="pt-0 pb-4 px-4 border-t border-slate-100 mt-3 pt-3">
+                <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
                 <CardFooterActions
                   viewLink={`/servicos/${req.id}`}
                   viewLabel="Abrir"
                 >
                   {req.status !== "Convertida em ordem" && (
-                    <Button variant="default" size="sm" onClick={() => navigate("/ordens/nova")}>
+                    <Button size="sm" className="gap-2" onClick={() => navigate("/ordens/nova", { state: { sourceRequest: req } })}>
+                      <Wrench className="h-4 w-4" />
                       Gerar OS
                     </Button>
                   )}

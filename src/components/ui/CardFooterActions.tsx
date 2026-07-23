@@ -47,7 +47,7 @@ export const CardFooterActions = ({
     if (viewLink) {
       return (
         <Link to={viewLink}>
-          <Button variant="secondary" size="sm" className="gap-2">
+          <Button variant="primary" size="sm" className="gap-2 shadow-1">
             <Eye className="w-4 h-4" /> {viewLabel}
           </Button>
         </Link>
@@ -55,7 +55,7 @@ export const CardFooterActions = ({
     }
     if (onView) {
       return (
-        <Button variant="secondary" size="sm" className="gap-2" onClick={onView}>
+        <Button variant="primary" size="sm" className="gap-2 shadow-1" onClick={onView}>
           <Eye className="w-4 h-4" /> {viewLabel}
         </Button>
       );
@@ -64,7 +64,7 @@ export const CardFooterActions = ({
   };
 
   return (
-    <div className="flex items-center justify-end gap-2 w-full ">
+    <div className="flex w-full flex-wrap items-center justify-end gap-2">
       <div className="mr-auto">
         {renderViewButton()}
       </div>

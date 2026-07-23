@@ -59,6 +59,34 @@
     @apply bg-slate-50 text-slate-900 antialiased;
     font-family: var(--font-family-base);
   }
+
+  button,
+  [role="button"],
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 @theme { --color-white: #ffffff; }
 .sidebar-text, .sidebar-text * { color: #ffffff !important; }
+
+@layer components {
+  .operational-grid {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .operational-card {
+    @apply min-w-0 overflow-hidden border-2 border-slate-200 bg-white shadow-sm transition-all hover:border-brand-700 hover:shadow-md;
+  }
+
+  .operational-card-fields {
+    @apply grid grid-cols-2 overflow-hidden rounded-md border border-slate-200 bg-slate-50;
+  }
+
+  .operational-card-field {
+    @apply min-w-0 border-b border-r border-slate-200 p-2.5 text-sm;
+  }
+
+  .operational-form-actions {
+    @apply flex flex-wrap justify-end gap-3 border-t border-slate-300 bg-slate-50 px-4 py-4;
+  }
+}

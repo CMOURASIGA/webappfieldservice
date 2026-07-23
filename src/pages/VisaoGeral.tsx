@@ -6,6 +6,9 @@ import { AlertTriangle, Clock, FileText, Inbox, CalendarDays, ShoppingCart, User
 import { addDays, endOfDay, isPast, parseISO, startOfDay } from "date-fns";
 import { getDocumentStatus } from "../utils/documentStatus";
 import { getPendingStockRequests, reconcileMaterial, resolveOrderStatusFromMaterials } from "../utils/stock";
+import { Button } from "../components/ui/Button";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { ArrowRight } from "lucide-react";
 
 export const VisaoGeral = () => {
   const navigate = useNavigate();
@@ -123,10 +126,7 @@ export const VisaoGeral = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="mb-1 text-[22px] font-semibold text-slate-900">Visao Geral</h1>
-        <p className="text-sm text-slate-500">Centro de controle operacional e gerencial.</p>
-      </div>
+      <OperationalPageHeader title="Visão Geral" description="Centro de controle operacional e gerencial." />
 
       <div>
         <h2 className="mb-4 text-lg font-semibold text-slate-800">Alertas Consolidados</h2>
@@ -153,9 +153,11 @@ export const VisaoGeral = () => {
             ) : (
               <ul className="space-y-3">
                 {decisions.map((decision, index) => (
-                  <li key={index} className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3">
+                  <li key={index} className="flex flex-col gap-3 rounded-md border border-slate-300 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm font-medium text-slate-800">{decision.title}</span>
-                    <button onClick={() => navigate(decision.link)} className="text-sm font-semibold text-brand-600 hover:underline">Resolver</button>
+                    <Button size="sm" className="gap-2 shadow-1" onClick={() => navigate(decision.link)}>
+                      Resolver <ArrowRight className="h-4 w-4" />
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -169,20 +171,22 @@ export const VisaoGeral = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
+              <button onClick={() => navigate("/agenda?periodo=hoje")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
                 <span className="flex items-center gap-2 text-sm text-slate-600"><CalendarDays className="h-4 w-4" /> Atividades Hoje</span>
                 <span className="font-bold text-slate-900">{agenda.hoje}</span>
-              </div>
-              <div className="flex items-center justify-between border-b pb-2">
+              </button>
+              <button onClick={() => navigate("/agenda?periodo=semana")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
                 <span className="flex items-center gap-2 text-sm text-slate-600"><CalendarDays className="h-4 w-4" /> Atividades na Semana</span>
                 <span className="font-bold text-slate-900">{agenda.semana}</span>
-              </div>
-              <div className="flex items-center justify-between">
+              </button>
+              <button onClick={() => navigate("/ordens?status=Sem+Responsavel")} className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-white p-3 text-left hover:border-brand-700 hover:bg-brand-050">
                 <span className="flex items-center gap-2 text-sm text-slate-600"><UserX className="h-4 w-4" /> Atividades sem Responsavel</span>
                 <span className="font-bold text-red-600">{agenda.semResponsavel}</span>
-              </div>
+              </button>
               <div className="pt-2">
-                <button onClick={() => navigate("/agenda")} className="w-full text-center text-sm font-semibold text-brand-600 hover:underline">Abrir Agenda Completa</button>
+                <Button onClick={() => navigate("/agenda")} className="w-full gap-2 shadow-1">
+                  Abrir Agenda Completa <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </CardContent>
