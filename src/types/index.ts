@@ -59,6 +59,7 @@ export interface Attachment {
   uploadedAt: string;
   description?: string;
   dataUrl?: string;
+  url?: string;
 }
 
 export interface Request {
@@ -181,6 +182,7 @@ export interface PreventivePlan {
   estimatedValue?: number;
   alertDaysAttention?: number;
   alertDaysCritical?: number;
+  scheduleStatus?: "Em dia" | "Próxima" | "Atrasada" | "Sem data";
   templateId?: string;
   checklist: ChecklistItem[];
   status: "Ativo" | "Inativo";

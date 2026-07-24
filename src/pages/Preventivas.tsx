@@ -50,6 +50,7 @@ export const Preventivas = () => {
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getAssetCode = (aid?: string) => assets.find(a => a.id === aid)?.code || "N/A";
   const getProviderName = (id?: string) => providers.find((provider) => provider.id === id)?.name || "Não atribuído";
+  const getLocationName = (id?: string) => locations.find((location) => location.id === id)?.name || "Geral da unidade";
   
   const getComputedNextExecution = (plan: PreventivePlan) => {
     return calculateNextExecution(plan.periodicity as any, plan.lastExecution, plan.startDate) || plan.nextExecution;
@@ -143,7 +144,7 @@ export const Preventivas = () => {
   
   const filteredPlans = plans.filter(p => {
     const term = searchTerm.trim().toLowerCase();
-    if (term && ![p.code, p.description, p.periodicity, getUnitName(p.unitId), getAssetCode(p.assetId)]
+    if (term && ![p.code, p.description, p.type, p.periodicity, getUnitName(p.unitId), getLocationName(p.locationId), getAssetCode(p.assetId), getProviderName(p.providerId)]
       .some((value) => value?.toLowerCase().includes(term))) return false;
     if (typeFilter !== "Todos" && p.type !== typeFilter) return false;
     if (periodicityFilter !== "Todas" && p.periodicity !== periodicityFilter) return false;

@@ -33,6 +33,9 @@ export const EditarPreventiva = () => {
     periodicity: "mensal",
     nextExecution: "",
     providerId: "",
+    estimatedValue: "",
+    alertDaysAttention: "30",
+    alertDaysCritical: "15",
   });
 
   const [checklistItems, setChecklistItems] = useState<{id: string, description: string, required: boolean}[]>([]);
@@ -62,6 +65,9 @@ export const EditarPreventiva = () => {
           periodicity: plan.periodicity || "mensal",
           nextExecution: plan.nextExecution ? plan.nextExecution.split("T")[0] : "",
           providerId: plan.providerId || "",
+          estimatedValue: String(plan.estimatedValue || ""),
+          alertDaysAttention: String(plan.alertDaysAttention || 30),
+          alertDaysCritical: String(plan.alertDaysCritical || 15),
         });
         if (plan.checklist && plan.checklist.length > 0) {
           setChecklistItems(plan.checklist);
@@ -101,6 +107,9 @@ export const EditarPreventiva = () => {
       periodicity: formData.periodicity,
       nextExecution: new Date(formData.nextExecution).toISOString(),
       providerId: formData.providerId || undefined,
+      estimatedValue: Number(formData.estimatedValue || 0),
+      alertDaysAttention: Number(formData.alertDaysAttention || 30),
+      alertDaysCritical: Number(formData.alertDaysCritical || 15),
       templateId: formData.templateId || undefined,
       checklist: validChecklist,
       updatedAt: new Date().toISOString()
@@ -189,6 +198,15 @@ export const EditarPreventiva = () => {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de manutenção *</label>
+                <Select required value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                  <option value="Preventiva">Preventiva</option>
+                  <option value="Preditiva">Preditiva</option>
+                  <option value="Inspeção">Inspeção</option>
+                  <option value="Corretiva planejada">Corretiva planejada</option>
+                </Select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Categoria *</label>
                 <Select required value={formData.categoryId} onChange={e => setFormData({ ...formData, categoryId: e.target.value })}>
                   <option value="">Selecione...</option>
@@ -220,6 +238,14 @@ export const EditarPreventiva = () => {
                   <option value="semestral">Semestral</option>
                   <option value="anual">Anual</option>
                 </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Valor estimado</label>
+                <Input type="number" min="0" step="0.01" value={formData.estimatedValue} onChange={e => setFormData({ ...formData, estimatedValue: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 rounded-lg border-2 border-slate-300 bg-slate-50 p-3">
+                <Input type="number" min="1" label="Atenção (dias)" value={formData.alertDaysAttention} onChange={e => setFormData({ ...formData, alertDaysAttention: e.target.value })} />
+                <Input type="number" min="1" label="Crítico (dias)" value={formData.alertDaysCritical} onChange={e => setFormData({ ...formData, alertDaysCritical: e.target.value })} />
               </div>
               
               <div>

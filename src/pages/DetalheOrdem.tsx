@@ -247,6 +247,7 @@ export const DetalheOrdem = () => {
           const nextExecution = calculateNextExecution(plan.periodicity, executedAt, plan.startDate);
           plans[pIdx].lastExecution = executedAt;
           plans[pIdx].nextExecution = nextExecution || plan.nextExecution;
+          plans[pIdx].scheduleStatus = plans[pIdx].nextExecution ? "Em dia" : "Sem data";
           plans[pIdx].updatedAt = new Date().toISOString();
           
           storageService.set("gsi_preventive_plans", plans);

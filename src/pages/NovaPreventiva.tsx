@@ -36,6 +36,8 @@ export const NovaPreventiva = () => {
     providerId: "",
     responsibleId: "",
     estimatedValue: "",
+    alertDaysAttention: "30",
+    alertDaysCritical: "15",
   });
 
   const [checklistItems, setChecklistItems] = useState<{id: string, description: string, required: boolean}[]>([{ id: crypto.randomUUID(), description: "", required: true }]);
@@ -103,6 +105,8 @@ export const NovaPreventiva = () => {
       providerId: formData.providerId,
       responsibleId: formData.responsibleId || undefined,
       estimatedValue: Number(formData.estimatedValue || 0),
+      alertDaysAttention: Number(formData.alertDaysAttention || 30),
+      alertDaysCritical: Number(formData.alertDaysCritical || 15),
       checklist: validChecklist,
       status: "Ativo",
       createdAt: new Date().toISOString(),
@@ -155,6 +159,18 @@ export const NovaPreventiva = () => {
                 disabled={!formData.unitId}
               />
               <Select
+                label="Tipo de manutenção"
+                required
+                value={formData.type}
+                onChange={e => setFormData({ ...formData, type: e.target.value })}
+                options={[
+                  { value: "Preventiva", label: "Preventiva" },
+                  { value: "Preditiva", label: "Preditiva" },
+                  { value: "Inspeção", label: "Inspeção" },
+                  { value: "Corretiva planejada", label: "Corretiva planejada" },
+                ]}
+              />
+              <Select
                 label="Categoria"
                 required
                 value={formData.categoryId}
@@ -203,6 +219,10 @@ export const NovaPreventiva = () => {
                 />
               </div>
               <Input type="number" min="0" step="0.01" label="Valor estimado" value={formData.estimatedValue} onChange={e => setFormData({ ...formData, estimatedValue: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4 rounded-lg border-2 border-slate-300 bg-slate-50 p-3">
+                <Input type="number" min="1" label="Alerta de atenção (dias)" value={formData.alertDaysAttention} onChange={e => setFormData({ ...formData, alertDaysAttention: e.target.value })} />
+                <Input type="number" min="1" label="Alerta crítico (dias)" value={formData.alertDaysCritical} onChange={e => setFormData({ ...formData, alertDaysCritical: e.target.value })} />
+              </div>
             </div>
             <div className="mt-6">
               <Textarea

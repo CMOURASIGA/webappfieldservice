@@ -29,6 +29,7 @@ export const DetalheDocumento = () => {
   const [newExpiration, setNewExpiration] = useState("");
   const [newIssue, setNewIssue] = useState("");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [attachmentUrl, setAttachmentUrl] = useState("");
   
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,6 +60,10 @@ export const DetalheDocumento = () => {
   };
   
   const handleDownload = (att: any) => {
+    if (att.url) {
+      window.open(att.url, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (!att.dataUrl) {
       alert("Arquivo não possui dados salvos (mock).");
       return;
@@ -69,6 +74,22 @@ export const DetalheDocumento = () => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleAddLink = () => {
+    if (!doc || !currentUser || !attachmentUrl.trim()) return;
+    try { new URL(attachmentUrl.trim()); } catch { alert("Informe uma URL válida, iniciando com http:// ou https://."); return; }
+    const allDocs = storageService.get("gsi_documents");
+    const idx = allDocs.findIndex(d => d.id === doc.id);
+    if (idx === -1) return;
+    allDocs[idx].attachments = [...(allDocs[idx].attachments || []), {
+      id: crypto.randomUUID(), name: "Documento por link", type: "link", size: 0,
+      uploadedAt: new Date().toISOString(), url: attachmentUrl.trim(),
+    }];
+    allDocs[idx].updatedAt = new Date().toISOString();
+    storageService.set("gsi_documents", allDocs);
+    storageService.logAudit(currentUser.id, "Adicionou link de documento", doc.id, "Document");
+    setAttachmentUrl(""); setDoc(allDocs[idx]);
   };
   
   const handleDeleteAttachment = (attId: string) => {
@@ -342,7 +363,7 @@ export const DetalheDocumento = () => {
                       <FileText className="w-5 h-5 text-brand-600 flex-shrink-0" />
                       <div className="truncate">
                         <p className="text-sm font-medium text-slate-900 truncate">{att.name}</p>
-                        <p className="text-xs text-slate-500">{(isValid(parseISO(att.uploadedAt)) ? format(parseISO(att.uploadedAt), 'dd/MM/yyyy') : 'Data Inválida')} • {(att.size / 1024).toFixed(1)} KB</p>
+                        <p className="text-xs text-slate-500">{(isValid(parseISO(att.uploadedAt)) ? format(parseISO(att.uploadedAt), 'dd/MM/yyyy') : 'Data Inválida')} • {att.url ? "Link externo" : `${(att.size / 1024).toFixed(1)} KB`}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -362,6 +383,10 @@ export const DetalheDocumento = () => {
                 )}
                 <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
                 <Button variant="secondary" className="w-full mt-2" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4 mr-2"/> Fazer Upload</Button>
+                <div className="mt-3 flex gap-2 rounded-lg border-2 border-slate-300 bg-slate-50 p-3">
+                  <Input value={attachmentUrl} onChange={(event) => setAttachmentUrl(event.target.value)} placeholder="https://... (link do documento)" />
+                  <Button type="button" variant="secondary" onClick={handleAddLink}>Adicionar link</Button>
+                </div>
               </div>
             </CardContent>
           </Card>
