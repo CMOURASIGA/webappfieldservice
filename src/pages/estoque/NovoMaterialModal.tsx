@@ -95,7 +95,7 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[680px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border border-slate-200 bg-white p-6 shadow-2xl sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle>{material ? "Editar Material" : "Novo Material"}</DialogTitle>
           <p className="text-sm text-slate-600">Informe os dados de identificação, local de estoque e níveis de reposição do material.</p>
