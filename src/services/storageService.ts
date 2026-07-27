@@ -1,6 +1,7 @@
 ﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate, MaintenanceExecution, StockMovement } from "../types";
 
-const VERSION = "1.6.0";
+// A nova versão repõe cenários compatíveis com os fluxos atuais sem apagar dados locais.
+const VERSION = "1.7.0";
 
 interface DB {
   gsi_data_version: { version: string };
@@ -53,7 +54,7 @@ export const storageService = {
       try {
         const v = JSON.parse(versionData);
         if (v.version !== VERSION) {
-          this.restoreDefaults();
+          this.migrateDefaults();
         }
       } catch {
         this.restoreDefaults();
@@ -61,6 +62,45 @@ export const storageService = {
     }
   },
 
+
+  /**
+   * Enriquece a massa existente sem excluir registros criados durante a
+   * demonstração. A restauração completa é reservada ao primeiro acesso.
+   */
+  migrateDefaults() {
+    const situationByStatus: Record<string, WorkOrder["operationalSituation"]> = {
+      "Nova": "Nova", "Planejada": "Planejamento", "Em planejamento": "Planejamento",
+      "Aguardando estoque": "Planejamento", "Aguardando material": "Planejamento",
+      "Programada": "Programada", "Em execução": "Em execução",
+      "Em validação": "Validação", "Concluída": "Concluída",
+    };
+    this.set("gsi_work_orders", this.get("gsi_work_orders").map((order) => ({
+      ...order,
+      operationalSituation: order.operationalSituation || situationByStatus[order.status] || "Nova",
+    })));
+
+    const documentValues: Record<string, number> = { "doc-1": 1840, "doc-2": 3200, "doc-3": 2750, "doc-4": 28800, "doc-5": 480 };
+    this.set("gsi_documents", this.get("gsi_documents").map((document) => ({
+      ...document,
+      value: document.value ?? documentValues[document.id] ?? 0,
+      versions: document.versions || [],
+      attachments: document.attachments || [],
+    })));
+
+    const expectedByPeriodicity: Record<string, number> = { mensal: 12, trimestral: 4, semestral: 2, anual: 1 };
+    this.set("gsi_preventive_plans", this.get("gsi_preventive_plans").map((plan) => {
+      const next = plan.nextExecution ? new Date(plan.nextExecution).getTime() : NaN;
+      const days = Number.isNaN(next) ? null : Math.ceil((next - Date.now()) / 86400000);
+      return {
+        ...plan,
+        expectedWorkOrders: plan.expectedWorkOrders ?? expectedByPeriodicity[plan.periodicity?.toLowerCase()] ?? 1,
+        alertDaysAttention: plan.alertDaysAttention ?? 30,
+        alertDaysCritical: plan.alertDaysCritical ?? 10,
+        scheduleStatus: plan.scheduleStatus || (days === null ? "Sem data" : days < 0 ? "Atrasada" : days <= (plan.alertDaysAttention ?? 30) ? "Próxima" : "Em dia"),
+      };
+    }));
+    this.set("gsi_data_version", { version: VERSION });
+  },
 
   restoreDefaults() {
     localStorage.clear();
@@ -277,6 +317,7 @@ export const storageService = {
         priority: "Média",
         technicalDescription: "Desobstruir dreno do split da recepção principal.",
         status: "Em execução",
+        operationalSituation: "Em execução",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
@@ -309,6 +350,7 @@ export const storageService = {
         priority: "Alta",
         technicalDescription: "Manutenção mensal preventiva do Chiller A.",
         status: "Aguardando material",
+        operationalSituation: "Planejamento",
         responsibleId: "usr-4",
         checklist: [
           { id: "ci-1", description: "Verificar e limpar filtros de ar", required: true, result: "Não se aplica" },
@@ -342,6 +384,7 @@ export const storageService = {
         priority: "Urgente",
         technicalDescription: "Substituir válvula de descarga da recepção.",
         status: "Aguardando estoque",
+        operationalSituation: "Planejamento",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
@@ -372,6 +415,7 @@ export const storageService = {
         priority: "Alta",
         technicalDescription: "Verificar ruído no ventilador do AC do Auditório",
         status: "Planejada",
+        operationalSituation: "Planejamento",
         responsibleId: "usr-6",
         checklist: [],
         materials: [],
@@ -392,6 +436,7 @@ export const storageService = {
         priority: "Média",
         technicalDescription: "Manutenção semestral do QGBT. Reaperto e limpeza.",
         status: "Programada",
+        operationalSituation: "Programada",
         responsibleId: "usr-4",
         providerId: "prov-3",
         deadline: new Date(Date.now() + 259200000).toISOString(),
@@ -413,6 +458,7 @@ export const storageService = {
         priority: "Média",
         technicalDescription: "Troca da torneira da copa",
         status: "Concluída",
+        operationalSituation: "Concluída",
         responsibleId: "usr-4",
         checklist: [],
         materials: [
@@ -453,6 +499,7 @@ export const storageService = {
         alertDaysCritical: 15,
         number: "ALV-12345/2025",
         status: "Atenção",
+        value: 1840,
         expirationDate: new Date(Date.now() + 86400000 * 15).toISOString(),
         attachments: [],
         createdAt: new Date(Date.now() - 86400000 * 300).toISOString(),
@@ -475,6 +522,7 @@ export const storageService = {
         alertDaysCritical: 20,
         number: "AVCB-8877/2026",
         status: "Vigente",
+        value: 3200,
         expirationDate: new Date(Date.now() + 86400000 * 250).toISOString(),
         attachments: [],
         createdAt: new Date(Date.now() - 86400000 * 100).toISOString(),
@@ -497,6 +545,7 @@ export const storageService = {
         alertDaysCritical: 15,
         number: "LAU-SPDA-RJ-001",
         status: "Crítico",
+        value: 2750,
         expirationDate: new Date(Date.now() - 86400000 * 10).toISOString(), // Vencido
         attachments: [],
         createdAt: new Date(Date.now() - 86400000 * 400).toISOString(),
@@ -504,8 +553,8 @@ export const storageService = {
         active: true
       }
     ];
-    docs.push({ id: "doc-4", type: "Contrato", title: "Contrato de Manutenção de Elevadores", unitId: "u-df", issuer: "Elevadores Capital S/A", regulatoryBody: "Gestão de Contratos CNC", number: "CTR-ELV-2026", issueDate: new Date(Date.now() - 86400000 * 60).toISOString(), expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(), periodicity: "Anual", scope: "Periódico", responsibleId: "usr-3", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
-    docs.push({ id: "doc-5", type: "Conta recorrente", title: "Renovação mensal de licença de descarte", unitId: "u-rj", issuer: "Prefeitura Municipal", regulatoryBody: "Controle Ambiental", number: "REC-AMB-RJ", periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 5, responsibleId: "usr-2", requiresART: false, alertDaysAttention: 10, alertDaysCritical: 3, status: "Vigente", attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-4", type: "Contrato", title: "Contrato de Manutenção de Elevadores", unitId: "u-df", issuer: "Elevadores Capital S/A", regulatoryBody: "Gestão de Contratos CNC", number: "CTR-ELV-2026", issueDate: new Date(Date.now() - 86400000 * 60).toISOString(), expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(), periodicity: "Anual", scope: "Periódico", responsibleId: "usr-3", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, status: "Vigente", value: 28800, attachments: [{ id: "att-doc-4", name: "contrato-elevadores-2026.pdf", type: "application/pdf", size: 726016, uploadedAt: new Date(Date.now() - 86400000 * 60).toISOString(), url: "https://exemplo.cnc.br/documentos/contrato-elevadores-2026.pdf" }], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-5", type: "Conta recorrente", title: "Renovação mensal de licença de descarte", unitId: "u-rj", issuer: "Prefeitura Municipal", regulatoryBody: "Controle Ambiental", number: "REC-AMB-RJ", periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 5, responsibleId: "usr-2", requiresART: false, alertDaysAttention: 10, alertDaysCritical: 3, status: "Vigente", value: 480, attachments: [{ id: "att-doc-5", name: "licenca-descarte-competencia-atual.pdf", type: "application/pdf", size: 132096, uploadedAt: new Date(Date.now() - 86400000 * 12).toISOString(), url: "https://exemplo.cnc.br/documentos/licenca-descarte-rj.pdf" }], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
     this.set("gsi_documents", docs);
 
     const plans: PreventivePlan[] = [
@@ -524,6 +573,10 @@ export const storageService = {
         responsibleId: "usr-4",
         providerId: "prov-1",
         estimatedValue: 900,
+        expectedWorkOrders: 12,
+        alertDaysAttention: 10,
+        alertDaysCritical: 3,
+        scheduleStatus: "Atrasada",
         nextExecution: new Date(Date.now() - 86400000 * 2).toISOString(), // Atrasado e gerou a OS-2
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
@@ -546,6 +599,10 @@ export const storageService = {
         responsibleId: "usr-4",
         providerId: "prov-3",
         estimatedValue: 1500,
+        expectedWorkOrders: 2,
+        alertDaysAttention: 30,
+        alertDaysCritical: 10,
+        scheduleStatus: "Próxima",
         nextExecution: new Date(Date.now() + 86400000 * 30).toISOString(), 
         checklist: checklistTemplates[1].items.map(i => ({...i})),
         status: "Ativo",
@@ -568,6 +625,10 @@ export const storageService = {
         responsibleId: "usr-4",
         providerId: "prov-1",
         estimatedValue: 750,
+        expectedWorkOrders: 12,
+        alertDaysAttention: 10,
+        alertDaysCritical: 3,
+        scheduleStatus: "Próxima",
         nextExecution: new Date(Date.now() + 86400000 * 15).toISOString(), 
         checklist: checklistTemplates[0].items.map(i => ({...i})),
         status: "Ativo",
