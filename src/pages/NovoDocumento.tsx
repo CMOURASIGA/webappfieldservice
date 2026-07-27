@@ -15,6 +15,7 @@ export const NovoDocumento = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState<Partial<Document>>({
     title: "",
@@ -34,6 +35,7 @@ export const NovoDocumento = () => {
     alertDaysAttention: 30,
     alertDaysCritical: 15,
     observations: "",
+    value: 0,
   });
 
   useEffect(() => {
@@ -54,14 +56,20 @@ export const NovoDocumento = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const toAttachment = (file: File) => new Promise<any>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ id: crypto.randomUUID(), name: file.name, type: file.type, size: file.size, uploadedAt: new Date().toISOString(), dataUrl: reader.result as string });
+    reader.readAsDataURL(file);
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const newDoc: Document = {
       ...(formData as any),
       id: uuidv4(),
       status: "Vigente",
-      attachments: [],
+      attachments: await Promise.all(pendingFiles.map(toAttachment)),
       versions: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -105,6 +113,15 @@ export const NovoDocumento = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input label="Número/Identificação *" name="number" value={formData.number} onChange={handleChange} required />
               <Input label="Órgão Regulador / Emissor *" name="regulatoryBody" value={formData.regulatoryBody} onChange={handleChange} required />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input label="Valor do documento (R$)" name="value" type="number" min="0" step="0.01" value={formData.value || ""} onChange={handleChange} />
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Anexos do documento</label>
+                <input className="block w-full rounded-md border-2 border-slate-300 bg-white p-2 text-sm" type="file" multiple onChange={(event) => setPendingFiles(Array.from(event.target.files || []))} />
+                {pendingFiles.length > 0 && <p className="mt-2 text-xs text-slate-600">{pendingFiles.length} arquivo(s) serão anexados ao salvar.</p>}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
