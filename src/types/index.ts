@@ -85,6 +85,10 @@ export interface Request {
 
 export type WorkOrderStatus = "Nova" | "Em planejamento" | "Planejada" | "Atribuída" | "Atribuída" | "Aguardando estoque" | "Aguardando material" | "Material liberado" | "Programada" | "Em execução" | "Em execução" | "Pausada" | "Aguardando terceiro" | "Em validação" | "Em validação" | "Concluída" | "Concluída" | "Cancelada" | "Reaberta";
 
+// Situação operacional é a forma alternativa de movimentar a OS. Os valores
+// precisam ser idênticos às colunas apresentadas no Kanban.
+export type WorkOrderKanbanColumn = "Nova" | "Planejamento" | "Programada" | "Em execução" | "Validação" | "Concluída";
+
 export interface OSMaterial {
   id: string;
   materialId?: string; // Se preenchido, é um material cadastrado no estoque
@@ -132,7 +136,7 @@ export interface WorkOrder {
   plannedDate?: string;
   deadline?: string;
   status: WorkOrderStatus;
-  operationalSituation?: "Programada" | "Realizada" | "Pausada" | "Cancelada";
+  operationalSituation?: WorkOrderKanbanColumn;
   checklist: ChecklistItem[];
   materials?: OSMaterial[];
   supplyStatus?: SupplyStatus;
