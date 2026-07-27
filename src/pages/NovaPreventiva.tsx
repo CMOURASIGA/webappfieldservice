@@ -32,6 +32,7 @@ export const NovaPreventiva = () => {
     type: "Preventiva",
     description: "",
     periodicity: "mensal",
+    expectedWorkOrders: "12",
     nextExecution: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
     providerId: "",
     responsibleId: "",
@@ -100,6 +101,7 @@ export const NovaPreventiva = () => {
       templateId: formData.templateId || undefined,
       description: formData.description,
       periodicity: formData.periodicity,
+      expectedWorkOrders: Number(formData.expectedWorkOrders || 1),
       startDate: new Date(formData.nextExecution).toISOString(),
       nextExecution: new Date(formData.nextExecution).toISOString(),
       providerId: formData.providerId,
@@ -218,6 +220,8 @@ export const NovaPreventiva = () => {
                   onChange={e => setFormData({ ...formData, nextExecution: e.target.value })}
                 />
               </div>
+              <Input type="number" min="1" label="Total de OS previstas no plano" value={formData.expectedWorkOrders} onChange={e => setFormData({ ...formData, expectedWorkOrders: e.target.value })} />
+              <p className="-mt-4 text-xs text-slate-500 md:col-span-2">Informe quantas ordens este plano deve gerar dentro do seu ciclo de acompanhamento. A periodicidade continua definindo o intervalo entre as gerações.</p>
               <Input type="number" min="0" step="0.01" label="Valor estimado" value={formData.estimatedValue} onChange={e => setFormData({ ...formData, estimatedValue: e.target.value })} />
               <div className="grid grid-cols-2 gap-4 rounded-lg border-2 border-slate-300 bg-slate-50 p-3">
                 <Input type="number" min="1" label="Alerta de atenção (dias)" value={formData.alertDaysAttention} onChange={e => setFormData({ ...formData, alertDaysAttention: e.target.value })} />
