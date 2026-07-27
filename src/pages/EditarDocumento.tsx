@@ -42,7 +42,7 @@ export const EditarDocumento = () => {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev!, [name]: checked }));
     } else if (type === "number") {
-      setFormData(prev => ({ ...prev!, [name]: parseInt(value) || 0 }));
+      setFormData(prev => ({ ...prev!, [name]: value === "" ? 0 : Number(value) || 0 }));
     } else {
       setFormData(prev => ({ ...prev!, [name]: value }));
     }
@@ -97,6 +97,13 @@ export const EditarDocumento = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input label="Número/Identificação *" name="number" value={formData.number} onChange={handleChange} required />
               <Input label="Órgão Regulador / Emissor *" name="regulatoryBody" value={formData.regulatoryBody} onChange={handleChange} required />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input label="Valor do documento (R$)" name="value" type="number" min="0" step="0.01" value={formData.value ?? ""} onChange={handleChange} />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                Informe o valor contratado, taxa ou custo associado ao documento. Este valor será considerado nos relatórios documentais.
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
