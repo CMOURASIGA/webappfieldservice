@@ -284,6 +284,17 @@ export const DetalheOrdem = () => {
     }
   };
 
+  const updateOperationalSituation = (operationalSituation: NonNullable<WorkOrder["operationalSituation"]>) => {
+    if (!order || !currentUser) return;
+    const orders = storageService.get("gsi_work_orders");
+    const idx = orders.findIndex((item: WorkOrder) => item.id === order.id);
+    if (idx === -1) return;
+    orders[idx] = { ...orders[idx], operationalSituation, updatedAt: new Date().toISOString() };
+    storageService.set("gsi_work_orders", orders);
+    storageService.logAudit(currentUser.id, "Alterou situação operacional da OS", order.id, "WorkOrder", order.operationalSituation, operationalSituation);
+    loadOrder();
+  };
+
   const handlePause = () => {
     if (!pauseReason) {
       alert("Selecione um motivo para a pausa.");
@@ -441,7 +452,7 @@ export const DetalheOrdem = () => {
             setModalTechId(order.responsibleId || order.providerId || "");
             setShowScheduleModal(true);
           }}><CalendarClock className="h-4 w-4" /> Programar</Button>
-          <Button variant="secondary" className="gap-2 border-slate-400 shadow-1" onClick={() => window.open(`/ordens/${order.id}/imprimir`, "_blank", "noopener,noreferrer")}><Printer className="w-4 h-4" /> Imprimir</Button>
+          <Button variant="secondary" className="gap-2 border-slate-400 shadow-1" onClick={() => { const printWindow = window.open(`/ordens/${order.id}/imprimir`, "_blank"); if (!printWindow) alert("Permita a abertura de nova aba para imprimir a OS."); }}><Printer className="w-4 h-4" /> Imprimir</Button>
         </div>
       </div>
 
@@ -452,11 +463,14 @@ export const DetalheOrdem = () => {
               <div className="flex justify-between items-start">
                 <CardTitle>Informações Técnicas</CardTitle>
                 <Badge variant={order.status === 'Concluída' ? 'success' : order.status === 'Em execução' ? 'info' : 'warning'}>
-                  {order.status}
+                  {order.status} {order.operationalSituation ? `• ${order.operationalSituation}` : ""}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="rounded-lg border-2 border-slate-300 bg-slate-50 p-4">
+                <Select label="Situação operacional da OS" value={order.operationalSituation || "Programada"} onChange={event => updateOperationalSituation(event.target.value as NonNullable<WorkOrder["operationalSituation"]>)} options={[{ value: "Programada", label: "Programada" }, { value: "Realizada", label: "Realizada" }, { value: "Pausada", label: "Pausada" }, { value: "Cancelada", label: "Cancelada" }]} />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs font-semibold text-slate-500 uppercase">Unidade</p>
