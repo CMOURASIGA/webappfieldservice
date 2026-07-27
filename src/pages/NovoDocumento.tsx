@@ -7,7 +7,7 @@ import { Card, CardContent } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
-import { ArrowLeft, Upload, FileText } from "lucide-react";
+import { ArrowLeft, Upload, FileText, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 export const NovoDocumento = () => {
@@ -61,6 +61,17 @@ export const NovoDocumento = () => {
     reader.onload = () => resolve({ id: crypto.randomUUID(), name: file.name, type: file.type, size: file.size, uploadedAt: new Date().toISOString(), dataUrl: reader.result as string });
     reader.readAsDataURL(file);
   });
+
+  const handleFilesSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setPendingFiles(previous => [...previous, ...files]);
+    // Permite escolher o mesmo arquivo novamente depois de removê-lo da lista.
+    event.target.value = "";
+  };
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles(previous => previous.filter((_, fileIndex) => fileIndex !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,8 +130,32 @@ export const NovoDocumento = () => {
               <Input label="Valor do documento (R$)" name="value" type="number" min="0" step="0.01" value={formData.value || ""} onChange={handleChange} />
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">Anexos do documento</label>
-                <input className="block w-full rounded-md border-2 border-slate-300 bg-white p-2 text-sm" type="file" multiple onChange={(event) => setPendingFiles(Array.from(event.target.files || []))} />
-                {pendingFiles.length > 0 && <p className="mt-2 text-xs text-slate-600">{pendingFiles.length} arquivo(s) serão anexados ao salvar.</p>}
+                <input id="document-attachments" className="sr-only" type="file" multiple onChange={handleFilesSelected} />
+                <label
+                  htmlFor="document-attachments"
+                  className="flex min-h-24 cursor-pointer items-center justify-center gap-3 rounded-lg border-2 border-dashed border-brand-300 bg-brand-50/40 px-4 py-5 text-center transition-colors hover:border-brand-500 hover:bg-brand-50"
+                >
+                  <Upload className="h-5 w-5 shrink-0 text-brand-600" />
+                  <span>
+                    <span className="block text-sm font-semibold text-brand-700">Selecionar arquivos</span>
+                    <span className="mt-0.5 block text-xs text-slate-600">Clique aqui para anexar documentos, imagens ou PDFs.</span>
+                  </span>
+                </label>
+                {pendingFiles.length > 0 && (
+                  <ul className="mt-3 space-y-2" aria-label="Arquivos selecionados">
+                    {pendingFiles.map((file, index) => (
+                      <li key={`${file.name}-${file.size}-${index}`} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2">
+                        <FileText className="h-4 w-4 shrink-0 text-brand-600" />
+                        <span className="min-w-0 flex-1 truncate text-sm text-slate-700">{file.name}</span>
+                        <span className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</span>
+                        <button type="button" onClick={() => removePendingFile(index)} className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-red-600" aria-label={`Remover ${file.name}`}>
+                          <X className="h-4 w-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-2 text-xs text-slate-500">Os arquivos serão vinculados ao documento ao salvar o cadastro.</p>
               </div>
             </div>
 
