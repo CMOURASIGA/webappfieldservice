@@ -16,6 +16,8 @@ export const NovoDocumento = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  // Delimita visualmente cada área de preenchimento no formulário de documentos.
+  const documentFieldClass = "document-form-field";
 
   const [formData, setFormData] = useState<Partial<Document>>({
     title: "",
@@ -110,8 +112,8 @@ export const NovoDocumento = () => {
         <Card>
           <CardContent className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Título do Documento *" name="title" value={formData.title} onChange={handleChange} required />
-              <Select label="Tipo *" name="type" value={formData.type} onChange={handleChange} required>
+              <Input className={documentFieldClass} label="Título do Documento *" name="title" value={formData.title} onChange={handleChange} required />
+              <Select className={documentFieldClass} label="Tipo *" name="type" value={formData.type} onChange={handleChange} required>
                 <option value="Alvará">Alvará</option>
                 <option value="Licença">Licença</option>
                 <option value="Laudo">Laudo</option>
@@ -122,12 +124,12 @@ export const NovoDocumento = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Número/Identificação *" name="number" value={formData.number} onChange={handleChange} required />
-              <Input label="Órgão Regulador / Emissor *" name="regulatoryBody" value={formData.regulatoryBody} onChange={handleChange} required />
+              <Input className={documentFieldClass} label="Número/Identificação *" name="number" value={formData.number} onChange={handleChange} required />
+              <Input className={documentFieldClass} label="Órgão Regulador / Emissor *" name="regulatoryBody" value={formData.regulatoryBody} onChange={handleChange} required />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Valor do documento (R$)" name="value" type="number" min="0" step="0.01" value={formData.value || ""} onChange={handleChange} />
+              <Input className={documentFieldClass} label="Valor do documento (R$)" name="value" type="number" min="0" step="0.01" value={formData.value || ""} onChange={handleChange} />
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">Anexos do documento</label>
                 <input id="document-attachments" className="sr-only" type="file" multiple onChange={handleFilesSelected} />
@@ -160,11 +162,11 @@ export const NovoDocumento = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select label="Unidade *" name="unitId" value={formData.unitId} onChange={handleChange} required>
+              <Select className={documentFieldClass} label="Unidade *" name="unitId" value={formData.unitId} onChange={handleChange} required>
                 <option value="">Selecione...</option>
                 {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
               </Select>
-              <Select label="Local/Área (Opcional)" name="locationId" value={formData.locationId} onChange={handleChange}>
+              <Select className={documentFieldClass} label="Local/Área (Opcional)" name="locationId" value={formData.locationId} onChange={handleChange}>
                 <option value="">Geral da Unidade</option>
                 {locations.filter(l => l.unitId === formData.unitId).map(l => (
                   <option key={l.id} value={l.id}>{l.name}</option>
@@ -173,9 +175,9 @@ export const NovoDocumento = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Input label="Data de Emissão" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
-              <Input label="Data de Vencimento" name="expirationDate" type="date" value={formData.expirationDate} onChange={handleChange} />
-              <Select label="Periodicidade" name="periodicity" value={formData.periodicity} onChange={handleChange}>
+              <Input className={documentFieldClass} label="Data de Emissão" name="issueDate" type="date" value={formData.issueDate} onChange={handleChange} />
+              <Input className={documentFieldClass} label="Data de Vencimento" name="expirationDate" type="date" value={formData.expirationDate} onChange={handleChange} />
+              <Select className={documentFieldClass} label="Periodicidade" name="periodicity" value={formData.periodicity} onChange={handleChange}>
                 <option value="Único">Único</option>
                 <option value="Mensal">Mensal</option>
                 <option value="Semestral">Semestral</option>
@@ -186,16 +188,16 @@ export const NovoDocumento = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select label="Regra de acompanhamento" name="scope" value={formData.scope} onChange={handleChange}>
+              <Select className={documentFieldClass} label="Regra de acompanhamento" name="scope" value={formData.scope} onChange={handleChange}>
                 <option value="Único">Vencimento único</option>
                 <option value="Periódico">Documento periódico</option>
                 <option value="Recorrente">Compromisso recorrente mensal</option>
               </Select>
-              {formData.scope === "Recorrente" && <Input label="Dia de vencimento mensal" name="recurrenceDay" type="number" min="1" max="28" value={formData.recurrenceDay} onChange={handleChange} />}
+              {formData.scope === "Recorrente" && <Input className={documentFieldClass} label="Dia de vencimento mensal" name="recurrenceDay" type="number" min="1" max="28" value={formData.recurrenceDay} onChange={handleChange} />}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Select label="Responsável" name="responsibleId" value={formData.responsibleId} onChange={handleChange}>
+              <Select className={documentFieldClass} label="Responsável" name="responsibleId" value={formData.responsibleId} onChange={handleChange}>
                 <option value="">Selecione...</option>
                 {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
               </Select>
@@ -209,12 +211,12 @@ export const NovoDocumento = () => {
               <h3 className="text-sm font-semibold text-slate-800">Configuração de Alertas</h3>
               <p className="text-xs text-slate-500">Defina com quantos dias de antecedência o sistema deve alertar sobre o vencimento.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input label="Dias para Status 'Atenção'" name="alertDaysAttention" type="number" value={formData.alertDaysAttention} onChange={handleChange} min="1" />
-                <Input label="Dias para Status 'Crítico'" name="alertDaysCritical" type="number" value={formData.alertDaysCritical} onChange={handleChange} min="1" />
+                <Input className={documentFieldClass} label="Dias para Status 'Atenção'" name="alertDaysAttention" type="number" value={formData.alertDaysAttention} onChange={handleChange} min="1" />
+                <Input className={documentFieldClass} label="Dias para Status 'Crítico'" name="alertDaysCritical" type="number" value={formData.alertDaysCritical} onChange={handleChange} min="1" />
               </div>
             </div>
 
-            <Textarea label="Observações" name="observations" value={formData.observations} onChange={handleChange} rows={3} />
+            <Textarea className={documentFieldClass} label="Observações" name="observations" value={formData.observations} onChange={handleChange} rows={3} />
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <Button type="button" variant="secondary" onClick={() => navigate("/documentos")}>Cancelar</Button>
