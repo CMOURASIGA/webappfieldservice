@@ -14,20 +14,20 @@ export const GestaoServicosDashboard = () => {
           <p className="text-sm text-slate-500">Central operacional de serviços, ordens, ativos e técnicos.</p>
         </PageHeaderTitleContent>
         <PageHeaderActionsContainer>
-          <Button variant="outline" className="gap-2" onClick={() => navigate("/servicos/nova")}><Plus className="w-4 h-4" /> Nova Corretiva</Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/preventivas/nova")}><Plus className="w-4 h-4" /> Nova Preventiva</Button>
+          <Button variant="outline" className="gap-2" onClick={() => navigate("/servicos/nova")}><Plus className="w-4 h-4" /> Nova Corretiva</Button>
           <Button variant="create" className="gap-2" onClick={() => navigate("/ordens/nova")}><Plus className="w-4 h-4" /> Nova OS</Button>
           <Button variant="outline" className="gap-2" onClick={() => navigate("/agenda")}><Calendar className="w-4 h-4" /> Agenda</Button>
         </PageHeaderActionsContainer>
       </PageHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="hover:border-brand-300 hover:shadow-sm transition-all cursor-pointer" onClick={() => navigate("/servicos/corretivas")}>
+        <Card className="hover:border-brand-300 hover:shadow-sm transition-all cursor-pointer" onClick={() => navigate("/preventivas")}>
           <CardHeader>
-            <h3 className="flex items-center gap-2 font-semibold"><Inbox className="w-5 h-5 text-brand-600" /> Corretivas</h3>
+            <h3 className="flex items-center gap-2 font-semibold"><CalendarClock className="w-5 h-5 text-brand-600" /> Preventivas</h3>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Gerencie solicitações e necessidades pontuais.</p>
+            <p className="text-sm text-slate-500">Gestão de planos e calendários recorrentes.</p>
           </CardContent>
         </Card>
 
@@ -40,12 +40,12 @@ export const GestaoServicosDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="hover:border-brand-300 hover:shadow-sm transition-all cursor-pointer" onClick={() => navigate("/preventivas")}>
+        <Card className="hover:border-brand-300 hover:shadow-sm transition-all cursor-pointer" onClick={() => navigate("/servicos/corretivas")}>
           <CardHeader>
-            <h3 className="flex items-center gap-2 font-semibold"><CalendarClock className="w-5 h-5 text-brand-600" /> Preventivas</h3>
+            <h3 className="flex items-center gap-2 font-semibold"><Inbox className="w-5 h-5 text-brand-600" /> Corretivas</h3>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">Gestão de planos e calendários recorrentes.</p>
+            <p className="text-sm text-slate-500">Gerencie solicitações e necessidades pontuais.</p>
           </CardContent>
         </Card>
         
