@@ -132,6 +132,7 @@ export interface WorkOrder {
   plannedDate?: string;
   deadline?: string;
   status: WorkOrderStatus;
+  operationalSituation?: "Programada" | "Realizada" | "Pausada" | "Cancelada";
   checklist: ChecklistItem[];
   materials?: OSMaterial[];
   supplyStatus?: SupplyStatus;
@@ -174,6 +175,7 @@ export interface PreventivePlan {
   categoryId: string;
   description: string;
   periodicity: string;
+  expectedWorkOrders?: number;
   lastExecution?: string;
   startDate?: string;
   nextExecution: string;
@@ -247,6 +249,7 @@ export interface Document {
   scope?: "Único" | "Periódico" | "Recorrente";
   recurrenceDay?: number;
   recurrenceHistory?: { id: string; competence: string; completedAt: string; notes?: string }[];
+  value?: number;
 }
 
 export interface Provider {
