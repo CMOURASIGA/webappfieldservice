@@ -95,28 +95,26 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle>{material ? "Editar Material" : "Novo Material"}</DialogTitle>
+          <p className="text-sm text-slate-600">Informe os dados de identificação, local de estoque e níveis de reposição do material.</p>
         </DialogHeader>
         
-        <form id="novo-material-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Código *</label>
+        <form id="novo-material-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-x-5 gap-y-5 py-3 sm:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Código *</label>
               <Input {...register("code")} placeholder="Ex: MAT-001" />
               {errors.code && <span className="text-xs text-red-500">{errors.code.message as string}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome *</label>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Nome *</label>
               <Input {...register("name")} placeholder="Ex: Lâmpada LED" />
               {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Categoria *</label>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Categoria *</label>
               <Select onValueChange={(val) => setValue("category", val)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -124,9 +122,9 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
                 </SelectContent>
               </Select>
               {errors.category && <span className="text-xs text-red-500">{errors.category.message as string}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Unidade de Medida *</label>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Unidade de medida *</label>
               <Select onValueChange={(val) => setValue("unit", val)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -139,12 +137,10 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
                 </SelectContent>
               </Select>
               {errors.unit && <span className="text-xs text-red-500">{errors.unit.message as string}</span>}
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Unidade Organizacional *</label>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Unidade organizacional *</label>
               <Select onValueChange={(val) => setValue("unitId", val)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -152,44 +148,39 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
                 </SelectContent>
               </Select>
               {errors.unitId && <span className="text-xs text-red-500">{errors.unitId.message as string}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Local (Almoxarifado)</label>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Local / almoxarifado</label>
               <Select onValueChange={(val) => setValue("locationId", val)}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
                   {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Estoque Mínimo *</label>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Estoque mínimo *</label>
               <Input type="number" {...register("minStock")} />
               {errors.minStock && <span className="text-xs text-red-500">{errors.minStock.message as string}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Estoque Ideal</label>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Estoque ideal</label>
               <Input type="number" {...register("idealStock")} />
-            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Valor unitário estimado</label>
+          <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
+            <label className="text-sm font-semibold text-slate-800">Valor unitário estimado</label>
             <Input type="number" min="0" step="0.01" {...register("unitPrice")} placeholder="0,00" />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Fabricante</label>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Fabricante</label>
               <Input {...register("manufacturer")} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Modelo</label>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-800">Modelo</label>
               <Input {...register("model")} />
-            </div>
           </div>
         </form>
         
