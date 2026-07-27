@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus, Asset } from "../types";
+import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus, WorkOrderKanbanColumn, Asset } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
@@ -56,7 +56,7 @@ export const Ordens = () => {
   };
 
   // Kanban setup
-  const KANBAN_COLUMNS = [
+  const KANBAN_COLUMNS: WorkOrderKanbanColumn[] = [
     "Nova",
     "Planejamento",
     "Programada",
@@ -125,9 +125,9 @@ export const Ordens = () => {
     return true;
   });
 
-  const moveOrder = (id: string, column: string) => {
+  const moveOrder = (id: string, column: WorkOrderKanbanColumn) => {
     const status: Record<string, WorkOrderStatus> = { Nova: "Nova", Planejamento: "Planejada", Programada: "Programada", "Em execução": "Em execução", Validação: "Em validação", "Concluída": "Concluída" };
-    const updated = orders.map(order => order.id === id ? { ...order, status: status[column], operationalSituation: column === "Programada" ? "Programada" : column === "Concluída" ? "Realizada" : order.operationalSituation, updatedAt: new Date().toISOString() } : order);
+    const updated = orders.map(order => order.id === id ? { ...order, status: status[column], operationalSituation: column, updatedAt: new Date().toISOString() } : order);
     storageService.set("gsi_work_orders", updated); setOrders(updated);
   };
 
