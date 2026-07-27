@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus } from "../types";
+import { WorkOrder, Unit, Location, Category, User, WorkOrderStatus, Asset } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardFooter } from "../components/ui/Card";
 import { CardFooterActions } from "../components/ui/CardFooterActions";
@@ -17,11 +17,17 @@ export const Ordens = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todas";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [numberFilter, setNumberFilter] = useState("");
+  const [assetFilter, setAssetFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [technicianFilter, setTechnicianFilter] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
 
   useEffect(() => {
     loadData();
@@ -33,6 +39,7 @@ export const Ordens = () => {
     setLocations(storageService.get("gsi_locations") || []);
     setCategories(storageService.get("gsi_categories") || []);
     setUsers(storageService.get("gsi_users") || []);
+    setAssets(storageService.get("gsi_assets") || []);
   };
 
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
@@ -103,9 +110,13 @@ export const Ordens = () => {
   };
 
   const filteredOrders = orders.filter(o => {
-    const term = searchTerm.trim().toLowerCase();
-    if (term && ![o.number, o.technicalDescription, getUnitName(o.unitId), getLocationName(o.locationId), getUserName(o.responsibleId)]
-      .some((value) => value?.toLowerCase().includes(term))) return false;
+    const relevantDate = o.plannedStart || o.plannedDate || o.createdAt;
+    if (numberFilter && !o.number.toLowerCase().includes(numberFilter.toLowerCase())) return false;
+    if (assetFilter && o.assetId !== assetFilter) return false;
+    if (locationFilter && o.locationId !== locationFilter) return false;
+    if (technicianFilter && o.responsibleId !== technicianFilter) return false;
+    if (startDateFilter && new Date(relevantDate) < new Date(`${startDateFilter}T00:00:00`)) return false;
+    if (endDateFilter && new Date(relevantDate) > new Date(`${endDateFilter}T23:59:59`)) return false;
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Abertas") return !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Sem Responsavel") return !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status);
@@ -113,6 +124,12 @@ export const Ordens = () => {
     if (statusFilter === "Falta Material") return ["Aguardando material", "Aguardando estoque"].includes(o.status);
     return true;
   });
+
+  const moveOrder = (id: string, column: string) => {
+    const status: Record<string, WorkOrderStatus> = { Nova: "Nova", Planejamento: "Planejada", Programada: "Programada", "Em execução": "Em execução", Validação: "Em validação", "Concluída": "Concluída" };
+    const updated = orders.map(order => order.id === id ? { ...order, status: status[column], operationalSituation: column === "Programada" ? "Programada" : column === "Concluída" ? "Realizada" : order.operationalSituation, updatedAt: new Date().toISOString() } : order);
+    storageService.set("gsi_work_orders", updated); setOrders(updated);
+  };
 
   return (
     <div className="space-y-6">
@@ -130,7 +147,14 @@ export const Ordens = () => {
         }
       />
 
-      <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por OS, descrição, unidade, local ou responsável..." resultCount={filteredOrders.length} />
+      <div className="grid grid-cols-1 gap-3 rounded-lg border-2 border-slate-300 bg-white p-4 md:grid-cols-3">
+        <input className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" placeholder="Número da OS" value={numberFilter} onChange={e => setNumberFilter(e.target.value)} />
+        <select className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" value={assetFilter} onChange={e => setAssetFilter(e.target.value)}><option value="">Todos os ativos</option>{assets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}</select>
+        <select className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" value={locationFilter} onChange={e => setLocationFilter(e.target.value)}><option value="">Todos os locais</option>{locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
+        <select className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" value={technicianFilter} onChange={e => setTechnicianFilter(e.target.value)}><option value="">Todos os técnicos</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
+        <input className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" type="date" aria-label="Data inicial" value={startDateFilter} onChange={e => setStartDateFilter(e.target.value)} />
+        <input className="rounded-md border-2 border-slate-300 px-3 py-2 text-sm" type="date" aria-label="Data final" value={endDateFilter} onChange={e => setEndDateFilter(e.target.value)} />
+      </div>
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-4">
         <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-md">
@@ -167,7 +191,7 @@ export const Ordens = () => {
             return (
               <Card key={order.id} className="operational-card flex h-full flex-col">
                 <CardContent className="p-4 flex flex-col h-full">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-2"><Badge variant="default">{order.operationalSituation || order.status}</Badge>
                     <div>
                       <h3 className="font-semibold text-slate-900 line-clamp-2" title={order.technicalDescription}>{order.technicalDescription}</h3>
                       <p className="text-xs text-slate-500 font-mono mt-0.5">{order.number}</p>
@@ -213,7 +237,7 @@ export const Ordens = () => {
           {KANBAN_COLUMNS.map(col => {
             const colOrders = filteredOrders.filter(o => getKanbanColumn(o.status) === col);
             return (
-              <div key={col} className="flex w-80 flex-none flex-col border-r-2 border-slate-400 bg-slate-50 last:border-r-0">
+              <div key={col} onDragOver={(e) => e.preventDefault()} onDrop={(e) => moveOrder(e.dataTransfer.getData("orderId"), col)} className="flex w-80 flex-none flex-col border-r-2 border-slate-400 bg-slate-50 last:border-r-0">
                 <div className="mb-4 flex items-center justify-between border-b-2 border-slate-400 bg-slate-100 p-4">
                   <h3 className="font-semibold text-slate-700">{col}</h3>
                   <span className="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-full">{colOrders.length}</span>
@@ -223,7 +247,7 @@ export const Ordens = () => {
                   {colOrders.map(order => {
                     const conditions = getConditionLabels(order);
                     return (
-                      <div key={order.id} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-brand-300" onClick={() => navigate(`/ordens/${order.id}`)}>
+                      <div key={order.id} draggable onDragStart={(e) => e.dataTransfer.setData("orderId", order.id)} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-grab hover:border-brand-300" onClick={() => navigate(`/ordens/${order.id}`)}>
                         <div className="flex justify-between items-start mb-1">
                           <p className="text-xs font-mono text-slate-500">{order.number}</p>
                           <span
