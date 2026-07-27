@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, PreventivePlan, Document, User, Unit, TechnicianWorkSchedule, TechnicianUnavailability, Provider } from "../types";
+import { WorkOrder, PreventivePlan, Document, User, Unit, TechnicianWorkSchedule, TechnicianUnavailability, Provider, Asset } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
@@ -29,6 +29,8 @@ export const Agenda = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const [orders, setOrders] = useState<WorkOrder[]>([]);
+  const [plans, setPlans] = useState<PreventivePlan[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -37,6 +39,9 @@ export const Agenda = () => {
   
   const [unitFilter, setUnitFilter] = useState("");
   const [technicianFilter, setTechnicianFilter] = useState("");
+  const [assetFilter, setAssetFilter] = useState("");
+  const [orderFilter, setOrderFilter] = useState("");
+  const [agendaScope, setAgendaScope] = useState<"Todas" | "OS" | "Preventivas">("Todas");
   
   const [showUnscheduled, setShowUnscheduled] = useState(false);
   const [schedulingOrder, setSchedulingOrder] = useState<WorkOrder | null>(null);
@@ -57,6 +62,8 @@ export const Agenda = () => {
 
   const refreshData = () => {
     setOrders(storageService.get("gsi_work_orders"));
+    setPlans(storageService.get("gsi_preventive_plans") || []);
+    setAssets(storageService.get("gsi_assets") || []);
     setUsers(storageService.get("gsi_users"));
     setProviders(storageService.get("gsi_providers"));
     setUnits(storageService.get("gsi_units"));
@@ -117,17 +124,30 @@ export const Agenda = () => {
       !o.scheduleStatus
     ).filter(o => {
       if (unitFilter && o.unitId !== unitFilter) return false;
+      if (assetFilter && o.assetId !== assetFilter) return false;
+      if (orderFilter && !o.number.toLowerCase().includes(orderFilter.toLowerCase())) return false;
       return true;
     });
   };
 
   const getScheduledOrders = () => {
+    if (agendaScope === "Preventivas") return [];
     return orders.filter(o => o.plannedStart && o.plannedEnd).filter(o => {
       if (unitFilter && o.unitId !== unitFilter) return false;
+      if (assetFilter && o.assetId !== assetFilter) return false;
+      if (orderFilter && !o.number.toLowerCase().includes(orderFilter.toLowerCase())) return false;
       if (technicianFilter && !o.additionalTechnicianIds?.includes(technicianFilter) && o.responsibleId !== technicianFilter && o.providerId !== technicianFilter) return false;
       return true;
     });
   };
+
+  const scheduledPlans = () => plans.filter(plan => {
+    if (agendaScope === "OS") return false;
+    if (!plan.nextExecution || !plan.active || plan.status !== "Ativo") return false;
+    if (unitFilter && plan.unitId !== unitFilter) return false;
+    if (assetFilter && plan.assetId !== assetFilter) return false;
+    return true;
+  });
 
   const handleDrop = (e: React.DragEvent, date: Date, hour: number) => {
     e.preventDefault();
@@ -217,6 +237,7 @@ export const Agenda = () => {
 
   const renderAgendaWeek = () => {
     const scheduled = getScheduledOrders();
+    const preventiveEvents = scheduledPlans();
     
     return (
       <div className="agenda-grid flex h-[calc(100vh-250px)] flex-col border-2 border-slate-500">
@@ -281,6 +302,11 @@ export const Agenda = () => {
                         </div>
                       );
                     })}
+                    {preventiveEvents.filter(plan => { const date = parseISO(plan.nextExecution); return isSameDay(date, day) && (date.getHours() || 7) === hour; }).map(plan => (
+                      <Link key={plan.id} to={`/preventivas/${plan.id}`} className="absolute left-1 right-1 z-20 rounded border border-amber-400 bg-amber-100 p-1 text-xs shadow-sm hover:ring-2 hover:ring-amber-400" style={{ top: "2px", minHeight: "30px" }} title={`Preventiva: ${plan.description}`}>
+                        <div className="font-semibold text-amber-900">PREV {plan.code}</div><div className="truncate text-amber-800">{plan.description}</div>
+                      </Link>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -336,6 +362,7 @@ export const Agenda = () => {
                   </td>
                 </tr>
               ))}
+              {agendaScope !== "OS" && scheduledPlans().map(plan => <tr key={`plan-${plan.id}`} className="bg-amber-50 cursor-pointer" onClick={() => window.location.assign(`/preventivas/${plan.id}`)}><td className="px-6 py-4">{format(parseISO(plan.nextExecution), "dd/MM/yyyy HH:mm")}</td><td className="px-6 py-4"><div className="font-medium">Preventiva {plan.code}</div><div className="text-xs text-slate-600">{plan.description}</div></td><td className="px-6 py-4">Plano preventivo</td><td className="px-6 py-4">{units.find(u => u.id === plan.unitId)?.sigla || "-"}</td><td className="px-6 py-4"><Badge variant="warning">Preventiva</Badge></td></tr>)}
               {scheduled.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
@@ -504,6 +531,9 @@ export const Agenda = () => {
           <option value="">Todos os Técnicos</option>
           {executors.map(t => <option key={t.id} value={t.id}>{t.name} ({t.type})</option>)}
         </Select>
+        <Select className="w-48" value={assetFilter} onChange={e => setAssetFilter(e.target.value)}><option value="">Todos os ativos</option>{assets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}</Select>
+        <Input className="w-44" placeholder="Buscar OS" value={orderFilter} onChange={e => setOrderFilter(e.target.value)} />
+        <Select className="w-44" value={agendaScope} onChange={e => setAgendaScope(e.target.value as any)} options={[{ value: "Todas", label: "OS e preventivas" }, { value: "OS", label: "Somente OS" }, { value: "Preventivas", label: "Somente preventivas" }]} />
 
         <Button 
           variant={showUnscheduled ? "primary" : "secondary"} 
