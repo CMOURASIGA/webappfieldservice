@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { storageService } from "../services/storageService";
-import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, Provider, OSMaterial, StockMaterial } from "../types";
+import { WorkOrder, Unit, Location, Category, User, Asset, WorkOrderStatus, WorkOrderKanbanColumn, Provider, OSMaterial, StockMaterial } from "../types";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
@@ -284,12 +284,20 @@ export const DetalheOrdem = () => {
     }
   };
 
-  const updateOperationalSituation = (operationalSituation: NonNullable<WorkOrder["operationalSituation"]>) => {
+  const updateOperationalSituation = (operationalSituation: WorkOrderKanbanColumn) => {
     if (!order || !currentUser) return;
     const orders = storageService.get("gsi_work_orders");
     const idx = orders.findIndex((item: WorkOrder) => item.id === order.id);
     if (idx === -1) return;
-    orders[idx] = { ...orders[idx], operationalSituation, updatedAt: new Date().toISOString() };
+    const statusByKanbanColumn: Record<WorkOrderKanbanColumn, WorkOrderStatus> = {
+      "Nova": "Nova",
+      "Planejamento": "Planejada",
+      "Programada": "Programada",
+      "Em execução": "Em execução",
+      "Validação": "Em validação",
+      "Concluída": "Concluída",
+    };
+    orders[idx] = { ...orders[idx], status: statusByKanbanColumn[operationalSituation], operationalSituation, updatedAt: new Date().toISOString() };
     storageService.set("gsi_work_orders", orders);
     storageService.logAudit(currentUser.id, "Alterou situação operacional da OS", order.id, "WorkOrder", order.operationalSituation, operationalSituation);
     loadOrder();
@@ -469,7 +477,7 @@ export const DetalheOrdem = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="rounded-lg border-2 border-slate-300 bg-slate-50 p-4">
-                <Select label="Situação operacional da OS" value={order.operationalSituation || "Programada"} onChange={event => updateOperationalSituation(event.target.value as NonNullable<WorkOrder["operationalSituation"]>)} options={[{ value: "Programada", label: "Programada" }, { value: "Realizada", label: "Realizada" }, { value: "Pausada", label: "Pausada" }, { value: "Cancelada", label: "Cancelada" }]} />
+                <Select label="Situação operacional da OS" value={order.operationalSituation || (order.status === "Em planejamento" || order.status === "Planejada" ? "Planejamento" : order.status === "Em validação" ? "Validação" : order.status === "Cancelada" ? "Concluída" : order.status)} onChange={event => updateOperationalSituation(event.target.value as WorkOrderKanbanColumn)} options={[{ value: "Nova", label: "Nova" }, { value: "Planejamento", label: "Planejamento" }, { value: "Programada", label: "Programada" }, { value: "Em execução", label: "Em execução" }, { value: "Validação", label: "Validação" }, { value: "Concluída", label: "Concluída" }]} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
