@@ -13,6 +13,8 @@ import { Request } from "../types";
 import { FormGrid, OperationalPageHeader } from "../components/ui/OperationalPage";
 import { MapPinPlus, Save, X } from "lucide-react";
 
+type OrderFormTab = "geral" | "atendimento" | "programacao";
+
 export const NovaOrdem = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,6 +44,7 @@ export const NovaOrdem = () => {
 
   const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
   const [newLocationData, setNewLocationData] = useState({ name: "", type: "Ambiente" });
+  const [activeTab, setActiveTab] = useState<OrderFormTab>("geral");
 
   useEffect(() => {
     setUnits(storageService.get("gsi_units").filter(u => u.active));
@@ -159,58 +162,39 @@ export const NovaOrdem = () => {
       <Card>
         <CardContent className="p-0">
           <form onSubmit={handleSubmit}>
-            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
-              <div className="mb-5">
+            <div className="flex overflow-x-auto border-b border-slate-300 bg-slate-50 px-4 pt-4 sm:px-6">
+              {([
+                ["geral", "Informações gerais"],
+                ["atendimento", "Detalhes do atendimento"],
+                ["programacao", "Programação"],
+              ] as [OrderFormTab, string][]).map(([tab, label]) => (
+                <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`whitespace-nowrap border border-b-0 px-4 py-2.5 text-sm font-semibold transition-colors ${activeTab === tab ? "border-slate-300 bg-white text-brand-800" : "border-transparent text-slate-600 hover:bg-white hover:text-brand-800"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "geral" && <section className="p-5 sm:p-6">
+              <div className="mb-6">
                 <h2 className="text-base font-bold text-slate-900">Identificação e localização</h2>
-                <p className="mt-1 text-sm text-slate-600">Informe a unidade e o local somente quando forem úteis para organizar o atendimento.</p>
+                <p className="mt-1 text-sm text-slate-600">Informe unidade e local somente quando forem úteis para organizar o atendimento.</p>
               </div>
-            <FormGrid className="border-0 bg-transparent p-0">
-              <Select
-                label="Unidade"
-                value={formData.unitId}
-                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "" })}
-                options={units.map(u => ({ value: u.id, label: u.name }))}
-              />
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-slate-700">Local/Ambiente</label>
-                  <Button
-                    type="button" 
-                    variant="secondary"
-                    size="sm"
-                    className="h-8 gap-1 px-2"
-                    disabled={!formData.unitId}
-                    onClick={() => setIsLocationDrawerOpen(true)}
-                  >
-                    <MapPinPlus className="h-4 w-4" /> Novo local
-                  </Button>
+              <FormGrid className="border-0 bg-transparent p-0">
+                <Select label="Unidade" value={formData.unitId} onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "" })} options={units.map(u => ({ value: u.id, label: u.name }))} />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-3"><label className="text-sm font-medium text-slate-700">Local/Ambiente</label><Button type="button" variant="secondary" size="sm" className="h-8 gap-1 px-2" disabled={!formData.unitId} onClick={() => setIsLocationDrawerOpen(true)}><MapPinPlus className="h-4 w-4" /> Novo local</Button></div>
+                  <Select value={formData.locationId} onChange={e => setFormData({ ...formData, locationId: e.target.value })} options={filteredLocations.map(l => ({ value: l.id, label: l.name }))} disabled={!formData.unitId} />
                 </div>
-                <Select
-                  value={formData.locationId}
-                  onChange={e => setFormData({ ...formData, locationId: e.target.value })}
-                  options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
-                  disabled={!formData.unitId}
-                />
-              </div>
-            </FormGrid>
-            </section>
-
-            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
-              <div className="mb-5">
+              </FormGrid>
+              <div className="mt-8 border-t border-slate-200 pt-6">
                 <h2 className="text-base font-bold text-slate-900">Ativos atendidos</h2>
-                <p className="mt-1 text-sm text-slate-600">A seleção sempre começa vazia. Adicione um ou mais ativos, independentemente da unidade ou do local informado.</p>
+                <p className="mt-1 text-sm text-slate-600">A seleção começa vazia. Adicione um ou mais ativos, independentemente da unidade ou local informado.</p>
+                <div className="mt-5 space-y-1.5"><label className="text-[13px] font-semibold text-slate-700">Ativos da ordem</label><select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-36 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-700/15">{availableAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}</select><p className="text-xs text-slate-500">Use Ctrl ou Cmd para selecionar vários ativos.</p></div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-semibold text-slate-700">Ativos da ordem</label>
-                <select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-36 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-700/15">
-                  {availableAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
-                </select>
-                <p className="text-xs text-slate-500">Use Ctrl ou Cmd para selecionar vários ativos.</p>
-              </div>
-            </section>
+            </section>}
 
-            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
-              <div className="mb-5"><h2 className="text-base font-bold text-slate-900">Dados do atendimento</h2></div>
+            {activeTab === "atendimento" && <section className="p-5 sm:p-6">
+              <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Dados do atendimento</h2><p className="mt-1 text-sm text-slate-600">Defina a classificação, prioridade e o escopo do serviço.</p></div>
               <FormGrid className="border-0 bg-transparent p-0">
               <Select
                 label="Categoria"
@@ -242,43 +226,24 @@ export const NovaOrdem = () => {
                   { value: "Urgente", label: "Urgente" },
                 ]}
               />
-              <Select
-                label="Responsável Interno (Opcional)"
-                value={formData.responsibleId}
-                onChange={e => setFormData({ ...formData, responsibleId: e.target.value })}
-                options={users.map(u => ({ value: u.id, label: u.name }))}
-              />
-              <Select
-                label="Prestador Externo (Opcional)"
-                value={formData.providerId}
-                onChange={e => setFormData({ ...formData, providerId: e.target.value })}
-                options={[{ value: "", label: "Nenhum" }, ...providers.map(p => ({ value: p.id, label: `${p.name} (${p.specialty})` }))]}
-              />
-              <Input
-                label="Prazo"
-                type="date"
-                value={formData.deadline}
-                onChange={e => setFormData({ ...formData, deadline: e.target.value })}
-              />
               </FormGrid>
-
               <div className="mt-5">
-              <Textarea
-              label="Descrição Técnica"
-              required
-              placeholder="Descreva o que deve ser feito..."
-              value={formData.technicalDescription}
-              onChange={e => setFormData({ ...formData, technicalDescription: e.target.value })}
-              />
+                <Textarea label="Descrição Técnica" required placeholder="Descreva o que deve ser feito..." value={formData.technicalDescription} onChange={e => setFormData({ ...formData, technicalDescription: e.target.value })} />
               </div>
-            </section>
+            </section>}
+
+            {activeTab === "programacao" && <section className="p-5 sm:p-6">
+              <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Programação do atendimento</h2><p className="mt-1 text-sm text-slate-600">Informe os responsáveis e o prazo quando já estiverem definidos.</p></div>
+              <FormGrid className="border-0 bg-transparent p-0">
+                <Select label="Responsável Interno (Opcional)" value={formData.responsibleId} onChange={e => setFormData({ ...formData, responsibleId: e.target.value })} options={users.map(u => ({ value: u.id, label: u.name }))} />
+                <Select label="Prestador Externo (Opcional)" value={formData.providerId} onChange={e => setFormData({ ...formData, providerId: e.target.value })} options={[{ value: "", label: "Nenhum" }, ...providers.map(p => ({ value: p.id, label: `${p.name} (${p.specialty})` }))]} />
+                <Input label="Prazo" type="date" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
+              </FormGrid>
+            </section>}
 
             <div className="operational-form-actions">
-              <Button type="button" variant="secondary" className="gap-2 border-slate-400" onClick={() => navigate(sourceRequest ? `/servicos/${sourceRequest.id}` : "/ordens")}>
-                <X className="h-4 w-4" /> Cancelar
-              </Button>
-              <Button type="submit" className="gap-2 shadow-2">
-                <Save className="h-4 w-4" /> Criar OS
+              <Button type="submit" className="ml-auto gap-2 shadow-2">
+                <Save className="h-4 w-4" /> Salvar Ordem de Serviço
               </Button>
             </div>
           </form>
