@@ -492,9 +492,9 @@ export const DetalheOrdem = () => {
                   <p className="text-xs font-semibold text-slate-500 uppercase">Categoria</p>
                   <p className="text-sm">{getCategoryName(order.categoryId)}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase">Ativo</p>
-                  <p className="text-sm">{getAssetCode(order.assetId)}</p>
+                <div className="sm:col-span-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase">Ativos atendidos</p>
+                  <p className="text-sm">{(order.assetIds?.length ? order.assetIds : [order.assetId]).filter(Boolean).map(getAssetCode).join(", ") || "Sem ativo vinculado"}</p>
                 </div>
                 {order.requestId && (
                   <div className="col-span-2">

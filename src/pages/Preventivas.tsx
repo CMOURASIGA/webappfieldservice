@@ -88,23 +88,26 @@ export const Preventivas = () => {
       
       const status = getStatus(getComputedNextExecution(plan), plan);
       if (status === "Atrasada" || status === "Próxima") {
-        // Check if it already has an open OS for this plan
-        const hasOpenOs = allOrders.some((o: any) => o.preventivePlanId === plan.id && o.status !== "Concluída" && o.status !== "Cancelada");
-        
-        if (!hasOpenOs) {
+        const planAssetIds = plan.assetIds?.length ? plan.assetIds : (plan.assetId ? [plan.assetId] : [undefined]);
+        for (const assetId of planAssetIds) {
+          // Cada ativo do plano possui sua própria OS pendente. Isso evita bloquear todos
+          // os demais ativos quando somente um deles já está em atendimento.
+          const hasOpenOs = allOrders.some((o: any) => o.preventivePlanId === plan.id && (o.assetIds?.includes(assetId) || o.assetId === assetId) && o.status !== "Concluída" && o.status !== "Cancelada");
+          if (hasOpenOs) continue;
           const year = new Date().getFullYear();
           const nextNumber = newOrders.filter((o: any) => o.number.includes(year.toString())).length + 1;
           const number = `OS-${year}-${nextNumber.toString().padStart(4, '0')}`;
-          
+          const asset = assets.find((item) => item.id === assetId);
           const newOrder = {
             id: uuidv4(),
             number,
             preventivePlanId: plan.id,
             unitId: plan.unitId,
             sector: plan.sector,
-            locationId: plan.locationId || "",
+            locationId: asset?.locationId || plan.locationId || "",
             categoryId: plan.categoryId,
-            assetId: plan.assetId || "",
+            assetId: assetId || "",
+            assetIds: assetId ? [assetId] : [],
             type: "Preventiva",
             priority: "Média",
             responsibleId: plan.responsibleId,
@@ -247,7 +250,7 @@ export const Preventivas = () => {
 
                 <div className="space-y-1.5 text-xs text-slate-600 mb-4 flex-1 mt-2">
                   <p><span className="font-medium text-slate-500">Unidade:</span> {getUnitName(plan.unitId)}</p>
-                  <p><span className="font-medium text-slate-500">Ativo:</span> {getAssetCode(plan.assetId)}</p>
+                  <p><span className="font-medium text-slate-500">Ativos:</span> {(plan.assetIds?.length ? plan.assetIds : [plan.assetId]).filter(Boolean).map(getAssetCode).join(", ") || "Não vinculado"}</p>
                   <p><span className="font-medium text-slate-500">Prestador:</span> {getProviderName(plan.providerId)}</p>
                   <p><span className="font-medium text-slate-500">Próx. Execução:</span> {nextExec ? format(parseISO(nextExec), "dd/MM/yyyy") : "N/A"}</p>
                 </div>

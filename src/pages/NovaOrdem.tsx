@@ -30,7 +30,7 @@ export const NovaOrdem = () => {
   const [formData, setFormData] = useState({
     unitId: currentUser?.unitId || "",
     locationId: "",
-    assetId: "",
+    assetIds: [] as string[],
     type: "Corretiva",
     categoryId: "",
     priority: "Média" as Priority,
@@ -58,7 +58,7 @@ export const NovaOrdem = () => {
       ...current,
       unitId: sourceRequest.unitId || current.unitId,
       locationId: sourceRequest.locationId || current.locationId,
-      assetId: sourceRequest.assetId || current.assetId,
+      assetIds: sourceRequest.assetId ? [sourceRequest.assetId] : current.assetIds,
       type: "Corretiva",
       categoryId: sourceRequest.categoryId || current.categoryId,
       priority: sourceRequest.suggestedPriority || current.priority,
@@ -67,7 +67,7 @@ export const NovaOrdem = () => {
   }, [sourceRequest]);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
-  const filteredAssets = assets.filter(a => (!formData.locationId || a.locationId === formData.locationId));
+  const filteredAssets = assets.filter(a => !formData.unitId || a.unitId === formData.unitId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +79,8 @@ export const NovaOrdem = () => {
       requestId: sourceRequest?.id,
       unitId: formData.unitId,
       locationId: formData.locationId,
-      assetId: formData.assetId || undefined,
+      assetId: formData.assetIds[0] || undefined,
+      assetIds: formData.assetIds,
       type: formData.type,
       categoryId: formData.categoryId,
       priority: formData.priority,
@@ -134,7 +135,7 @@ export const NovaOrdem = () => {
     storageService.set("gsi_locations", locs);
     
     setLocations([...locations, newLocation]);
-    setFormData({ ...formData, locationId: newLocation.id, assetId: "" });
+    setFormData({ ...formData, locationId: newLocation.id, assetIds: [] });
     setIsLocationDrawerOpen(false);
     setNewLocationData({ name: "", type: "Ambiente" });
   };
@@ -164,7 +165,7 @@ export const NovaOrdem = () => {
                 label="Unidade"
                 required
                 value={formData.unitId}
-                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetId: "" })}
+                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetIds: [] })}
                 options={units.map(u => ({ value: u.id, label: u.name }))}
               />
               <div className="space-y-1">
@@ -184,17 +185,18 @@ export const NovaOrdem = () => {
                 <Select
                   required
                   value={formData.locationId}
-                  onChange={e => setFormData({ ...formData, locationId: e.target.value, assetId: "" })}
+                  onChange={e => setFormData({ ...formData, locationId: e.target.value })}
                   options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
                   disabled={!formData.unitId}
                 />
               </div>
-              <Select
-                label="Ativo (Opcional)"
-                value={formData.assetId}
-                onChange={e => setFormData({ ...formData, assetId: e.target.value })}
-                options={filteredAssets.map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))}
-              />
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-sm font-medium text-slate-700">Ativos atendidos (opcional)</label>
+                <select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-28 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                  {filteredAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
+                </select>
+                <p className="text-xs text-slate-500">Selecione um ou mais ativos. Use Ctrl ou Cmd para selecionar vários itens.</p>
+              </div>
               <Select
                 label="Categoria"
                 required

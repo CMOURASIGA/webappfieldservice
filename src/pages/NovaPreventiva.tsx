@@ -26,7 +26,7 @@ export const NovaPreventiva = () => {
   const [formData, setFormData] = useState({
     unitId: currentUser?.unitId || "",
     locationId: "",
-    assetId: "",
+    assetIds: [] as string[],
     categoryId: "",
     templateId: "",
     type: "Preventiva",
@@ -54,7 +54,7 @@ export const NovaPreventiva = () => {
   }, []);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
-  const filteredAssets = assets.filter(a => a.locationId === formData.locationId || (!formData.locationId && a.unitId === formData.unitId));
+  const filteredAssets = assets.filter(a => !formData.unitId || a.unitId === formData.unitId);
 
   const handleTemplateChange = (templateId: string) => {
     setFormData(prev => ({ ...prev, templateId }));
@@ -95,7 +95,8 @@ export const NovaPreventiva = () => {
       code: `PREV-${Math.floor(1000 + Math.random() * 9000)}`,
       unitId: formData.unitId,
       locationId: formData.locationId,
-      assetId: formData.assetId,
+      assetId: formData.assetIds[0],
+      assetIds: formData.assetIds,
       type: formData.type,
       categoryId: formData.categoryId,
       templateId: formData.templateId || undefined,
@@ -143,23 +144,23 @@ export const NovaPreventiva = () => {
                 label="Unidade"
                 required
                 value={formData.unitId}
-                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetId: "" })}
+                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetIds: [] })}
                 options={units.map(u => ({ value: u.id, label: u.name }))}
               />
               <Select
                 label="Local/Ambiente (Opcional)"
                 value={formData.locationId}
-                onChange={e => setFormData({ ...formData, locationId: e.target.value, assetId: "" })}
+                onChange={e => setFormData({ ...formData, locationId: e.target.value })}
                 options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
                 disabled={!formData.unitId}
               />
-              <Select
-                label="Ativo (Opcional)"
-                value={formData.assetId}
-                onChange={e => setFormData({ ...formData, assetId: e.target.value })}
-                options={filteredAssets.map(a => ({ value: a.id, label: `${a.code} - ${a.name}` }))}
-                disabled={!formData.unitId}
-              />
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-sm font-medium text-slate-700">Ativos abrangidos pelo plano</label>
+                <select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-28 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none" disabled={!formData.unitId}>
+                  {filteredAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
+                </select>
+                <p className="text-xs text-slate-500">Um plano pode abranger vários ativos. Na geração, será criada uma OS para cada ativo selecionado.</p>
+              </div>
               <Select
                 label="Tipo de manutenção"
                 required

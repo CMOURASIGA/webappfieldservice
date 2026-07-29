@@ -67,6 +67,7 @@ export interface Request {
   protocol: string;
   solicitanteId: string;
   assetId?: string;
+  assetIds?: string[];
   unitId: string;
   sector?: string;
   locationId: string;
@@ -126,6 +127,7 @@ export interface WorkOrder {
   sector?: string;
   locationId: string;
   assetId?: string;
+  assetIds?: string[];
   type: string;
   categoryId: string;
   priority: Priority;
@@ -175,6 +177,7 @@ export interface PreventivePlan {
   sector?: string;
   locationId?: string;
   assetId?: string;
+  assetIds?: string[];
   type: string;
   categoryId: string;
   description: string;

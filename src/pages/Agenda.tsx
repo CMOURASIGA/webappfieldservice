@@ -124,7 +124,7 @@ export const Agenda = () => {
       !o.scheduleStatus
     ).filter(o => {
       if (unitFilter && o.unitId !== unitFilter) return false;
-      if (assetFilter && o.assetId !== assetFilter) return false;
+      if (assetFilter && !(o.assetIds?.includes(assetFilter) || o.assetId === assetFilter)) return false;
       if (orderFilter && !o.number.toLowerCase().includes(orderFilter.toLowerCase())) return false;
       return true;
     });
@@ -134,7 +134,7 @@ export const Agenda = () => {
     if (agendaScope === "Preventivas") return [];
     return orders.filter(o => o.plannedStart && o.plannedEnd).filter(o => {
       if (unitFilter && o.unitId !== unitFilter) return false;
-      if (assetFilter && o.assetId !== assetFilter) return false;
+      if (assetFilter && !(o.assetIds?.includes(assetFilter) || o.assetId === assetFilter)) return false;
       if (orderFilter && !o.number.toLowerCase().includes(orderFilter.toLowerCase())) return false;
       if (technicianFilter && !o.additionalTechnicianIds?.includes(technicianFilter) && o.responsibleId !== technicianFilter && o.providerId !== technicianFilter) return false;
       return true;
@@ -145,7 +145,7 @@ export const Agenda = () => {
     if (agendaScope === "OS") return false;
     if (!plan.nextExecution || !plan.active || plan.status !== "Ativo") return false;
     if (unitFilter && plan.unitId !== unitFilter) return false;
-    if (assetFilter && plan.assetId !== assetFilter) return false;
+    if (assetFilter && !(plan.assetIds?.includes(assetFilter) || plan.assetId === assetFilter)) return false;
     return true;
   });
 
@@ -273,7 +273,7 @@ export const Agenda = () => {
                     {scheduled.filter(o => {
                       const start = parseISO(o.plannedStart!);
                       return isSameDay(start, day) && start.getHours() === hour;
-                    }).map(o => {
+                    }).map((o, eventIndex, eventsAtHour) => {
                       const start = parseISO(o.plannedStart!);
                       const end = parseISO(o.plannedEnd!);
                       const durationInMinutes = (end.getTime() - start.getTime()) / 60000;
@@ -283,8 +283,8 @@ export const Agenda = () => {
                       return (
                         <div 
                           key={o.id}
-                          className="absolute left-1 right-1 bg-brand-100 border border-brand-300 rounded p-1 shadow-sm overflow-hidden text-xs z-10 cursor-pointer hover:ring-2 hover:ring-brand-400 transition-all"
-                          style={{ top: `${topOffset}%`, height: `${Math.max(heightPercentage, 30)}px` }}
+                          className="absolute bg-brand-100 border border-brand-300 rounded p-1 shadow-sm overflow-hidden text-xs z-10 cursor-pointer hover:ring-2 hover:ring-brand-400 transition-all"
+                          style={{ top: `${topOffset}%`, height: `${Math.max(heightPercentage, 30)}px`, left: `calc(${(eventIndex / eventsAtHour.length) * 100}% + 3px)`, width: `calc(${100 / eventsAtHour.length}% - 6px)` }}
                           title={`${o.number} - ${o.technicalDescription}`}
                           onClick={() => {
                             setSchedulingOrder(o);

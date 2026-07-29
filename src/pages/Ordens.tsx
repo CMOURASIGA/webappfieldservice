@@ -21,6 +21,7 @@ export const Ordens = () => {
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todas";
+  const dashboardFilter = searchParams.get("filter") || "";
   const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
   const [numberFilter, setNumberFilter] = useState("");
   const [assetFilter, setAssetFilter] = useState("");
@@ -45,6 +46,7 @@ export const Ordens = () => {
   const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "N/A";
   const getLocationName = (id: string) => locations.find(l => l.id === id)?.name || "N/A";
   const getUserName = (id?: string) => users.find(u => u.id === id)?.name || "Não atribuído";
+  const getAssetNames = (order: WorkOrder) => (order.assetIds?.length ? order.assetIds : [order.assetId]).filter(Boolean).map(id => assets.find(asset => asset.id === id)?.code || "Ativo não encontrado").join(", ") || "Sem ativo vinculado";
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -112,7 +114,7 @@ export const Ordens = () => {
   const filteredOrders = orders.filter(o => {
     const relevantDate = o.plannedStart || o.plannedDate || o.createdAt;
     if (numberFilter && !o.number.toLowerCase().includes(numberFilter.toLowerCase())) return false;
-    if (assetFilter && o.assetId !== assetFilter) return false;
+    if (assetFilter && !(o.assetIds?.includes(assetFilter) || o.assetId === assetFilter)) return false;
     if (locationFilter && o.locationId !== locationFilter) return false;
     if (technicianFilter && o.responsibleId !== technicianFilter) return false;
     if (startDateFilter && new Date(relevantDate) < new Date(`${startDateFilter}T00:00:00`)) return false;
@@ -122,6 +124,10 @@ export const Ordens = () => {
     if (statusFilter === "Sem Responsavel") return !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Atrasadas") return o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Falta Material") return ["Aguardando material", "Aguardando estoque"].includes(o.status);
+    if (dashboardFilter === "atrasadas") return !!o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status);
+    if (dashboardFilter === "programacao") return !o.plannedDate && !["Concluída", "Cancelada"].includes(o.status) && ["Nova", "Planejada", "Em planejamento", "Atribuída"].includes(o.status);
+    if (dashboardFilter === "material-validacao") return ["Aguardando material", "Aguardando estoque", "Em validação"].includes(o.status);
+    if (dashboardFilter === "corretivas-abertas") return o.type.toLowerCase().includes("corretiva") && !["Concluída", "Cancelada"].includes(o.status);
     return true;
   });
 
@@ -214,6 +220,7 @@ export const Ordens = () => {
                     <p className="operational-card-field border-r-0"><span className="block font-semibold">Local</span> {getLocationName(order.locationId)}</p>
                     <p className="operational-card-field border-b-0"><span className="block font-semibold">Técnico</span> {getUserName(order.responsibleId)}</p>
                     <p className="operational-card-field border-b-0 border-r-0"><span className="block font-semibold">Prazo</span> {order.deadline ? format(parseISO(order.deadline), 'dd/MM/yyyy HH:mm') : 'N/A'}</p>
+                    <p className="operational-card-field col-span-2 border-b-0 border-r-0"><span className="block font-semibold">Ativos</span> {getAssetNames(order)}</p>
                   </div>
 
                   </CardContent>

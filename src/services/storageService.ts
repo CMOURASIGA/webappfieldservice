@@ -1,7 +1,7 @@
 ﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate, MaintenanceExecution, StockMovement } from "../types";
 
 // A nova versão repõe cenários compatíveis com os fluxos atuais sem apagar dados locais.
-const VERSION = "1.7.0";
+const VERSION = "1.8.0";
 
 interface DB {
   gsi_data_version: { version: string };
@@ -76,6 +76,7 @@ export const storageService = {
     };
     this.set("gsi_work_orders", this.get("gsi_work_orders").map((order) => ({
       ...order,
+      assetIds: order.assetIds?.length ? order.assetIds : (order.assetId ? [order.assetId] : []),
       operationalSituation: order.operationalSituation || situationByStatus[order.status] || "Nova",
     })));
 
@@ -93,6 +94,7 @@ export const storageService = {
       const days = Number.isNaN(next) ? null : Math.ceil((next - Date.now()) / 86400000);
       return {
         ...plan,
+        assetIds: plan.assetIds?.length ? plan.assetIds : (plan.assetId ? [plan.assetId] : []),
         expectedWorkOrders: plan.expectedWorkOrders ?? expectedByPeriodicity[plan.periodicity?.toLowerCase()] ?? 1,
         alertDaysAttention: plan.alertDaysAttention ?? 30,
         alertDaysCritical: plan.alertDaysCritical ?? 10,
