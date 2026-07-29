@@ -238,9 +238,46 @@ export const Agenda = () => {
   const renderAgendaWeek = () => {
     const scheduled = getScheduledOrders();
     const preventiveEvents = scheduledPlans();
+    const hourHeight = 72;
+    const totalHeight = hours.length * hourHeight;
+
+    // Calcula colunas pelo intervalo real da OS, e não apenas pelo horário de
+    // início. Assim, 09:00-10:00 e 09:30-10:30 aparecem lado a lado.
+    const layoutOrdersForDay = (day: Date) => {
+      const events = scheduled
+        .filter(order => isSameDay(parseISO(order.plannedStart!), day))
+        .sort((a, b) => parseISO(a.plannedStart!).getTime() - parseISO(b.plannedStart!).getTime());
+      const laidOut: Array<{ order: WorkOrder; column: number; columns: number }> = [];
+      let cluster: Array<{ order: WorkOrder; column: number }> = [];
+      let clusterEnd = 0;
+
+      const closeCluster = () => {
+        const columns = Math.max(1, ...cluster.map(item => item.column + 1));
+        cluster.forEach(item => laidOut.push({ ...item, columns }));
+        cluster = [];
+        clusterEnd = 0;
+      };
+
+      events.forEach(order => {
+        const start = parseISO(order.plannedStart!).getTime();
+        const end = parseISO(order.plannedEnd!).getTime();
+        if (cluster.length && start >= clusterEnd) closeCluster();
+        const usedColumns = new Set(
+          cluster
+            .filter(item => parseISO(item.order.plannedEnd!).getTime() > start)
+            .map(item => item.column),
+        );
+        let column = 0;
+        while (usedColumns.has(column)) column += 1;
+        cluster.push({ order, column });
+        clusterEnd = Math.max(clusterEnd, end);
+      });
+      if (cluster.length) closeCluster();
+      return laidOut;
+    };
     
     return (
-      <div className="agenda-grid flex h-[calc(100vh-250px)] flex-col border-2 border-slate-500">
+      <div className="agenda-grid flex h-[calc(100vh-250px)] min-h-[620px] flex-col overflow-hidden rounded-lg border-2 border-slate-400 bg-white">
         {/* Header Days */}
         <div className="flex border-b-2 border-slate-300 bg-slate-100">
           <div className="w-16 flex-shrink-0 border-r-2 border-slate-500"></div>
@@ -255,62 +292,32 @@ export const Agenda = () => {
         </div>
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="relative">
-            {hours.map(hour => (
-              <div key={hour} className="flex min-h-[60px] border-b-2 border-slate-400 last:border-b-0">
-                <div className="w-16 flex-shrink-0 border-r-2 border-slate-500 bg-slate-100 py-2 text-center text-xs font-semibold text-slate-600">
-                  {hour.toString().padStart(2, '0')}:00
+        <div className="flex-1 overflow-auto">
+          <div className="flex min-w-[820px]">
+            <div className="w-16 shrink-0 border-r-2 border-slate-500 bg-slate-100" style={{ height: totalHeight }}>
+              {hours.map(hour => <div key={hour} className="border-b-2 border-slate-300 pr-2 pt-1 text-right text-xs font-semibold text-slate-600" style={{ height: hourHeight }}>{hour.toString().padStart(2, "0")}:00</div>)}
+            </div>
+            {weekDays.map(day => {
+              const dayOrders = layoutOrdersForDay(day);
+              return (
+                <div key={day.toISOString()} className={`relative min-w-0 flex-1 border-r-2 border-slate-400 last:border-r-0 ${isToday(day) ? "bg-brand-50/50" : "bg-white"}`} style={{ height: totalHeight }}>
+                  {hours.map(hour => <div key={hour} className="h-[72px] border-b-2 border-slate-300 transition-colors hover:bg-slate-50" onDragOver={event => event.preventDefault()} onDrop={event => handleDrop(event, day, hour)} />)}
+                  {dayOrders.map(({ order, column, columns }) => {
+                    const start = parseISO(order.plannedStart!);
+                    const end = parseISO(order.plannedEnd!);
+                    const duration = Math.max(30, (end.getTime() - start.getTime()) / 60000);
+                    const top = ((start.getHours() - startHour) * 60 + start.getMinutes()) * (hourHeight / 60);
+                    return <div key={order.id} className="absolute z-10 cursor-pointer overflow-hidden rounded-md border border-brand-400 bg-brand-100 p-2 text-xs shadow-sm transition hover:z-20 hover:ring-2 hover:ring-brand-500" style={{ top: `${top}px`, height: `${duration * (hourHeight / 60)}px`, left: `calc(${(column / columns) * 100}% + 3px)`, width: `calc(${100 / columns}% - 6px)` }} title={`${order.number} - ${order.technicalDescription}`} onClick={() => { setSchedulingOrder(order); setModalDate(format(start, "yyyy-MM-dd")); setModalStartTime(format(start, "HH:mm")); setModalDuration(String(duration)); setModalTechId(order.responsibleId || order.providerId || ""); }}>
+                      <div className="font-bold text-brand-900">{order.number}</div><div className="mt-0.5 truncate text-brand-800">{order.technicalDescription}</div><div className="mt-1 truncate text-[10px] text-brand-700">{executors.find(item => item.id === (order.responsibleId || order.providerId))?.name || "Sem responsável"}</div>
+                    </div>;
+                  })}
+                  {preventiveEvents.filter(plan => isSameDay(parseISO(plan.nextExecution), day)).map(plan => {
+                    const date = parseISO(plan.nextExecution); const top = ((date.getHours() || startHour) - startHour) * hourHeight + date.getMinutes() * (hourHeight / 60);
+                    return <Link key={plan.id} to={`/preventivas/${plan.id}`} className="absolute left-1 right-1 z-20 overflow-hidden rounded border border-amber-400 bg-amber-100 p-1 text-xs shadow-sm hover:ring-2 hover:ring-amber-400" style={{ top, minHeight: 32 }} title={`Preventiva: ${plan.description}`}><div className="font-semibold text-amber-900">PREV {plan.code}</div><div className="truncate text-amber-800">{plan.description}</div></Link>;
+                  })}
                 </div>
-                {weekDays.map(day => (
-                  <div 
-                    key={`${day.toISOString()}-${hour}`} 
-                    className={`relative flex-1 border-r-2 border-slate-500 transition-colors last:border-r-0 ${isToday(day) ? 'bg-brand-50/50' : ''}`}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => handleDrop(e, day, hour)}
-                  >
-                    {/* Render OS Cards that start in this hour and day */}
-                    {scheduled.filter(o => {
-                      const start = parseISO(o.plannedStart!);
-                      return isSameDay(start, day) && start.getHours() === hour;
-                    }).map((o, eventIndex, eventsAtHour) => {
-                      const start = parseISO(o.plannedStart!);
-                      const end = parseISO(o.plannedEnd!);
-                      const durationInMinutes = (end.getTime() - start.getTime()) / 60000;
-                      const topOffset = (start.getMinutes() / 60) * 100;
-                      const heightPercentage = (durationInMinutes / 60) * 100;
-
-                      return (
-                        <div 
-                          key={o.id}
-                          className="absolute bg-brand-100 border border-brand-300 rounded p-1 shadow-sm overflow-hidden text-xs z-10 cursor-pointer hover:ring-2 hover:ring-brand-400 transition-all"
-                          style={{ top: `${topOffset}%`, height: `${Math.max(heightPercentage, 30)}px`, left: `calc(${(eventIndex / eventsAtHour.length) * 100}% + 3px)`, width: `calc(${100 / eventsAtHour.length}% - 6px)` }}
-                          title={`${o.number} - ${o.technicalDescription}`}
-                          onClick={() => {
-                            setSchedulingOrder(o);
-                            setModalDate(format(start, 'yyyy-MM-dd'));
-                            setModalStartTime(format(start, 'HH:mm'));
-                            setModalDuration(durationInMinutes.toString());
-                            setModalTechId(o.responsibleId || o.providerId || "");
-                          }}
-                        >
-                          <div className="font-semibold text-brand-800">{o.number}</div>
-                          <div className="text-brand-600 truncate">{o.technicalDescription}</div>
-                          <div className="text-brand-500 text-[10px] mt-0.5">
-                            {executors.find(e => e.id === (o.responsibleId || o.providerId))?.name || "Sem responsável"}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {preventiveEvents.filter(plan => { const date = parseISO(plan.nextExecution); return isSameDay(date, day) && (date.getHours() || 7) === hour; }).map(plan => (
-                      <Link key={plan.id} to={`/preventivas/${plan.id}`} className="absolute left-1 right-1 z-20 rounded border border-amber-400 bg-amber-100 p-1 text-xs shadow-sm hover:ring-2 hover:ring-amber-400" style={{ top: "2px", minHeight: "30px" }} title={`Preventiva: ${plan.description}`}>
-                        <div className="font-semibold text-amber-900">PREV {plan.code}</div><div className="truncate text-amber-800">{plan.description}</div>
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

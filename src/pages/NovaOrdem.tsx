@@ -28,7 +28,7 @@ export const NovaOrdem = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
 
   const [formData, setFormData] = useState({
-    unitId: currentUser?.unitId || "",
+    unitId: "",
     locationId: "",
     assetIds: [] as string[],
     type: "Corretiva",
@@ -67,7 +67,9 @@ export const NovaOrdem = () => {
   }, [sourceRequest]);
 
   const filteredLocations = locations.filter(l => l.unitId === formData.unitId);
-  const filteredAssets = assets.filter(a => !formData.unitId || a.unitId === formData.unitId);
+  // A OS pode atender ativos de diferentes unidades. A unidade e o local são
+  // informações complementares, não devem limitar nem pré-selecionar ativos.
+  const availableAssets = assets;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,7 +143,7 @@ export const NovaOrdem = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
+    <div className="mx-auto max-w-6xl space-y-6">
       <OperationalPageHeader
         title={sourceRequest ? `Gerar OS da ${sourceRequest.protocol}` : "Nova Ordem de Serviço"}
         description={sourceRequest ? "Os dados da manutenção foram preenchidos automaticamente. Complete apenas o que estiver faltando." : "Crie uma ordem de serviço manual."}
@@ -155,17 +157,18 @@ export const NovaOrdem = () => {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Detalhes da OS</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <FormGrid>
+        <CardContent className="p-0">
+          <form onSubmit={handleSubmit}>
+            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
+              <div className="mb-5">
+                <h2 className="text-base font-bold text-slate-900">Identificação e localização</h2>
+                <p className="mt-1 text-sm text-slate-600">Informe a unidade e o local somente quando forem úteis para organizar o atendimento.</p>
+              </div>
+            <FormGrid className="border-0 bg-transparent p-0">
               <Select
                 label="Unidade"
-                required
                 value={formData.unitId}
-                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "", assetIds: [] })}
+                onChange={e => setFormData({ ...formData, unitId: e.target.value, locationId: "" })}
                 options={units.map(u => ({ value: u.id, label: u.name }))}
               />
               <div className="space-y-1">
@@ -183,20 +186,32 @@ export const NovaOrdem = () => {
                   </Button>
                 </div>
                 <Select
-                  required
                   value={formData.locationId}
                   onChange={e => setFormData({ ...formData, locationId: e.target.value })}
                   options={filteredLocations.map(l => ({ value: l.id, label: l.name }))}
                   disabled={!formData.unitId}
                 />
               </div>
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-sm font-medium text-slate-700">Ativos atendidos (opcional)</label>
-                <select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-28 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
-                  {filteredAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
-                </select>
-                <p className="text-xs text-slate-500">Selecione um ou mais ativos. Use Ctrl ou Cmd para selecionar vários itens.</p>
+            </FormGrid>
+            </section>
+
+            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
+              <div className="mb-5">
+                <h2 className="text-base font-bold text-slate-900">Ativos atendidos</h2>
+                <p className="mt-1 text-sm text-slate-600">A seleção sempre começa vazia. Adicione um ou mais ativos, independentemente da unidade ou do local informado.</p>
               </div>
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-semibold text-slate-700">Ativos da ordem</label>
+                <select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-36 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-700/15">
+                  {availableAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
+                </select>
+                <p className="text-xs text-slate-500">Use Ctrl ou Cmd para selecionar vários ativos.</p>
+              </div>
+            </section>
+
+            <section className="border-b-2 border-slate-200 p-5 sm:p-6">
+              <div className="mb-5"><h2 className="text-base font-bold text-slate-900">Dados do atendimento</h2></div>
+              <FormGrid className="border-0 bg-transparent p-0">
               <Select
                 label="Categoria"
                 required
@@ -245,17 +260,20 @@ export const NovaOrdem = () => {
                 value={formData.deadline}
                 onChange={e => setFormData({ ...formData, deadline: e.target.value })}
               />
-            </FormGrid>
+              </FormGrid>
 
-            <Textarea
+              <div className="mt-5">
+              <Textarea
               label="Descrição Técnica"
               required
               placeholder="Descreva o que deve ser feito..."
               value={formData.technicalDescription}
               onChange={e => setFormData({ ...formData, technicalDescription: e.target.value })}
-            />
+              />
+              </div>
+            </section>
 
-            <div className="operational-form-actions -mx-6 -mb-6">
+            <div className="operational-form-actions">
               <Button type="button" variant="secondary" className="gap-2 border-slate-400" onClick={() => navigate(sourceRequest ? `/servicos/${sourceRequest.id}` : "/ordens")}>
                 <X className="h-4 w-4" /> Cancelar
               </Button>
