@@ -119,15 +119,15 @@ export const Ordens = () => {
     if (technicianFilter && o.responsibleId !== technicianFilter) return false;
     if (startDateFilter && new Date(relevantDate) < new Date(`${startDateFilter}T00:00:00`)) return false;
     if (endDateFilter && new Date(relevantDate) > new Date(`${endDateFilter}T23:59:59`)) return false;
+    if (dashboardFilter === "atrasadas") return !!o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status);
+    if (dashboardFilter === "programacao") return !o.plannedDate && !["Concluída", "Cancelada"].includes(o.status) && ["Nova", "Planejada", "Em planejamento", "Atribuída"].includes(o.status);
+    if (dashboardFilter === "material-validacao") return ["Aguardando material", "Aguardando estoque", "Em validação"].includes(o.status);
+    if (dashboardFilter === "corretivas-abertas") return o.type.toLowerCase().includes("corretiva") && !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Todas") return true;
     if (statusFilter === "Abertas") return !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Sem Responsavel") return !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Atrasadas") return o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status);
     if (statusFilter === "Falta Material") return ["Aguardando material", "Aguardando estoque"].includes(o.status);
-    if (dashboardFilter === "atrasadas") return !!o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status);
-    if (dashboardFilter === "programacao") return !o.plannedDate && !["Concluída", "Cancelada"].includes(o.status) && ["Nova", "Planejada", "Em planejamento", "Atribuída"].includes(o.status);
-    if (dashboardFilter === "material-validacao") return ["Aguardando material", "Aguardando estoque", "Em validação"].includes(o.status);
-    if (dashboardFilter === "corretivas-abertas") return o.type.toLowerCase().includes("corretiva") && !["Concluída", "Cancelada"].includes(o.status);
     return true;
   });
 
