@@ -8,6 +8,7 @@ import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Drawer } from "../components/ui/Drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@cnc-ti/layout-basic";
 import { useAuth } from "../contexts/AuthContext";
 import { Request } from "../types";
 import { FormGrid, OperationalPageHeader } from "../components/ui/OperationalPage";
@@ -162,19 +163,14 @@ export const NovaOrdem = () => {
       <Card>
         <CardContent className="p-0">
           <form onSubmit={handleSubmit}>
-            <div className="flex overflow-x-auto border-b border-slate-300 bg-slate-50 px-4 pt-4 sm:px-6">
-              {([
-                ["geral", "Informações gerais"],
-                ["atendimento", "Detalhes do atendimento"],
-                ["programacao", "Programação"],
-              ] as [OrderFormTab, string][]).map(([tab, label]) => (
-                <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`whitespace-nowrap border border-b-0 px-4 py-2.5 text-sm font-semibold transition-colors ${activeTab === tab ? "border-slate-300 bg-white text-brand-800" : "border-transparent text-slate-600 hover:bg-white hover:text-brand-800"}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OrderFormTab)} className="w-full">
+              <TabsList className="cnc-w-full cnc-overflow-x-auto cnc-px-4 cnc-pt-4 sm:cnc-px-6">
+                <TabsTrigger value="geral">Informações gerais</TabsTrigger>
+                <TabsTrigger value="atendimento">Detalhes do atendimento</TabsTrigger>
+                <TabsTrigger value="programacao">Programação</TabsTrigger>
+              </TabsList>
 
-            {activeTab === "geral" && <section className="p-5 sm:p-6">
+            <TabsContent value="geral">
               <div className="mb-6">
                 <h2 className="text-base font-bold text-slate-900">Identificação e localização</h2>
                 <p className="mt-1 text-sm text-slate-600">Informe unidade e local somente quando forem úteis para organizar o atendimento.</p>
@@ -191,9 +187,9 @@ export const NovaOrdem = () => {
                 <p className="mt-1 text-sm text-slate-600">A seleção começa vazia. Adicione um ou mais ativos, independentemente da unidade ou local informado.</p>
                 <div className="mt-5 space-y-1.5"><label className="text-[13px] font-semibold text-slate-700">Ativos da ordem</label><select multiple value={formData.assetIds} onChange={e => setFormData({ ...formData, assetIds: Array.from(e.target.selectedOptions, option => option.value) })} className="min-h-36 w-full rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-700/15">{availableAssets.map(a => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}</select><p className="text-xs text-slate-500">Use Ctrl ou Cmd para selecionar vários ativos.</p></div>
               </div>
-            </section>}
+            </TabsContent>
 
-            {activeTab === "atendimento" && <section className="p-5 sm:p-6">
+            <TabsContent value="atendimento">
               <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Dados do atendimento</h2><p className="mt-1 text-sm text-slate-600">Defina a classificação, prioridade e o escopo do serviço.</p></div>
               <FormGrid className="border-0 bg-transparent p-0">
               <Select
@@ -230,16 +226,17 @@ export const NovaOrdem = () => {
               <div className="mt-5">
                 <Textarea label="Descrição Técnica" required placeholder="Descreva o que deve ser feito..." value={formData.technicalDescription} onChange={e => setFormData({ ...formData, technicalDescription: e.target.value })} />
               </div>
-            </section>}
+            </TabsContent>
 
-            {activeTab === "programacao" && <section className="p-5 sm:p-6">
+            <TabsContent value="programacao">
               <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Programação do atendimento</h2><p className="mt-1 text-sm text-slate-600">Informe os responsáveis e o prazo quando já estiverem definidos.</p></div>
               <FormGrid className="border-0 bg-transparent p-0">
                 <Select label="Responsável Interno (Opcional)" value={formData.responsibleId} onChange={e => setFormData({ ...formData, responsibleId: e.target.value })} options={users.map(u => ({ value: u.id, label: u.name }))} />
                 <Select label="Prestador Externo (Opcional)" value={formData.providerId} onChange={e => setFormData({ ...formData, providerId: e.target.value })} options={[{ value: "", label: "Nenhum" }, ...providers.map(p => ({ value: p.id, label: `${p.name} (${p.specialty})` }))]} />
                 <Input label="Prazo" type="date" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
               </FormGrid>
-            </section>}
+            </TabsContent>
+            </Tabs>
 
             <div className="operational-form-actions">
               <Button type="submit" className="ml-auto gap-2 shadow-2">
@@ -284,3 +281,4 @@ export const NovaOrdem = () => {
     </div>
   );
 };
+�W���{彽�v�ݮ<��oV�o���G{i�6
