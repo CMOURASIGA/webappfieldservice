@@ -8,7 +8,7 @@ import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { Plus, Calendar, Wrench } from "lucide-react";
-import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Servicos = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export const Servicos = () => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("Todas");
+  const [statusFilter] = useState<string>("Todas");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -49,14 +49,6 @@ export const Servicos = () => {
     }
   };
 
-  const stats = {
-    total: requests.length,
-    abertas: requests.filter(r => r.status === "Aberta" || r.status === "Rascunho").length,
-    emTriagem: requests.filter(r => r.status === "Em triagem" || r.status === "Aguardando informação").length,
-    convertidas: requests.filter(r => r.status === "Convertida em ordem").length,
-    rejeitadas: requests.filter(r => r.status === "Rejeitada").length,
-  };
-
   const statusFilteredRequests = statusFilter === "Todas"
     ? requests
     : statusFilter === "Abertas" ? requests.filter(r => r.status === "Aberta" || r.status === "Rascunho")
@@ -87,14 +79,6 @@ export const Servicos = () => {
 
       <SearchToolbar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar por título, protocolo, descrição, unidade, local ou categoria..." resultCount={filteredRequests.length} />
 
-      {/* Indicadores Acionáveis */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricButton label="Todos" value={stats.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
-        <MetricButton label="Abertos" value={stats.abertas} active={statusFilter === "Abertas"} onClick={() => setStatusFilter("Abertas")} />
-        <MetricButton label="Sem Planejamento" value={stats.emTriagem} active={statusFilter === "Em Triagem"} valueClassName="text-blue-700" onClick={() => setStatusFilter("Em Triagem")} />
-        <MetricButton label="Convertidos em OS" value={stats.convertidas} active={statusFilter === "Convertidas"} valueClassName="text-green-700" onClick={() => setStatusFilter("Convertidas")} />
-      </div>
-      
       {/* Cards Operacionais */}
       <div className="operational-grid">
         {filteredRequests.map(req => (

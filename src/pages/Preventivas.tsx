@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import { CheckCircle2, Plus, Settings, X } from "lucide-react";
 import { NovoPlanoModal } from "./preventivas/NovoPlanoModal";
 import { RegistroExecucaoModal } from "./ordens/RegistroExecucaoModal";
-import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
+import { OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
 
 export const Preventivas = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export const Preventivas = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todos";
-  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [statusFilter] = useState(initialstatusFilter);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("Todos");
   const [periodicityFilter, setPeriodicityFilter] = useState("Todas");
@@ -64,14 +64,6 @@ export const Preventivas = () => {
     if (isPast(date) && !isToday(date)) return "Atrasada";
     if (days >= 0 && days <= (plan?.alertDaysAttention ?? 30)) return "Próxima";
     return "Em dia";
-  };
-
-  const metrics = {
-    total: plans.length,
-    emDia: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Em dia").length,
-    proximas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Próxima").length,
-    atrasadas: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Atrasada").length,
-    semData: plans.filter(p => getStatus(getComputedNextExecution(p), p) === "Sem data").length,
   };
 
   
@@ -214,15 +206,6 @@ export const Preventivas = () => {
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)}><option value="Todas">Todas as unidades</option>{units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}><option value="Todos">Todos os prestadores</option>{providers.map((provider) => <option key={provider.id} value={provider.id}>{provider.name}</option>)}</select>
         <select className="h-10 rounded-md border-2 border-slate-400 bg-white px-3 text-sm" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value)}><option value="Todos">Todos os locais</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select>
-      </div>
-
-      {/* Indicadores Acionáveis */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricButton label="Total de Manutenções" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
-        <MetricButton label="Em Dia" value={metrics.emDia} active={statusFilter === "Em dia"} valueClassName="text-green-700" onClick={() => setStatusFilter("Em dia")} />
-        <MetricButton label="Atenção (30d)" value={metrics.proximas} active={statusFilter === "Próximas"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Próximas")} />
-        <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
-        <MetricButton label="Sem data" value={metrics.semData} active={statusFilter === "Sem data"} onClick={() => setStatusFilter("Sem data")} />
       </div>
 
       {/* Cards Operacionais */}

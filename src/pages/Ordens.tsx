@@ -8,7 +8,7 @@ import { CardFooterActions } from "../components/ui/CardFooterActions";
 import { Badge } from "../components/ui/Badge";
 import { format, isValid, parseISO } from "date-fns";
 import { LayoutList, Kanban as KanbanIcon, Plus, Calendar } from "lucide-react";
-import { MetricButton, OperationalPageHeader, SearchToolbar } from "../components/ui/OperationalPage";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
 
 export const Ordens = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export const Ordens = () => {
   const [searchParams] = useSearchParams();
   const initialstatusFilter = searchParams.get("status") || "Todas";
   const dashboardFilter = searchParams.get("filter") || "";
-  const [statusFilter, setStatusFilter] = useState(initialstatusFilter);
+  const [statusFilter] = useState(initialstatusFilter);
   const [numberFilter, setNumberFilter] = useState("");
   const [assetFilter, setAssetFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
@@ -103,14 +103,6 @@ export const Ordens = () => {
     return labels;
   };
 
-  const metrics = {
-    total: orders.length,
-    emAberto: orders.filter(o => !["Concluída", "Cancelada"].includes(o.status)).length,
-    semResponsavel: orders.filter(o => !o.responsibleId && !["Concluída", "Cancelada"].includes(o.status)).length,
-    atrasadas: orders.filter(o => o.deadline && new Date(o.deadline) < new Date() && !["Concluída", "Cancelada"].includes(o.status)).length,
-    faltaMaterial: orders.filter(o => ["Aguardando material", "Aguardando estoque"].includes(o.status)).length,
-  };
-
   const filteredOrders = orders.filter(o => {
     const relevantDate = o.plannedStart || o.plannedDate || o.createdAt;
     if (numberFilter && !o.number.toLowerCase().includes(numberFilter.toLowerCase())) return false;
@@ -179,15 +171,6 @@ export const Ordens = () => {
             <KanbanIcon className="w-4 h-4" />
           </button>
         </div>
-      </div>
-
-      {/* Indicadores Acionáveis */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricButton label="Todas" value={metrics.total} active={statusFilter === "Todas"} onClick={() => setStatusFilter("Todas")} />
-        <MetricButton label="Em Aberto" value={metrics.emAberto} active={statusFilter === "Abertas"} onClick={() => setStatusFilter("Abertas")} />
-        <MetricButton label="Sem Técnico" value={metrics.semResponsavel} active={statusFilter === "Sem Responsavel"} valueClassName="text-brand-700" onClick={() => setStatusFilter("Sem Responsavel")} />
-        <MetricButton label="Falta Material" value={metrics.faltaMaterial} active={statusFilter === "Falta Material"} valueClassName="text-orange-700" onClick={() => setStatusFilter("Falta Material")} />
-        <MetricButton label="Atrasadas" value={metrics.atrasadas} active={statusFilter === "Atrasadas"} valueClassName="text-red-700" onClick={() => setStatusFilter("Atrasadas")} />
       </div>
 
       {viewMode === "list" ? (
