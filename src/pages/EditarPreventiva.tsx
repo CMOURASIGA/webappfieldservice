@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Unit, Location, Asset, PreventivePlan, Category, Provider, ChecklistTemplate, ChecklistItem } from "../types";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { TabbedFormCard } from "../components/ui/TabbedFormCard";
 
 export const EditarPreventiva = () => {
   const { id } = useParams();
@@ -154,24 +155,12 @@ export const EditarPreventiva = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="page-title-panel flex items-center gap-4">
-        <Link to={`/preventivas/${id}`}>
-          <Button variant="secondary" size="sm" className="p-2">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-[22px] font-semibold text-slate-900 mb-1">Editar Manutenção: {planCode}</h1>
-          <p className="text-sm text-slate-500">Altere os dados da manutenção preventiva.</p>
-        </div>
-      </div>
+      <OperationalPageHeader title={`Editar Manutenção: ${planCode}`} description="Altere os dados do plano de manutenção preventiva." backTo={`/preventivas/${id}`} />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <form onSubmit={handleSubmit}>
+        <TabbedFormCard submitLabel="Salvar Alterações" tabs={[
+          { value: "informacoes", label: "Informações", content: <>
+            <div><h2 className="text-base font-bold text-slate-900">Dados do plano</h2><p className="mt-1 text-sm text-slate-600">Atualize a abrangência e classificação da manutenção.</p></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Unidade *</label>
@@ -219,14 +208,9 @@ export const EditarPreventiva = () => {
                 <Input required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Ex: Manutenção Mensal PMOC - Chiller" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Agendamento e Responsáveis</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          </> },
+          { value: "programacao", label: "Programação", content: <>
+            <div><h2 className="text-base font-bold text-slate-900">Agendamento e responsáveis</h2><p className="mt-1 text-sm text-slate-600">Defina a periodicidade, os alertas e quem executará a rotina.</p></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Periodicidade *</label>
@@ -261,20 +245,16 @@ export const EditarPreventiva = () => {
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle>Checklist (Passo a passo)</CardTitle>
+          </> },
+          { value: "checklist", label: "Checklist", content: <>
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-base font-bold text-slate-900">Checklist</h2><p className="mt-1 text-sm text-slate-600">Mantenha o passo a passo da execução atualizado.</p></div>
             <div className="w-64">
               <Select value={formData.templateId} onChange={e => loadTemplate(e.target.value)}>
                 <option value="">Carregar de um modelo...</option>
                 {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </Select>
             </div>
-          </CardHeader>
-          <CardContent>
+            </div>
             <div className="space-y-3">
               {checklistItems.map((item, idx) => (
                 <div key={item.id} className="flex gap-2 items-start">
@@ -302,15 +282,8 @@ export const EditarPreventiva = () => {
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Item de Verificação
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-3">
-          <Link to={`/preventivas/${id}`}>
-            <Button variant="secondary" type="button">Cancelar</Button>
-          </Link>
-          <Button type="submit">Salvar Alterações</Button>
-        </div>
+          </> },
+        ]} />
       </form>
     </div>
   );

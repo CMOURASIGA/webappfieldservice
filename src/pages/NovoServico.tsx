@@ -6,11 +6,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { Drawer } from "../components/ui/Drawer";
 import { useAuth } from "../contexts/AuthContext";
 import { FormGrid, OperationalPageHeader } from "../components/ui/OperationalPage";
 import { MapPinPlus, Save, X } from "lucide-react";
+import { TabbedFormCard } from "../components/ui/TabbedFormCard";
 
 export const NovoServico = () => {
   const navigate = useNavigate();
@@ -106,13 +106,11 @@ export const NovoServico = () => {
         backTo="/servicos/corretivas"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Gerais</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <FormGrid>
+      <form onSubmit={handleSubmit}>
+        <TabbedFormCard submitLabel="Salvar Manutenção" tabs={[
+          { value: "identificacao", label: "Identificação", content: <>
+            <div><h2 className="text-base font-bold text-slate-900">Local e classificação</h2><p className="mt-1 text-sm text-slate-600">Informe onde ocorreu a necessidade e como ela deve ser classificada.</p></div>
+            <FormGrid className="border-0 bg-transparent p-0">
               <Select
                 label="Unidade"
                 required
@@ -173,7 +171,9 @@ export const NovoServico = () => {
                 </>
               )}
             </FormGrid>
-
+          </> },
+          { value: "solicitacao", label: "Detalhes da solicitação", content: <>
+            <div><h2 className="text-base font-bold text-slate-900">Descrição da manutenção</h2><p className="mt-1 text-sm text-slate-600">Registre as informações que orientarão o atendimento.</p></div>
             <Input
               label="Título"
               required
@@ -189,18 +189,9 @@ export const NovoServico = () => {
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
             />
-
-            <div className="operational-form-actions -mx-6 -mb-6">
-              <Button type="button" variant="secondary" className="gap-2 border-slate-400" onClick={() => navigate("/servicos/corretivas")}>
-                <X className="h-4 w-4" /> Cancelar
-              </Button>
-              <Button type="submit" className="gap-2 shadow-2">
-                <Save className="h-4 w-4" /> Salvar Manutenção
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </> },
+        ]} />
+      </form>
 
       <Drawer
         isOpen={isLocationDrawerOpen}

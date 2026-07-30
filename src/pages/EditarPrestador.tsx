@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { storageService } from "../services/storageService";
 import { Provider, Unit } from "../types";
-import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
 import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { TabbedFormCard } from "../components/ui/TabbedFormCard";
 
 const specialties = [
   "Climatização", "Elétrica", "Civil", "Hidráulica", "Elevadores",
@@ -95,13 +94,13 @@ export const EditarTécnico = () => {
         backTo="/prestadores"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações do Técnico</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit}>
+        <TabbedFormCard
+          submitLabel="Salvar Alterações"
+          tabs={[
+            { value: "identificacao", label: "Identificação", content: <>
+              <div><h2 className="text-base font-bold text-slate-900">Dados do técnico</h2><p className="mt-1 text-sm text-slate-600">Atualize os dados cadastrais do profissional ou fornecedor.</p></div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Input
                 label="Nome ou Razão Social"
                 required
@@ -132,6 +131,11 @@ export const EditarTécnico = () => {
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
+              </div>
+            </> },
+            { value: "atuacao", label: "Atuação", content: <>
+              <div><h2 className="text-base font-bold text-slate-900">Atuação e disponibilidade</h2><p className="mt-1 text-sm text-slate-600">Mantenha especialidade, unidade atendida e status atualizados.</p></div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Select
                 label="Especialidade"
                 required
@@ -170,25 +174,19 @@ export const EditarTécnico = () => {
                   { value: "Inativo", label: "Inativo" },
                 ]}
               />
-            </div>
-
+              </div>
+            </> },
+            { value: "observacoes", label: "Observações", content: <>
+              <div><h2 className="text-base font-bold text-slate-900">Informações complementares</h2><p className="mt-1 text-sm text-slate-600">Registre orientações ou restrições para uso interno.</p></div>
             <Textarea
               label="Observações"
               value={formData.observations}
               onChange={e => setFormData({ ...formData, observations: e.target.value })}
             />
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-              <Button type="button" variant="secondary" onClick={() => navigate("/prestadores")}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Salvar Alterações
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </> },
+          ]}
+        />
+      </form>
     </div>
   );
 };

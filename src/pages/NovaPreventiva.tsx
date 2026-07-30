@@ -6,10 +6,10 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Select } from "../components/ui/Select";
 import { Textarea } from "../components/ui/Textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
 import { useAuth } from "../contexts/AuthContext";
 import { format, isValid, addDays } from "date-fns";
 import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { TabbedFormCard } from "../components/ui/TabbedFormCard";
 
 export const NovaPreventiva = () => {
   const navigate = useNavigate();
@@ -135,12 +135,10 @@ export const NovaPreventiva = () => {
         backTo="/preventivas"
       />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalhes da Manutenção</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <form onSubmit={handleSubmit}>
+        <TabbedFormCard submitLabel="Salvar Plano de Manutenção" tabs={[
+          { value: "planejamento", label: "Planejamento", content: <>
+            <div><h2 className="text-base font-bold text-slate-900">Abrangência e planejamento</h2><p className="mt-1 text-sm text-slate-600">Defina os ativos, a rotina e os responsáveis pelo plano.</p></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Select
                 label="Unidade"
@@ -240,17 +238,13 @@ export const NovaPreventiva = () => {
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Checklist de Verificação</CardTitle>
+          </> },
+          { value: "checklist", label: "Checklist", content: <>
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-base font-bold text-slate-900">Checklist de verificação</h2><p className="mt-1 text-sm text-slate-600">Inclua os itens que deverão ser conferidos na execução.</p></div>
             <Button type="button" variant="secondary" size="sm" onClick={handleAddChecklistItem}>
               + Adicionar Item
             </Button>
-          </CardHeader>
-          <CardContent>
+            </div>
             <div className="space-y-3">
               {checklistItems.map((item, index) => (
                 <div key={item.id} className="flex items-center gap-4 border border-slate-200 p-3 rounded-md">
@@ -281,17 +275,8 @@ export const NovaPreventiva = () => {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="secondary" onClick={() => navigate("/preventivas")}>
-            Cancelar
-          </Button>
-          <Button type="submit">
-            Salvar
-          </Button>
-        </div>
+          </> },
+        ]} />
       </form>
     </div>
   );
