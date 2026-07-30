@@ -1,4 +1,169 @@
-Y™Áäx-ÆÈ‹j◊ù¢Îi∫⁄+äßj[hëÈ‹¢ÈÌ„ø8NãZñã≠¶Îeäw¨’•µ¡Ω…–ÅIïÖç–∞ÅÏÅ’Õïôôïç–∞Å’ÕïM—Ö—îÅÙÅô…Ω¥Äâ…ïÖç–àÏ)•µ¡Ω…–ÅÏÅΩ…µA…ΩŸ•ëï»∞Å’ÕïΩ…¥ÅÙÅô…Ω¥Äâ…ïÖç–µ°ΩΩ¨µôΩ…¥àÏ)•µ¡Ω…–ÅÏÅÈΩëIïÕΩ±Ÿï»ÅÙÅô…Ω¥Äâ°ΩΩ≠ôΩ…¥Ω…ïÕΩ±Ÿï…ÃΩÈΩêàÏ)•µ¡Ω…–ÅÏÅËÅÙÅô…Ω¥ÄâÈΩêàÏ)•µ¡Ω…–ÅM›Ö∞Åô…Ω¥ÄâÕ›ïï—Ö±ï…–»àÏ)•µ¡Ω…–ÅÏÅ’Õï1ΩçÖ—•Ω∏∞Å’Õï9ÖŸ•ùÖ—îÅÙÅô…Ω¥Äâ…ïÖç–µ…Ω’—ï»µëΩ¥àÏ)•µ¡Ω…–ÅÏÅ•±ïQï·–∞ÅMÖŸî∞ÅU¡±ΩÖê∞Å`ÅÙÅô…Ω¥Äâ±’ç•ëîµ…ïÖç–àÏ)•µ¡Ω…–ÅÏÅÕ—Ω…ÖùïMï…Ÿ•çîÅÙÅô…Ω¥Äà∏∏ΩÕï…Ÿ•çïÃΩÕ—Ω…ÖùïMï…Ÿ•çîàÏ)•µ¡Ω…–ÅÏÅÕÕï–∞Å——Öç°µïπ–∞ÅÖ—ïùΩ…‰∞Å1ΩçÖ—•Ω∏∞ÅA…•Ω…•—‰∞ÅA…ΩŸ•ëï»∞ÅIï≈’ïÕ–∞ÅUπ•–∞ÅUÕï»∞Å]Ω…≠=…ëï»∞Å]Ω…≠=…ëï…M—Ö—’ÃÅÙÅô…Ω¥Äà∏∏Ω—Â¡ïÃàÏ)•µ¡Ω…–ÅÏÅ	’——Ω∏ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§Ω	’——Ω∏àÏ)•µ¡Ω…–ÅÏÅÖ…ê∞ÅÖ…ëΩπ—ïπ–∞ÅÖ…ëΩΩ—ï»ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§ΩÖ…êàÏ)•µ¡Ω…–ÅÏÅ%π¡’–ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§Ω%π¡’–àÏ)•µ¡Ω…–ÅÏÅMï±ïç–ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§ΩMï±ïç–àÏ)•µ¡Ω…–ÅÏÅQï·—Ö…ïÑÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§ΩQï·—Ö…ïÑàÏ)•µ¡Ω…–ÅÏÅ=¡ï…Ö—•ΩπÖ±AÖùï!ïÖëï»ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§Ω=¡ï…Ö—•ΩπÖ±AÖùîàÏ)•µ¡Ω…–ÅÏÅQÖâÕΩµ¡Ωπïπ–ÅÙÅô…Ω¥Äà∏∏ΩçΩµ¡Ωπïπ—ÃΩ’§ΩQÖâÕΩµ¡Ωπïπ–àÏ)•µ¡Ω…–ÅÏÅ’Õï’—†ÅÙÅô…Ω¥Äà∏∏ΩçΩπ—ï·—ÃΩ’—°Ωπ—ï·–àÏ()çΩπÕ–ÅΩÕMç°ïµÑÄÙÅËπΩâ©ïç–°Ï(ÄÅ’π•—%êËÅËπÕ—…•πú†§πµ•∏†ƒ∞ÄâMï±ïç•ΩπîÅÑÅ’π•ëÖëî∏à§∞(ÄÅ±ΩçÖ—•Ωπ%êËÅËπÕ—…•πú†§πµ•∏†ƒ∞ÄâMï±ïç•ΩπîÅºÅ±ΩçÖ∞ÅΩ‘ÅÖµâ•ïπ—î∏à§∞(ÄÅÕïç—Ω»ËÅËπÕ—…•πú†§πΩ¡—•ΩπÖ∞†§∞(ÄÅÖÕÕï—%ëÃËÅËπÖ……Ö‰°ËπÕ—…•πú†§§∞(ÄÅ—Â¡îËÅËπÕ—…•πú†§πµ•∏†ƒ∞ÄâMï±ïç•ΩπîÅºÅ—•¡ºÅëîÅÕï…Ÿßùº∏à§∞(ÄÅçÖ—ïùΩ…Â%êËÅËπÕ—…•πú†§πµ•∏†ƒ∞ÄâMï±ïç•ΩπîÅÑÅçÖ—ïùΩ…•Ñ∏à§∞(ÄÅ¡…•Ω…•—‰ËÅËπïπ’¥°lâ	Ö•·Ñà∞Äâ7•ë•Ñà∞Äâ±—Ñà∞ÄâU…ùïπ—îât§∞(ÄÅ—ïç°π•çÖ±ïÕç…•¡—•Ω∏ËÅËπÕ—…•πú†§π—…•¥†§πµ•∏†ƒ¿∞ÄâïÕç…ïŸÑÅºÅÕï…ŸßùºÅçΩ¥Å¡ï±ºÅµïπΩÃÄƒ¿ÅçÖ…Öç—ï…ïÃ∏à§∞(ÄÅ…ó~¸‚⁄$z{-ÆÈ‹j◊ùdf" onChange={(event) => setFiles((current) => [...current, ...Array.from(event.target.files || [])])} /></label></div>{files.length > 0 && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{files.map((file, index) => <div key={`${file.name}-${index}`} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"><FileText className="h-5 w-5 text-slate-500" /><span className="min-w-0 flex-1 truncate text-sm">{file.name}</span><button type="button" aria-label={`Remover ${file.name}`} onClick={() => setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))} className="rounded p-1 text-red-700 hover:bg-red-50"><X className="h-4 w-4" /></button></div>)}</div>}<div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><strong>Revis√£o antes de salvar</strong><p className="mt-1">O salvamento √© √∫nico. Ap√≥s criar, a OS seguir√° para programa√ß√£o, execu√ß√£o, valida√ß√£o e encerramento na pr√≥pria ficha.</p></div></div> },
+import React, { useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Swal from "sweetalert2";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FileText, Save, Upload, X } from "lucide-react";
+import { storageService } from "../services/storageService";
+import { Asset, Attachment, Category, Location, Priority, Provider, Request, Unit, User, WorkOrder, WorkOrderStatus } from "../types";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent, CardFooter } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { Textarea } from "../components/ui/Textarea";
+import { OperationalPageHeader } from "../components/ui/OperationalPage";
+import { TabsComponent } from "../components/ui/TabsComponent";
+import { useAuth } from "../contexts/AuthContext";
+
+const osSchema = z.object({
+  unitId: z.string().min(1, "Selecione a unidade."),
+  locationId: z.string().min(1, "Selecione o local ou ambiente."),
+  sector: z.string().optional(),
+  assetIds: z.array(z.string()),
+  type: z.string().min(1, "Selecione o tipo de servi√ßo."),
+  categoryId: z.string().min(1, "Selecione a categoria."),
+  priority: z.enum(["Baixa", "M√©dia", "Alta", "Urgente"]),
+  technicalDescription: z.string().trim().min(10, "Descreva o servi√ßo com pelo menos 10 caracteres."),
+  responsibleId: z.string().optional(),
+  providerId: z.string().optional(),
+  plannedDate: z.string().optional(),
+  plannedStartTime: z.string().optional(),
+  estimatedDurationMinutes: z.string().optional(),
+  deadline: z.string().optional(),
+  scheduleNotes: z.string().optional(),
+});
+
+type OSFormData = z.infer<typeof osSchema>;
+
+const fileToAttachment = (file: File) => new Promise<Attachment>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve({ id: crypto.randomUUID(), name: file.name, type: file.type || "application/octet-stream", size: file.size, uploadedAt: new Date().toISOString(), dataUrl: String(reader.result) });
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
+export const NovaOrdem = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser } = useAuth();
+  const sourceRequest = (location.state as { sourceRequest?: Request } | null)?.sourceRequest;
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const methods = useForm<OSFormData>({
+    resolver: zodResolver(osSchema),
+    mode: "onChange",
+    defaultValues: {
+      unitId: sourceRequest?.unitId || "",
+      locationId: sourceRequest?.locationId || "",
+      sector: sourceRequest?.sector || "",
+      assetIds: sourceRequest?.assetId ? [sourceRequest.assetId] : [],
+      type: sourceRequest ? "Corretiva" : "Corretiva",
+      categoryId: sourceRequest?.categoryId || "",
+      priority: sourceRequest?.suggestedPriority || "M√©dia",
+      technicalDescription: sourceRequest?.description || "",
+      responsibleId: "",
+      providerId: "",
+      plannedDate: "",
+      plannedStartTime: "",
+      estimatedDurationMinutes: "60",
+      deadline: "",
+      scheduleNotes: "",
+    },
+  });
+  const { register, handleSubmit, watch, setValue, formState: { errors, isValid } } = methods;
+  const unitId = watch("unitId");
+  const assetIds = watch("assetIds");
+  const filteredLocations = locations.filter((item) => item.unitId === unitId);
+
+  useEffect(() => {
+    setUnits(storageService.get("gsi_units").filter((item) => item.active));
+    setLocations(storageService.get("gsi_locations").filter((item) => item.active));
+    setAssets(storageService.get("gsi_assets").filter((item) => item.active && item.status === "Ativo"));
+    setCategories(storageService.get("gsi_categories").filter((item) => item.active));
+    setUsers(storageService.get("gsi_users").filter((item) => item.active));
+    setProviders(storageService.get("gsi_providers").filter((item) => item.active && item.status === "Ativo"));
+  }, []);
+
+  const onSubmit = async (data: OSFormData) => {
+    if (!currentUser) return;
+    setIsSubmitting(true);
+    try {
+      const attachments = await Promise.all(files.map(fileToAttachment));
+      const hasAssignee = Boolean(data.responsibleId || data.providerId);
+      const hasSchedule = Boolean(data.plannedDate && data.plannedStartTime && hasAssignee);
+      const plannedStart = hasSchedule ? new Date(`${data.plannedDate}T${data.plannedStartTime}:00`).toISOString() : undefined;
+      const estimatedDurationMinutes = Number(data.estimatedDurationMinutes || 60);
+      const plannedEnd = plannedStart ? new Date(new Date(plannedStart).getTime() + estimatedDurationMinutes * 60_000).toISOString() : undefined;
+      const status: WorkOrderStatus = hasSchedule ? "Programada" : hasAssignee ? "Atribu√≠da" : "Nova";
+      const operationalSituation = hasSchedule ? "Programada" : hasAssignee ? "Planejamento" : "Nova" as const;
+      const newOrder: WorkOrder = {
+        id: crypto.randomUUID(),
+        number: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        requestId: sourceRequest?.id,
+        unitId: data.unitId,
+        locationId: data.locationId,
+        sector: data.sector?.trim() || undefined,
+        assetId: data.assetIds[0],
+        assetIds: data.assetIds,
+        type: data.type,
+        categoryId: data.categoryId,
+        priority: data.priority as Priority,
+        responsibleId: data.responsibleId || undefined,
+        providerId: data.providerId || undefined,
+        technicalDescription: data.technicalDescription.trim(),
+        deadline: data.deadline ? new Date(`${data.deadline}T23:59:59`).toISOString() : undefined,
+        plannedDate: data.plannedDate || undefined,
+        plannedStart,
+        plannedEnd,
+        estimatedDurationMinutes,
+        scheduleStatus: hasSchedule ? "Programada" : undefined,
+        scheduleNotes: data.scheduleNotes?.trim() || undefined,
+        status,
+        operationalSituation,
+        checklist: [],
+        observations: "",
+        attachments,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true,
+      };
+      const orders = storageService.get("gsi_work_orders");
+      storageService.set("gsi_work_orders", [...orders, newOrder]);
+      if (sourceRequest) {
+        const requests = storageService.get("gsi_requests").map((request) => request.id === sourceRequest.id ? { ...request, status: "Convertida em ordem" as const, updatedAt: new Date().toISOString() } : request);
+        storageService.set("gsi_requests", requests);
+      }
+      storageService.logAudit(currentUser.id, "Criou Ordem de Servi√ßo", newOrder.id, "WorkOrder", "", newOrder.status);
+      await Swal.fire({ icon: "success", title: "OS criada com sucesso.", text: `${newOrder.number} est√° pronta para acompanhamento.`, timer: 1600, showConfirmButton: false });
+      navigate(`/ordens/${newOrder.id}`, { state: { createdOrderNumber: newOrder.number } });
+    } catch {
+      await Swal.fire({ icon: "error", title: "N√£o foi poss√≠vel salvar a OS.", text: "Revise os dados e tente novamente." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <OperationalPageHeader title={sourceRequest ? `Gerar OS da ${sourceRequest.protocol}` : "Nova Ordem de Servi√ßo"} description="Registre, programe e encaminhe a ordem para execu√ß√£o." backTo={sourceRequest ? `/servicos/${sourceRequest.id}` : "/ordens"} />
+      {sourceRequest && <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950"><strong>Origem vinculada:</strong> {sourceRequest.title}. Os dados dispon√≠veis foram trazidos para esta OS.</div>}
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Card className="overflow-hidden border border-slate-200 shadow-sm">
+            <CardContent className="p-6">
+              <TabsComponent items={[
+                { value: "dados-gerais", title: "Dados gerais", children: <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2"><Select label="Unidade *" error={errors.unitId?.message} {...register("unitId", { onChange: () => setValue("locationId", "", { shouldValidate: true }) })} options={units.map((item) => ({ value: item.id, label: item.name }))} /><Select label="Local / ambiente *" error={errors.locationId?.message} disabled={!unitId} {...register("locationId")} options={filteredLocations.map((item) => ({ value: item.id, label: item.name }))} /><Input label="Setor" placeholder="Ex.: Administrativo" error={errors.sector?.message} {...register("sector")} /><div className="flex flex-col gap-1.5"><label className="text-[13px] font-semibold text-slate-700">Ativos atendidos</label><select multiple value={assetIds} onChange={(event) => setValue("assetIds", Array.from(event.target.selectedOptions, (option) => option.value), { shouldValidate: true })} className="min-h-28 rounded-md border-2 border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-700 focus:outline-none focus:ring-3 focus:ring-blue-700/15">{assets.map((item) => <option key={item.id} value={item.id}>{item.code} - {item.name}</option>)}</select><span className="text-xs text-slate-500">Use Ctrl ou Cmd para selecionar mais de um ativo.</span></div></div> },
+                { value: "atendimento", title: "Atendimento", children: <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2"><Select label="Categoria *" error={errors.categoryId?.message} {...register("categoryId")} options={categories.map((item) => ({ value: item.id, label: item.name }))} /><Select label="Tipo de servi√ßo *" error={errors.type?.message} {...register("type")} options={[{ value: "Corretiva", label: "Corretiva" }, { value: "Preventiva", label: "Preventiva" }, { value: "Melhoria", label: "Melhoria" }]} /><Select label="Prioridade *" error={errors.priority?.message} {...register("priority")} options={[{ value: "Baixa", label: "Baixa" }, { value: "M√©dia", label: "M√©dia" }, { value: "Alta", label: "Alta" }, { value: "Urgente", label: "Urgente" }]} /><Input label="Prazo para conclus√£o" type="date" error={errors.deadline?.message} {...register("deadline")} /><div className="md:col-span-2"><Textarea label="Descri√ß√£o t√©cnica do servi√ßo *" placeholder="Descreva o problema, o servi√ßo esperado e os cuidados necess√°rios." error={errors.technicalDescription?.message} {...register("technicalDescription")} /></div></div> },
+                { value: "programacao", title: "Programa√ß√£o", children: <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-2"><Select label="T√©cnico interno" {...register("responsibleId")} options={[{ value: "", label: "Definir depois" }, ...users.filter((item) => item.role === "Executor/T√©cnico" || item.role === "Administrador").map((item) => ({ value: item.id, label: item.name }))]} /><Select label="Prestador externo" {...register("providerId")} options={[{ value: "", label: "N√£o se aplica" }, ...providers.map((item) => ({ value: item.id, label: `${item.name} (${item.specialty})` }))]} /><Input label="Data programada" type="date" {...register("plannedDate")} /><Input label="Hora de in√≠cio" type="time" {...register("plannedStartTime")} /><Select label="Dura√ß√£o estimada" {...register("estimatedDurationMinutes")} options={[{ value: "30", label: "30 minutos" }, { value: "60", label: "1 hora" }, { value: "120", label: "2 horas" }, { value: "240", label: "4 horas" }, { value: "480", label: "8 horas" }]} /><Textarea label="Orienta√ß√µes de programa√ß√£o" placeholder="Acesso ao local, janela de atendimento ou outra orienta√ß√£o." {...register("scheduleNotes")} /></div> },
+                { value: "anexos-revisao", title: "Anexos e revis√£o", children: <div className="space-y-6 p-4"><div><label className="mb-2 block text-[13px] font-semibold text-slate-700">Anexos da OS</label><label className="flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-slate-300 px-6 py-7 text-center hover:bg-slate-50"><Upload className="mb-2 h-7 w-7 text-slate-400" /><span className="text-sm font-medium text-brand-900">Selecionar arquivos</span><span className="mt-1 text-xs text-slate-500">Imagens e PDF, at√© 10 MB por arquivo.</span><input className="sr-only" type="file" multiple accept="image/*,.pdf" onChange={(event) => setFiles((current) => [...current, ...Array.from(event.target.files || [])])} /></label></div>{files.length > 0 && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{files.map((file, index) => <div key={`${file.name}-${index}`} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3"><FileText className="h-5 w-5 text-slate-500" /><span className="min-w-0 flex-1 truncate text-sm">{file.name}</span><button type="button" aria-label={`Remover ${file.name}`} onClick={() => setFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))} className="rounded p-1 text-red-700 hover:bg-red-50"><X className="h-4 w-4" /></button></div>)}</div>}<div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><strong>Revis√£o antes de salvar</strong><p className="mt-1">O salvamento √© √∫nico. Ap√≥s criar, a OS seguir√° para programa√ß√£o, execu√ß√£o, valida√ß√£o e encerramento na pr√≥pria ficha.</p></div></div> },
               ]} />
             </CardContent>
             <CardFooter className="justify-end gap-3 border-t border-slate-200 px-6 py-4"><Button type="button" variant="secondary" onClick={() => navigate(-1)}>Cancelar</Button><Button type="submit" disabled={!isValid || isSubmitting} className="gap-2"><Save className="h-4 w-4" />{isSubmitting ? "Salvando..." : "Salvar Ordem de Servi√ßo"}</Button></CardFooter>
