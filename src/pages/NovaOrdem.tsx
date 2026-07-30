@@ -163,14 +163,15 @@ export const NovaOrdem = () => {
       <Card className="overflow-hidden border-2 border-slate-300 shadow-1">
         <CardContent className="p-0">
           <form onSubmit={handleSubmit}>
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OrderFormTab)} className="w-full">
-              <TabsList className="cnc-w-full cnc-overflow-x-auto cnc-border-b cnc-border-slate-300 cnc-bg-slate-50 cnc-px-5 cnc-pt-5 sm:cnc-px-6">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OrderFormTab)}>
+              {/* Sem estilização adicional: usa as Tabs nativas do kit CNC. */}
+              <TabsList>
                 <TabsTrigger value="geral">Informações gerais</TabsTrigger>
                 <TabsTrigger value="atendimento">Detalhes do atendimento</TabsTrigger>
                 <TabsTrigger value="programacao">Programação</TabsTrigger>
               </TabsList>
 
-            <TabsContent value="geral" className="m-0 space-y-8 p-5 sm:p-6">
+            <TabsContent value="geral">
               <div className="mb-6">
                 <h2 className="text-base font-bold text-slate-900">Identificação e localização</h2>
                 <p className="mt-1 text-sm text-slate-600">Informe unidade e local somente quando forem úteis para organizar o atendimento.</p>
@@ -189,7 +190,7 @@ export const NovaOrdem = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="atendimento" className="m-0 space-y-6 p-5 sm:p-6">
+            <TabsContent value="atendimento">
               <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Dados do atendimento</h2><p className="mt-1 text-sm text-slate-600">Defina a classificação, prioridade e o escopo do serviço.</p></div>
               <FormGrid className="border-0 bg-transparent p-0">
               <Select
@@ -228,7 +229,7 @@ export const NovaOrdem = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="programacao" className="m-0 p-5 sm:p-6">
+            <TabsContent value="programacao">
               <div className="mb-6"><h2 className="text-base font-bold text-slate-900">Programação do atendimento</h2><p className="mt-1 text-sm text-slate-600">Informe os responsáveis e o prazo quando já estiverem definidos.</p></div>
               <FormGrid className="border-0 bg-transparent p-0">
                 <Select label="Responsável Interno (Opcional)" value={formData.responsibleId} onChange={e => setFormData({ ...formData, responsibleId: e.target.value })} options={users.map(u => ({ value: u.id, label: u.name }))} />

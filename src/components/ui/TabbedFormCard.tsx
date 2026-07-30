@@ -27,12 +27,13 @@ export const TabbedFormCard = ({ tabs, submitLabel, defaultTab, className }: Tab
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="cnc-w-full cnc-overflow-x-auto cnc-border-b cnc-border-slate-300 cnc-bg-slate-50 cnc-px-5 cnc-pt-5 sm:cnc-px-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {/* Mantém a apresentação nativa do kit CNC, igual à demonstração. */}
+        <TabsList>
           {tabs.map((tab) => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
         </TabsList>
         {tabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="m-0 space-y-6 p-5 sm:p-6">
+          <TabsContent key={tab.value} value={tab.value}>
             {tab.content}
           </TabsContent>
         ))}
