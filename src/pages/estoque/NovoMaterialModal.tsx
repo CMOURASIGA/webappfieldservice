@@ -18,6 +18,7 @@ import {
 } from "@cnc-ti/layout-basic";
 import { storageService } from "../../services/storageService";
 import { StockMaterial } from "../../types";
+import { TabsComponent } from "../../components/ui/TabsComponent";
 
 const schema = z.object({
   code: z.string().min(1, "Código é obrigatório"),
@@ -101,7 +102,9 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
           <p className="text-sm text-slate-600">Informe os dados de identificação, local de estoque e níveis de reposição do material.</p>
         </DialogHeader>
         
-        <form id="novo-material-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-x-5 gap-y-5 py-3 sm:grid-cols-2">
+        <form id="novo-material-form" onSubmit={handleSubmit(onSubmit)} className="py-3">
+          <TabsComponent items={[
+            { value: "identificacao", title: "Identificação", children: <div className="grid grid-cols-1 gap-x-5 gap-y-5 p-4 sm:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-2">
               <label className="text-sm font-semibold text-slate-800">Código *</label>
               <Input {...register("code")} placeholder="Ex: MAT-001" />
@@ -139,6 +142,8 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
               {errors.unit && <span className="text-xs text-red-500">{errors.unit.message as string}</span>}
           </div>
 
+          </div> },
+            { value: "estoque", title: "Estoque e localização", children: <div className="grid grid-cols-1 gap-x-5 gap-y-5 p-4 sm:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-2">
               <label className="text-sm font-semibold text-slate-800">Unidade organizacional *</label>
               <Select onValueChange={(val) => setValue("unitId", val)}>
@@ -169,6 +174,8 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
               <Input type="number" {...register("idealStock")} />
           </div>
 
+          </div> },
+            { value: "complemento", title: "Complemento", children: <div className="grid grid-cols-1 gap-x-5 gap-y-5 p-4 sm:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
             <label className="text-sm font-semibold text-slate-800">Valor unitário estimado</label>
             <Input type="number" min="0" step="0.01" {...register("unitPrice")} placeholder="0,00" />
@@ -181,7 +188,8 @@ export const NovoMaterialModal = ({ open, onOpenChange, onSuccess, material }: P
           <div className="flex min-w-0 flex-col gap-2">
               <label className="text-sm font-semibold text-slate-800">Modelo</label>
               <Input {...register("model")} />
-          </div>
+          </div></div> },
+          ]} />
         </form>
         
         <DialogFooter>
