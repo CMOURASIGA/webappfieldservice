@@ -19,6 +19,7 @@ import {
 } from "@cnc-ti/layout-basic";
 import { storageService } from "../../services/storageService";
 import { PreventivePlan } from "../../types";
+import { TabsComponent } from "../../components/ui/TabsComponent";
 
 const schema = z.object({
   code: z.string().min(1, "Código obrigatório"),
@@ -80,7 +81,9 @@ export const NovoPlanoModal = ({ open, onOpenChange, onSuccess }: Props) => {
           <DialogTitle>Novo Plano de Manutenção</DialogTitle>
         </DialogHeader>
         
-        <form id="novo-plano-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form id="novo-plano-form" onSubmit={handleSubmit(onSubmit)} className="py-4">
+          <TabsComponent items={[
+            { value: "planejamento", title: "Planejamento", children: <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Código *</label>
@@ -104,13 +107,15 @@ export const NovoPlanoModal = ({ open, onOpenChange, onSuccess }: Props) => {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium">Descrição *</label>
             <Input {...register("description")} placeholder="Ex: Manutenção Preventiva do Ar Condicionado" />
             {errors.description && <span className="text-xs text-red-500">{errors.description.message as string}</span>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          </div> },
+            { value: "programacao", title: "Programação", children: <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:col-span-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Unidade *</label>
               <Select onValueChange={(val) => setValue("unitId", val)}>
@@ -132,7 +137,7 @@ export const NovoPlanoModal = ({ open, onOpenChange, onSuccess }: Props) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:col-span-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Data Inicial do Plano *</label>
               <Input type="date" {...register("startDate")} />
@@ -163,7 +168,8 @@ export const NovoPlanoModal = ({ open, onOpenChange, onSuccess }: Props) => {
               <label className="text-sm font-medium">Categoria / Tipo</label>
               <Input {...register("type")} placeholder="Ex: Climatização" />
             </div>
-          </div>
+          </div></div> },
+          ]} />
         </form>
         
         <DialogFooter>
