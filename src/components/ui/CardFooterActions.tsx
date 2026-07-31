@@ -1,30 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, Pencil, Trash2, PowerOff, History, Printer } from "lucide-react";
+import { Eye, History, Pencil, PowerOff, Printer, Trash2 } from "lucide-react";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@cnc-ti/layout-basic";
 import { Button } from "./Button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@cnc-ti/layout-basic";
-import { useState } from "react";
 
 interface CardFooterActionsProps {
   onView?: () => void;
   viewLink?: string;
   viewLabel?: string;
-  
   onEdit?: () => void;
   editLink?: string;
   editLabel?: string;
-  
   onDelete?: () => void;
   deleteLabel?: string;
   isDeactivate?: boolean;
-  
   onHistory?: () => void;
   historyLabel?: string;
-  
   onPrint?: () => void;
   printLabel?: string;
   children?: React.ReactNode;
 }
+
+const iconClassName = "h-4 w-4";
 
 export const CardFooterActions = ({
   onView,
@@ -37,133 +34,132 @@ export const CardFooterActions = ({
   deleteLabel = "Inativar registro",
   isDeactivate = true,
   onHistory,
-  historyLabel = "Consultar histórico",
+  historyLabel = "Consultar histÃ³rico",
   onPrint,
   printLabel = "Imprimir",
   children,
 }: CardFooterActionsProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const renderViewButton = () => {
-    if (viewLink) {
+
+  const renderAction = ({
+    label,
+    icon,
+    onClick,
+    to,
+    className,
+  }: {
+    label: string;
+    icon: React.ReactNode;
+    onClick?: () => void;
+    to?: string;
+    className?: string;
+  }) => {
+    const mergedClassName = ["card-action-button", className].filter(Boolean).join(" ");
+
+    if (to) {
       return (
-        <Link to={viewLink} title={viewLabel} aria-label={viewLabel}>
-          <Button variant="primary" size="sm" className="card-action-button shadow-1" title={viewLabel} aria-label={viewLabel}>
-            <Eye className="w-4 h-4" />
-          </Button>
+        <Link to={to} className={mergedClassName} title={label} aria-label={label}>
+          {icon}
         </Link>
       );
     }
-    if (onView) {
+
+    if (onClick) {
       return (
-        <Button variant="primary" size="sm" className="card-action-button shadow-1" onClick={onView} title={viewLabel} aria-label={viewLabel}>
-          <Eye className="w-4 h-4" />
-        </Button>
+        <button type="button" className={mergedClassName} onClick={onClick} title={label} aria-label={label}>
+          {icon}
+        </button>
       );
     }
+
     return null;
   };
 
   return (
     <div className="card-action-bar">
-      <div className="card-action-cell card-action-primary">
-        {renderViewButton()}
-      </div>
-      {children && <div className="card-action-cell card-action-custom">{children}</div>}
-      
-      {onHistory && (
-        <Button
-          variant="secondary" 
-          size="sm" 
-          className="card-action-button"
-          onClick={onHistory}
-          title={historyLabel}
-          aria-label={historyLabel}
-        >
-          <History className="w-4 h-4" />
-        </Button>
-      )}
-      
-      {onPrint && (
-        <Button
-          variant="secondary" 
-          size="sm" 
-          className="card-action-button"
-          onClick={onPrint}
-          title={printLabel}
-          aria-label={printLabel}
-        >
-          <Printer className="w-4 h-4" />
-        </Button>
+      {(viewLink || onView) && (
+        <div className="card-action-cell">
+          {renderAction({
+            label: viewLabel,
+            icon: <Eye className={iconClassName} />,
+            onClick: onView,
+            to: viewLink,
+          })}
+        </div>
       )}
 
-      {(onEdit || editLink) && (
-        editLink ? (
-          <Link to={editLink}>
-            <Button
-              variant="secondary" 
-              size="sm" 
-              className="card-action-button"
-              title={editLabel}
-              aria-label={editLabel}
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-          </Link>
-        ) : (
-          <Button
-            variant="secondary" 
-            size="sm" 
-            className="card-action-button"
-            onClick={onEdit}
-            title={editLabel}
-            aria-label={editLabel}
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
-        )
+      {children && <div className="card-action-cell card-action-custom">{children}</div>}
+
+      {onHistory && (
+        <div className="card-action-cell">
+          {renderAction({
+            label: historyLabel,
+            icon: <History className={iconClassName} />,
+            onClick: onHistory,
+          })}
+        </div>
       )}
-      
+
+      {onPrint && (
+        <div className="card-action-cell">
+          {renderAction({
+            label: printLabel,
+            icon: <Printer className={iconClassName} />,
+            onClick: onPrint,
+          })}
+        </div>
+      )}
+
+      {(editLink || onEdit) && (
+        <div className="card-action-cell">
+          {renderAction({
+            label: editLabel,
+            icon: <Pencil className={iconClassName} />,
+            onClick: onEdit,
+            to: editLink,
+          })}
+        </div>
+      )}
+
       {onDelete && (
         <>
-        <Button
-          variant="secondary" 
-          size="sm" 
-          className="card-action-button text-red-700 hover:bg-red-50"
-          onClick={() => setIsDeleteDialogOpen(true)}
-          title={deleteLabel}
-          aria-label={deleteLabel}
-        >
-          {isDeactivate ? <PowerOff className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-        </Button>
+          <div className="card-action-cell">
+            {renderAction({
+              label: deleteLabel,
+              icon: isDeactivate ? <PowerOff className={iconClassName} /> : <Trash2 className={iconClassName} />,
+              onClick: () => setIsDeleteDialogOpen(true),
+              className: "text-red-700 hover:bg-red-50",
+            })}
+          </div>
 
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{isDeactivate ? "Confirmar inativação" : "Confirmar exclusão"}</DialogTitle>
-              <DialogDescription>
-                {isDeactivate 
-                  ? "Deseja realmente inativar este registro? O registro será mantido no histórico e deixará de ficar disponível para novos vínculos."
-                  : "Deseja realmente excluir este registro? Esta ação não pode ser desfeita e removerá os dados permanentemente."}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary">Cancelar</Button>
-              </DialogClose>
-              <Button 
-                variant="primary" 
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => {
-                  onDelete();
-                  setIsDeleteDialogOpen(false);
-                }}
-              >
-                Confirmar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </>
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{isDeactivate ? "Confirmar inativaÃ§Ã£o" : "Confirmar exclusÃ£o"}</DialogTitle>
+                <DialogDescription>
+                  {isDeactivate
+                    ? "Deseja realmente inativar este registro? O registro serÃ¡ mantido no histÃ³rico e deixarÃ¡ de ficar disponÃ­vel para novos vÃ­nculos."
+                    : "Deseja realmente excluir este registro? Esta aÃ§Ã£o nÃ£o pode ser desfeita e removerÃ¡ os dados permanentemente."}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="secondary">Cancelar</Button>
+                </DialogClose>
+                <Button
+                  variant="primary"
+                  className="bg-red-600 text-white hover:bg-red-700"
+                  onClick={() => {
+                    onDelete();
+                    setIsDeleteDialogOpen(false);
+                  }}
+                >
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   );

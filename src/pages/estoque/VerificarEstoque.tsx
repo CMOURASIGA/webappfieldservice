@@ -168,18 +168,18 @@ export const VerificarEstoque = () => {
           const available = material.physicalBalance - material.reservedBalance;
           const status = getStockStatus(material);
           return (
-            <Card key={material.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-              <CardContent className="space-y-4 p-0">
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
+            <Card key={material.id} className="record-card">
+              <CardContent className="record-card-content">
+                <div className="record-card-body">
+                  <div className="record-card-header">
                     <Badge variant="default">{material.code}</Badge>
                     {status !== "Normal" && (
                       <Badge variant="default" className={status === "Sem saldo" ? "border-red-200 bg-red-50 text-red-700" : status === "Crítico" ? "border-orange-200 bg-orange-50 text-orange-700" : "border-yellow-200 bg-yellow-50 text-yellow-700"}>{status}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={material.name}>{material.name}</h3>
-                    <p className="text-sm text-slate-500">Unidade: {getUnitName(material.unitId)}</p>
+                    <h3 className="record-card-title" title={material.name}>{material.name}</h3>
+                    <p className="record-card-subtitle">Unidade: {getUnitName(material.unitId)}</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-center">
                     <div><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Físico</p><p className="mt-1 font-semibold text-slate-900">{material.physicalBalance}</p></div>
@@ -192,7 +192,7 @@ export const VerificarEstoque = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
+              <CardFooter className="mt-auto border-t border-slate-200 p-0">
                 <CardFooterActions
                   onView={() => navigate(`/estoque/movimentacoes?materialId=${material.id}`)}
                   viewLabel="Historico"
@@ -200,9 +200,9 @@ export const VerificarEstoque = () => {
                   onDelete={() => handleDeactivateMaterial(material)}
                   deleteLabel="Inativar material"
                 >
-                  <Button variant="secondary" size="sm" className="card-action-button" title="Solicitar material" aria-label="Solicitar material" onClick={() => navigate(`/estoque/solicitacoes/nova?materialId=${material.id}`)}>
+                  <button type="button" className="card-action-button" title="Solicitar material" aria-label="Solicitar material" onClick={() => navigate(`/estoque/solicitacoes/nova?materialId=${material.id}`)}>
                     <PackageOpen className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </CardFooterActions>
               </CardFooter>
             </Card>

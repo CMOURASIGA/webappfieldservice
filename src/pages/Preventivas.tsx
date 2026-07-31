@@ -364,17 +364,17 @@ export const Preventivas = () => {
           else if (status === "Sem data") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
-            <Card key={plan.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-              <CardContent className="space-y-4 p-0">
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
+            <Card key={plan.id} className="record-card">
+              <CardContent className="record-card-content">
+                <div className="record-card-body">
+                  <div className="record-card-header">
                     <Badge variant="default">{plan.code}</Badge>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>{status === "Proxima" ? "Próxima" : status}</span>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={plan.description}>{plan.description}</h3>
-                    <p className="text-sm text-slate-500">{plan.periodicity}</p>
+                    <h3 className="record-card-title" title={plan.description}>{plan.description}</h3>
+                    <p className="record-card-subtitle">{plan.periodicity}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border border-slate-200">
@@ -396,12 +396,12 @@ export const Preventivas = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-950">
+                  <div className="record-card-note border-blue-300 bg-blue-50 text-blue-950">
                     <strong>Ao gerar a OS:</strong> responsável, local, ativo, checklist e custo estimado são preenchidos a partir deste plano.
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
+              <CardFooter className="mt-auto border-t border-slate-200 p-0">
                 <CardFooterActions onView={() => navigate(`/preventivas/${plan.id}`)} viewLabel="Abrir" />
               </CardFooter>
             </Card>

@@ -183,16 +183,16 @@ export const Locais = () => {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredLocations.map((location) => (
-          <Card key={location.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-            <CardContent className="space-y-4 p-0">
-              <div className="space-y-4 p-4">
-                <div className="flex items-start justify-between gap-3">
+          <Card key={location.id} className="record-card">
+            <CardContent className="record-card-content">
+              <div className="record-card-body">
+                <div className="record-card-header">
                   <Badge variant="default">{location.code}</Badge>
                   <Badge variant="default">{location.type}</Badge>
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={location.name}>{location.name}</h3>
+                  <h3 className="record-card-title" title={location.name}>{location.name}</h3>
                 </div>
 
                 <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border border-slate-200">
@@ -215,7 +215,7 @@ export const Locais = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="mt-auto border-t border-slate-200 px-5 py-4">
+            <CardFooter className="mt-auto border-t border-slate-200 p-0">
               <CardFooterActions
                 viewLink={`/locais/${location.id}`}
                 viewLabel="Ver detalhes"

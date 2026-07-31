@@ -236,17 +236,17 @@ export const VerificarDocumentos = () => {
           else if (status === "Sem validade definida") badgeClass = "bg-slate-100 text-slate-700";
 
           return (
-            <Card key={doc.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-              <CardContent className="space-y-4 p-0">
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
+            <Card key={doc.id} className="record-card">
+              <CardContent className="record-card-content">
+                <div className="record-card-body">
+                  <div className="record-card-header">
                     <Badge variant="default">{doc.type}</Badge>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>{status}</span>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={doc.title}>{doc.title}</h3>
-                    <p className="text-sm text-slate-500">{doc.number || "Sem numero"}</p>
+                    <h3 className="record-card-title" title={doc.title}>{doc.title}</h3>
+                    <p className="record-card-subtitle">{doc.number || "Sem numero"}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border border-slate-200">
@@ -269,13 +269,13 @@ export const VerificarDocumentos = () => {
                   </div>
 
                   {!(doc.attachments && doc.attachments.length > 0) && (
-                    <div className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <div className="record-card-note border-slate-300 bg-slate-50 text-slate-700">
                       Documento sem anexo.
                     </div>
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
+              <CardFooter className="mt-auto border-t border-slate-200 p-0">
                 <CardFooterActions
                   viewLink={`/documentos/${doc.id}`}
                   viewLabel="Abrir"

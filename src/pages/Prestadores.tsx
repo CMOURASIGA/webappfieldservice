@@ -184,16 +184,16 @@ export const Tecnicos = () => {
         {filteredProviders.map((provider) => {
           const stats = getProviderStats(provider.id);
           return (
-            <Card key={provider.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-              <CardContent className="space-y-4 p-0">
-                <div className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
+            <Card key={provider.id} className="record-card">
+              <CardContent className="record-card-content">
+                <div className="record-card-body">
+                  <div className="record-card-header">
                     <Badge variant="default">{provider.type || "Externo"}</Badge>
                     <Badge variant={provider.status === "Ativo" ? "success" : "default"}>{provider.status}</Badge>
                   </div>
                   <div className="space-y-2">
-                    <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={provider.name}>{provider.name}</h3>
-                    <p className="text-sm text-slate-500">{provider.document || "Sem documento"}</p>
+                    <h3 className="record-card-title" title={provider.name}>{provider.name}</h3>
+                    <p className="record-card-subtitle">{provider.document || "Sem documento"}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border border-slate-200">
                     <div className="border-b border-r border-slate-200 bg-slate-50 p-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Especialidade</p><p className="mt-1 text-sm font-medium text-slate-900">{provider.specialty || "-"}</p></div>
@@ -207,7 +207,7 @@ export const Tecnicos = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="mt-auto border-t border-slate-200 px-5 py-4">
+              <CardFooter className="mt-auto border-t border-slate-200 p-0">
                 <CardFooterActions
                   viewLink={`/prestadores/${provider.id}`}
                   viewLabel="Ver detalhes"

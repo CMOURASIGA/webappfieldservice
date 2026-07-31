@@ -230,17 +230,17 @@ export const Ativos = () => {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredAssets.map((asset) => (
-          <Card key={asset.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-            <CardContent className="space-y-4 p-0">
-              <div className="space-y-4 p-4">
-                <div className="flex items-start justify-between gap-3">
+          <Card key={asset.id} className="record-card">
+            <CardContent className="record-card-content">
+              <div className="record-card-body">
+                <div className="record-card-header">
                   <Badge variant="default">{asset.code}</Badge>
                   {getStatusBadge(asset.status)}
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={asset.name}>{asset.name}</h3>
-                  <p className="text-sm text-slate-500">{asset.category}</p>
+                  <h3 className="record-card-title" title={asset.name}>{asset.name}</h3>
+                  <p className="record-card-subtitle">{asset.category}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-lg border border-slate-200">
@@ -263,7 +263,7 @@ export const Ativos = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="mt-auto border-t border-slate-200 px-5 py-4">
+            <CardFooter className="mt-auto border-t border-slate-200 p-0">
               <CardFooterActions
                 viewLink={`/ativos/${asset.id}`}
                 viewLabel="Ver detalhes"

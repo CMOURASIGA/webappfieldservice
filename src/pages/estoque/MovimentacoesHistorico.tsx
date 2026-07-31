@@ -156,14 +156,15 @@ export const MovimentacoesHistorico = () => {
 
       <div className="space-y-4">
         {filtered.map((movement) => (
-          <Card key={movement.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:border-brand-700 hover:shadow-md">
-            <CardContent className="space-y-4 p-4">
+          <Card key={movement.id} className="record-card">
+            <CardContent className="record-card-content">
+              <div className="record-card-body">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={movement.type === "Entrada" ? "success" : movement.type === "Saída" ? "danger" : "warning"}>{movement.type}</Badge>
-                    <h3 className="text-lg font-semibold text-slate-900">{getMaterialName(movement.materialId)}</h3>
-                    <span className="text-sm text-slate-500">{getMaterialCategory(movement.materialId)}</span>
+                    <h3 className="record-card-title">{getMaterialName(movement.materialId)}</h3>
+                    <span className="record-card-subtitle">{getMaterialCategory(movement.materialId)}</span>
                   </div>
                   <p className="text-sm text-slate-500">Data: {format(parseISO(movement.date), "dd/MM/yyyy HH:mm")} • Responsável: {getUserName(movement.userId)}</p>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
@@ -180,6 +181,7 @@ export const MovimentacoesHistorico = () => {
                     </Link>
                   )}
                 </div>
+              </div>
               </div>
             </CardContent>
           </Card>

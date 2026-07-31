@@ -208,22 +208,22 @@ export const Servicos = () => {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredRequests.map((request) => (
-          <Card key={request.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-            <CardContent className="space-y-4 p-0">
-              <div className="space-y-4 p-4">
-                <div className="flex items-start justify-between gap-3">
+          <Card key={request.id} className="record-card">
+            <CardContent className="record-card-content">
+              <div className="record-card-body">
+                <div className="record-card-header">
                   <Badge variant="default">{isValid(parseISO(request.createdAt)) ? format(parseISO(request.createdAt), "yyyy") : "Sem data"}</Badge>
                   {getStatusBadge(request.status)}
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={request.title}>
+                  <h3 className="record-card-title" title={request.title}>
                     {request.title}
                   </h3>
-                  <p className="text-sm text-slate-500">{request.protocol}</p>
+                  <p className="record-card-subtitle">{request.protocol}</p>
                 </div>
 
-                <div className="border-t border-slate-200 pt-3 text-sm text-slate-600">
+                <div className="record-card-meta text-sm text-slate-600">
                   <p className="line-clamp-2">{request.description}</p>
                 </div>
 
@@ -249,12 +249,12 @@ export const Servicos = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="mt-auto border-t border-slate-200 px-4 py-4">
+            <CardFooter className="mt-auto border-t border-slate-200 p-0">
               <CardFooterActions viewLink={`/servicos/${request.id}`} viewLabel="Abrir">
                 {request.status !== "Convertida em ordem" && (
-                  <Button size="sm" className="gap-2" onClick={() => navigate("/ordens/nova", { state: { sourceRequest: request } })}>
+                  <button type="button" className="card-action-button gap-2" title="Gerar OS" aria-label="Gerar OS" onClick={() => navigate("/ordens/nova", { state: { sourceRequest: request } })}>
                     Gerar OS
-                  </Button>
+                  </button>
                 )}
               </CardFooterActions>
             </CardFooter>

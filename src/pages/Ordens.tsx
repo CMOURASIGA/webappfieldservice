@@ -346,24 +346,24 @@ export const Ordens = () => {
             {filteredOrders.map((order) => {
               const conditions = getConditionLabels(order);
               return (
-                <Card key={order.id} className="overflow-hidden border-2 border-slate-300 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-700 hover:shadow-md">
-                  <CardContent className="space-y-4 p-0">
-                    <div className="space-y-4 p-4">
-                      <div className="flex items-start justify-between gap-3">
+                <Card key={order.id} className="record-card">
+                  <CardContent className="record-card-content">
+                    <div className="record-card-body">
+                      <div className="record-card-header">
                         <Badge variant="default">{formatDate(order.createdAt, "yyyy")}</Badge>
                         <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getPriorityTone(order.priority)}`}>{getPriorityLabel(order.priority)}</span>
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="line-clamp-2 text-lg font-semibold text-slate-900" title={order.technicalDescription}>
+                        <h3 className="record-card-title" title={order.technicalDescription}>
                           {order.technicalDescription}
                         </h3>
-                        <p className="line-clamp-2 text-sm text-slate-500">{getCategoryName(order.categoryId)}</p>
+                        <p className="record-card-subtitle">{getCategoryName(order.categoryId)}</p>
                       </div>
 
-                      <div className="border-t border-slate-200 pt-3 text-xs text-slate-600">
-                        <p className="font-semibold uppercase tracking-wide text-slate-500">{order.type}</p>
-                        <div className="mt-2 space-y-1.5">
+                      <div className="record-card-meta text-xs text-slate-600">
+                        <p className="record-card-kicker">{order.type}</p>
+                        <div className="record-card-meta-list">
                           <p className="flex items-center gap-2">
                             <CalendarDays className="h-3.5 w-3.5" />
                             {order.deadline ? `${formatDate(order.deadline, "dd/MM/yyyy")} às ${formatDate(order.deadline, "HH:mm")}` : "Prazo nao informado"}
@@ -402,7 +402,7 @@ export const Ordens = () => {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t border-slate-200 p-0">
+                  <CardFooter className="mt-auto border-t border-slate-200 p-0">
                     <CardFooterActions
                       viewLink={`/ordens/${order.id}`}
                       viewLabel="Ver OS"
