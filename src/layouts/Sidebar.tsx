@@ -64,7 +64,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
   const [units, setUnits] = useState<Unit[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
 
-  useEffect(() => {
+  const refreshAgendaData = () => {
     setOrders((storageService.get("gsi_work_orders") || []) as WorkOrder[]);
     setCommitments((storageService.get("gsi_technician_unavailabilities") || []) as TechnicianUnavailability[]);
     setPlans((storageService.get("gsi_preventive_plans") || []) as PreventivePlan[]);
@@ -72,7 +72,20 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
     setProviders((storageService.get("gsi_providers") || []) as Provider[]);
     setUnits((storageService.get("gsi_units") || []) as Unit[]);
     setLocations((storageService.get("gsi_locations") || []) as Location[]);
+  };
+
+  useEffect(() => {
+    refreshAgendaData();
   }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      refreshAgendaData();
+    };
+
+    window.addEventListener("gsi-storage-updated", handleStorageUpdate);
+    return () => window.removeEventListener("gsi-storage-updated", handleStorageUpdate);
+  }, []);
 
   useEffect(() => {
     if (setMobileMenuOpen) setMobileMenuOpen(false);
@@ -126,21 +139,10 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
           helper: `${getLocationName(plan.locationId)}${plan.unitId ? ` • ${getUnitName(plan.unitId)}` : ""}`,
           href: `/preventivas/${plan.id}`,
         })),
-      ...commitments
-        .filter((commitment) => commitment.startAt && commitment.endAt)
-        .map((commitment) => ({
-          id: `commitment-${commitment.id}`,
-          date: parseISO(commitment.startAt),
-          endDate: parseISO(commitment.endAt),
-          badge: (commitment.type || "Outro").toUpperCase(),
-          title: getExecutorName(commitment.technicianId),
-          subtitle: commitment.reason || "Compromisso sem descricao",
-          helper: "Agenda da equipe",
-        })),
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
     return items;
-  }, [commitments, locations, orders, plans, providers, units, users]);
+  }, [locations, orders, plans, providers, units, users]);
 
   const monthDays = eachDayOfInterval({
     start: startOfMonth(calendarMonth),
@@ -280,7 +282,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
   );
 
   const renderAgendaDay = () => (
-    <div className="flex max-h-[calc(100vh-190px)] flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center justify-between text-[11px] font-semibold">
         <button type="button" className="inline-flex items-center gap-1 text-white hover:text-white/80" onClick={() => setSelectedAgendaDate(null)}>
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -289,7 +291,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         <span className="text-white/90">{selectedAgendaDate ? format(selectedAgendaDate, "EEEE, dd 'de' MMM", { locale: ptBR }) : ""}</span>
       </div>
 
-      <div className="mt-3 flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
+      <div className="custom-scrollbar mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-scroll pr-1">
         {dayOccurrences.length > 0 ? (
           dayOccurrences.map((occurrence) => {
             const content = (
@@ -327,13 +329,15 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
         )}
       </div>
 
-      <button
-        type="button"
-        className="mt-3 w-full text-left text-sm font-semibold text-white transition-colors hover:text-white/80"
-        onClick={goToAgendaPage}
-      >
-        Abrir agenda completa
-      </button>
+      <div className="mt-3 shrink-0">
+        <button
+          type="button"
+          className="w-full text-left text-sm font-semibold text-white transition-colors hover:text-white/80"
+          onClick={goToAgendaPage}
+        >
+          Abrir agenda completa
+        </button>
+      </div>
     </div>
   );
 
@@ -364,7 +368,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen?
               </div>
             </div>
 
-            <section className="mx-3 mt-3 min-h-0 flex-1 border-t border-white/25 px-1 pt-3 pb-4 text-white" aria-label="Agenda mensal">
+            <section className="mx-3 mt-3 flex min-h-0 flex-1 flex-col border-t border-white/25 px-1 pt-3 pb-4 text-white" aria-label="Agenda mensal">
               <h2 className="mb-2 text-xs font-bold uppercase tracking-wider">Agenda</h2>
               {selectedAgendaDate ? renderAgendaDay() : renderAgendaMonth()}
             </section>

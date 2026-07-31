@@ -38,6 +38,9 @@ export const storageService = {
 
   set<K extends keyof DB>(key: K, value: DB[K]) {
     localStorage.setItem(key, JSON.stringify(value));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("gsi-storage-updated", { detail: { key } }));
+    }
   },
 
   getDefaults<K extends keyof DB>(key: K): DB[K] {
@@ -1356,62 +1359,103 @@ export const storageService = {
     // Ordens de Serviço distribuídas na semana atual
     const currentOrders = this.get("gsi_work_orders");
     
-    // OS 1: João - Segunda 08:00 às 10:00
-    if(currentOrders[0]) {
-      const d = new Date(monday); d.setHours(8, 0, 0, 0);
-      const end = new Date(d); end.setHours(10, 0, 0, 0);
-      currentOrders[0].responsibleId = "tec-1";
-      currentOrders[0].plannedStart = d.toISOString();
-      currentOrders[0].plannedEnd = end.toISOString();
-      currentOrders[0].estimatedDurationMinutes = 120;
-      currentOrders[0].scheduleStatus = "Concluída";
-    }
+    const assignOrderSchedule = (
+      index: number,
+      day: Date,
+      startHour: number,
+      startMinute: number,
+      endHour: number,
+      endMinute: number,
+      options: {
+        responsibleId?: string;
+        providerId?: string;
+        scheduleStatus: any;
+        scheduleNotes?: string;
+      },
+    ) => {
+      if (!currentOrders[index]) return;
+      const start = new Date(day);
+      start.setHours(startHour, startMinute, 0, 0);
+      const end = new Date(day);
+      end.setHours(endHour, endMinute, 0, 0);
+      currentOrders[index].responsibleId = options.responsibleId;
+      currentOrders[index].providerId = options.providerId;
+      currentOrders[index].plannedStart = start.toISOString();
+      currentOrders[index].plannedEnd = end.toISOString();
+      currentOrders[index].estimatedDurationMinutes = Math.max(30, (end.getTime() - start.getTime()) / 60000);
+      currentOrders[index].scheduleStatus = options.scheduleStatus;
+      currentOrders[index].scheduleNotes = options.scheduleNotes;
+    };
 
-    // OS 2: Ana - Terça 09:00 às 12:00
-    if(currentOrders[1]) {
-      const d = new Date(tuesday); d.setHours(9, 0, 0, 0);
-      const end = new Date(d); end.setHours(12, 0, 0, 0);
-      currentOrders[1].responsibleId = "tec-2";
-      currentOrders[1].plannedStart = d.toISOString();
-      currentOrders[1].plannedEnd = end.toISOString();
-      currentOrders[1].estimatedDurationMinutes = 180;
-      currentOrders[1].scheduleStatus = "Programada";
-    }
+    // Segunda com vários cenários para validar sidebar + rolagem
+    assignOrderSchedule(0, monday, 8, 0, 10, 0, {
+      responsibleId: "tec-1",
+      scheduleStatus: "Programada",
+    });
+    assignOrderSchedule(1, monday, 10, 30, 12, 0, {
+      responsibleId: "tec-2",
+      scheduleStatus: "Programada",
+    });
+    assignOrderSchedule(2, monday, 13, 0, 14, 30, {
+      responsibleId: "tec-1",
+      scheduleStatus: "Confirmada pelo técnico",
+    });
+    assignOrderSchedule(3, monday, 15, 0, 17, 0, {
+      providerId: "prov-1",
+      scheduleStatus: "Reprogramação necessária",
+      scheduleNotes: "Falta de material",
+    });
+    assignOrderSchedule(5, monday, 17, 15, 18, 30, {
+      responsibleId: "tec-2",
+      scheduleStatus: "Programada",
+    });
+    assignOrderSchedule(6, monday, 18, 45, 20, 0, {
+      providerId: "prov-2",
+      scheduleStatus: "Programada",
+    });
 
-    // OS 3: João - Quarta 14:00 às 16:00
-    if(currentOrders[2]) {
-      const d = new Date(wednesday); d.setHours(14, 0, 0, 0);
-      const end = new Date(d); end.setHours(16, 0, 0, 0);
-      currentOrders[2].responsibleId = "tec-1";
-      currentOrders[2].plannedStart = d.toISOString();
-      currentOrders[2].plannedEnd = end.toISOString();
-      currentOrders[2].estimatedDurationMinutes = 120;
-      currentOrders[2].scheduleStatus = "Confirmada pelo técnico";
-    }
+    // Demais dias continuam com ocorrências para leitura geral da agenda
+    assignOrderSchedule(7, tuesday, 9, 0, 11, 30, {
+      responsibleId: "tec-2",
+      scheduleStatus: "Programada",
+    });
+    assignOrderSchedule(8, wednesday, 14, 0, 16, 0, {
+      responsibleId: "tec-1",
+      scheduleStatus: "Confirmada pelo técnico",
+    });
+    assignOrderSchedule(9, thursday, 10, 0, 15, 0, {
+      providerId: "prov-9",
+      scheduleStatus: "Programada",
+    });
 
-    // OS 4: Clima Técnica - Quinta 10:00 às 15:00 (Reprogramação)
-    if(currentOrders[3]) {
-      const d = new Date(thursday); d.setHours(10, 0, 0, 0);
-      const end = new Date(d); end.setHours(15, 0, 0, 0);
-      currentOrders[3].responsibleId = undefined;
-      currentOrders[3].providerId = "prov-1";
-      currentOrders[3].plannedStart = d.toISOString();
-      currentOrders[3].plannedEnd = end.toISOString();
-      currentOrders[3].estimatedDurationMinutes = 300;
-      currentOrders[3].scheduleStatus = "Reprogramação necessária";
-      currentOrders[3].scheduleNotes = "Falta de material";
-    }
-
-    // OS 5: Não programada (aparecerá na aba lateral 'Não Programadas')
-    if(currentOrders[4]) {
+    // Uma OS não programada para manter o cenário lateral da agenda completa
+    if (currentOrders[4]) {
       currentOrders[4].plannedStart = undefined;
       currentOrders[4].plannedEnd = undefined;
       currentOrders[4].estimatedDurationMinutes = undefined;
       currentOrders[4].scheduleStatus = "Não programada";
       currentOrders[4].responsibleId = undefined;
+      currentOrders[4].providerId = undefined;
     }
 
     this.set("gsi_work_orders", currentOrders);
+
+    const currentPlans = this.get("gsi_preventive_plans") || [];
+    const planSchedules = [
+      { index: 0, day: monday, hour: 11, minute: 15 },
+      { index: 1, day: monday, hour: 14, minute: 45 },
+      { index: 2, day: monday, hour: 16, minute: 30 },
+      { index: 3, day: tuesday, hour: 13, minute: 30 },
+    ];
+
+    planSchedules.forEach(({ index, day, hour, minute }) => {
+      if (!currentPlans[index]) return;
+      const nextExecution = new Date(day);
+      nextExecution.setHours(hour, minute, 0, 0);
+      currentPlans[index].nextExecution = nextExecution.toISOString();
+    });
+
+    this.set("gsi_preventive_plans", currentPlans);
 
     // Indisponibilidades
     const unavails = [
