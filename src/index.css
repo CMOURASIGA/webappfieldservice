@@ -412,10 +412,46 @@
     @apply rounded-xl border-2 border-slate-300 bg-brand-050 p-5 shadow-sm;
   }
 
+  .system-form-field {
+    border: 2px solid #94a3b8 !important;
+    background-color: #ffffff !important;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .system-form-field:hover {
+    border-color: #64748b !important;
+  }
+
+  .system-form-field:focus,
+  .system-form-field:focus-visible {
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14) !important;
+  }
+
   main input:not([type="checkbox"]):not([type="radio"]),
   main textarea,
   main select {
-    border-color: var(--color-gray-400) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: #94a3b8 !important;
+    background-color: #ffffff !important;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  main input:not([type="checkbox"]):not([type="radio"]):hover,
+  main textarea:hover,
+  main select:hover {
+    border-color: #64748b !important;
+  }
+
+  main input:not([type="checkbox"]):not([type="radio"]):focus,
+  main input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  main textarea:focus,
+  main textarea:focus-visible,
+  main select:focus,
+  main select:focus-visible {
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14) !important;
   }
 
   /* No cadastro de documentos, a borda permanece visível para deixar clara\n     a área clicável de cada campo, mesmo no layout claro. */
