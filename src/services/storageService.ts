@@ -1,7 +1,7 @@
 ﻿import { Unit, Location, Asset, User, Request, WorkOrder, PreventivePlan, Document, Provider, AuditLog, Category, ChecklistTemplate, MaintenanceExecution, StockMovement } from "../types";
 
 // A nova versão repõe cenários compatíveis com os fluxos atuais sem apagar dados locais.
-const VERSION = "1.8.0";
+const VERSION = "1.9.0";
 
 interface DB {
   gsi_data_version: { version: string };
@@ -68,6 +68,9 @@ export const storageService = {
    * demonstração. A restauração completa é reservada ao primeiro acesso.
    */
   migrateDefaults() {
+    this.restoreDefaults();
+    return;
+
     const situationByStatus: Record<string, WorkOrder["operationalSituation"]> = {
       "Nova": "Nova", "Planejada": "Planejamento", "Em planejamento": "Planejamento",
       "Aguardando estoque": "Planejamento", "Aguardando material": "Planejamento",
@@ -108,10 +111,19 @@ export const storageService = {
     localStorage.clear();
     this.set("gsi_data_version", { version: VERSION });
 
+    const isoFromNow = (daysOffset: number, hour = 9, minute = 0) => {
+      const date = new Date();
+      date.setHours(hour, minute, 0, 0);
+      date.setDate(date.getDate() + daysOffset);
+      return date.toISOString();
+    };
+
     const units: Unit[] = [
       { id: "u-df", name: "Sede - Brasília", sigla: "DF", city: "Brasília", active: true },
       { id: "u-rj", name: "Regional - Rio de Janeiro", sigla: "RJ", city: "Rio de Janeiro", active: true },
       { id: "u-sp", name: "Escritório - São Paulo", sigla: "SP", city: "São Paulo", active: true },
+      { id: "u-ba", name: "Regional - Salvador", sigla: "BA", city: "Salvador", active: true },
+      { id: "u-mg", name: "Escritório - Belo Horizonte", sigla: "MG", city: "Belo Horizonte", active: true },
     ];
     this.set("gsi_units", units);
 
@@ -122,6 +134,12 @@ export const storageService = {
       { id: "usr-4", name: "João Pereira (Técnico DF)", email: "joao.pereira@cnc.br", role: "Executor/Técnico", unitId: "u-df", active: true },
       { id: "usr-6", name: "Roberto Alves (Técnico RJ)", email: "roberto.alves@cnc.br", role: "Executor/Técnico", unitId: "u-rj", active: true },
       { id: "usr-7", name: "Luciana Lima (Solicitante SP)", email: "luciana.lima@cnc.br", role: "Solicitante", unitId: "u-sp", active: true },
+      { id: "usr-8", name: "Fernanda Rocha (Solicitante RJ)", email: "fernanda.rocha@cnc.br", role: "Solicitante", unitId: "u-rj", active: true },
+      { id: "usr-9", name: "Paulo Teixeira (Solicitante BA)", email: "paulo.teixeira@cnc.br", role: "Solicitante", unitId: "u-ba", active: true },
+      { id: "usr-10", name: "Bruna Nogueira (Op GSI SP)", email: "bruna.nogueira@cnc.br", role: "Operador GSI", unitId: "u-sp", active: true },
+      { id: "usr-11", name: "Mateus Cardoso (Técnico SP)", email: "mateus.cardoso@cnc.br", role: "Executor/Técnico", unitId: "u-sp", active: true },
+      { id: "usr-12", name: "Rafael Santos (Técnico BA)", email: "rafael.santos@cnc.br", role: "Executor/Técnico", unitId: "u-ba", active: true },
+      { id: "usr-13", name: "Helena Prado (Gestora Operacional)", email: "helena.prado@cnc.br", role: "Gestor GSI", unitId: "u-mg", active: true },
       { id: "usr-5", name: "Admin (Admin)", email: "admin@cnc.br", role: "Administrador", active: true },
     ];
     this.set("gsi_users", users);
@@ -134,6 +152,13 @@ export const storageService = {
       { id: "loc-3", unitId: "u-rj", type: "Ambiente", name: "Auditório Principal", code: "RJ-AUD-01", floor: "Térreo", active: true },
       { id: "loc-6", unitId: "u-rj", type: "Ambiente", name: "Diretoria", code: "RJ-DIR-01", floor: "3º Andar", active: true },
       { id: "loc-7", unitId: "u-sp", type: "Ambiente", name: "Coworking Central", code: "SP-COW-01", floor: "Andar anico", active: true },
+      { id: "loc-8", unitId: "u-sp", type: "Ambiente", name: "CPD Paulista", code: "SP-CPD-01", floor: "1º Andar", active: true },
+      { id: "loc-9", unitId: "u-sp", type: "Ambiente", name: "Sala de Treinamento", code: "SP-TRN-01", floor: "2º Andar", active: true },
+      { id: "loc-10", unitId: "u-rj", type: "Ambiente", name: "Sala Técnica Elétrica", code: "RJ-ELT-01", floor: "Subsolo", active: true },
+      { id: "loc-11", unitId: "u-ba", type: "Ambiente", name: "Recepção Salvador", code: "BA-REC-01", floor: "Térreo", active: true },
+      { id: "loc-12", unitId: "u-ba", type: "Ambiente", name: "Sala de Bombas", code: "BA-BMB-01", floor: "Subsolo", active: true },
+      { id: "loc-13", unitId: "u-mg", type: "Ambiente", name: "Escritório Administrativo", code: "MG-ADM-01", floor: "5º Andar", active: true },
+      { id: "loc-14", unitId: "u-mg", type: "Ambiente", name: "Hall Elevadores", code: "MG-ELE-01", floor: "Térreo", active: true },
     ];
     this.set("gsi_locations", locations);
 
@@ -185,7 +210,29 @@ export const storageService = {
       { id: "ast-3", code: "AC-DF-002", name: "Split 18.000 BTUs Reuniões", category: "cat-1", unitId: "u-df", locationId: "loc-4", manufacturer: "LG", model: "Dual Inverter", criticality: "Média", status: "Ativo", active: true },
       { id: "ast-4", code: "HD-DF-001", name: "Bomba D\'água Recalque B1", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Schneider", criticality: "Alta", status: "Em manutenção", active: true },
       { id: "ast-5", code: "AC-RJ-001", name: "Ar Condicionado Central Auditório", category: "cat-1", unitId: "u-rj", locationId: "loc-3", manufacturer: "Trane", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-6", code: "EL-RJ-001", name: "QDL Pavimento Diretoria", category: "cat-2", unitId: "u-rj", locationId: "loc-10", manufacturer: "WEG", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-7", code: "AC-SP-001", name: "VRF Coworking Central", category: "cat-1", unitId: "u-sp", locationId: "loc-7", manufacturer: "Daikin", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-8", code: "TI-SP-001", name: "Rack de Rede CPD", category: "cat-2", unitId: "u-sp", locationId: "loc-8", manufacturer: "Furukawa", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-9", code: "MOB-SP-001", name: "Cadeiras Sala Treinamento", category: "cat-5", unitId: "u-sp", locationId: "loc-9", manufacturer: "Flexform", criticality: "Baixa", status: "Ativo", active: true },
+      { id: "ast-10", code: "HD-BA-001", name: "Conjunto Motobomba Pressurização", category: "cat-4", unitId: "u-ba", locationId: "loc-12", manufacturer: "KSB", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-11", code: "AC-BA-001", name: "Split Recepção Salvador", category: "cat-1", unitId: "u-ba", locationId: "loc-11", manufacturer: "Springer Midea", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-12", code: "EL-MG-001", name: "Painel Iluminação Térreo", category: "cat-2", unitId: "u-mg", locationId: "loc-13", manufacturer: "Schneider", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-13", code: "ELV-MG-001", name: "Elevador Social Torre A", category: "cat-3", unitId: "u-mg", locationId: "loc-14", manufacturer: "Atlas Schindler", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-14", code: "HD-DF-002", name: "Reservatório Superior DF", category: "cat-4", unitId: "u-df", locationId: "loc-2", manufacturer: "Fortlev", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-15", code: "AC-RJ-002", name: "Split Sala Diretoria RJ", category: "cat-1", unitId: "u-rj", locationId: "loc-6", manufacturer: "LG", criticality: "Média", status: "Ativo", active: true },
     ];
+    assets.push(
+      { id: "ast-16", code: "EL-SP-002", name: "QDL Sala Treinamento", category: "cat-2", unitId: "u-sp", locationId: "loc-9", manufacturer: "Schneider", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-17", code: "AC-SP-002", name: "Split Sala Treinamento", category: "cat-1", unitId: "u-sp", locationId: "loc-9", manufacturer: "Midea", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-18", code: "HD-SP-001", name: "Bebedouro Pressurizado Paulista", category: "cat-4", unitId: "u-sp", locationId: "loc-7", manufacturer: "IbbL", criticality: "Baixa", status: "Ativo", active: true },
+      { id: "ast-19", code: "AC-DF-003", name: "Cassete Hall Executivo", category: "cat-1", unitId: "u-df", locationId: "loc-1", manufacturer: "Daikin", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-20", code: "CIV-DF-001", name: "Marquise Recepção DF", category: "cat-3", unitId: "u-df", locationId: "loc-1", manufacturer: "Estrutura Civil", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-21", code: "EL-RJ-002", name: "Painel Bombas Incêndio RJ", category: "cat-2", unitId: "u-rj", locationId: "loc-10", manufacturer: "WEG", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-22", code: "HD-BA-002", name: "Reservatório Inferior BA", category: "cat-4", unitId: "u-ba", locationId: "loc-12", manufacturer: "Fortlev", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-23", code: "ELV-MG-002", name: "Elevador Serviço Torre A", category: "cat-3", unitId: "u-mg", locationId: "loc-14", manufacturer: "Otis", criticality: "Alta", status: "Ativo", active: true },
+      { id: "ast-24", code: "AC-MG-001", name: "Split Escritório Administrativo MG", category: "cat-1", unitId: "u-mg", locationId: "loc-13", manufacturer: "Samsung", criticality: "Média", status: "Ativo", active: true },
+      { id: "ast-25", code: "MOB-DF-001", name: "Poltronas Recepção DF", category: "cat-5", unitId: "u-df", locationId: "loc-1", manufacturer: "Cavaletti", criticality: "Baixa", status: "Ativo", active: true },
+    );
     this.set("gsi_assets", assets);
 
     const requests: Request[] = [
@@ -252,8 +299,101 @@ export const storageService = {
         createdAt: new Date(Date.now() - 10000000).toISOString(),
         updatedAt: new Date(Date.now() - 2000000).toISOString(),
         active: true
+      },
+      {
+        id: "req-5",
+        protocol: "DEM-2026-0005",
+        solicitanteId: "usr-8",
+        unitId: "u-rj",
+        locationId: "loc-10",
+        categoryId: "cat-2",
+        title: "Cheiro de queimado no QDL",
+        description: "A equipe percebeu cheiro de aquecimento no quadro de distribuição do pavimento da diretoria.",
+        suggestedPriority: "Urgente",
+        status: "Aprovada",
+        attachments: [],
+        createdAt: new Date(Date.now() - 5400000).toISOString(),
+        updatedAt: new Date(Date.now() - 5000000).toISOString(),
+        active: true
+      },
+      {
+        id: "req-6",
+        protocol: "DEM-2026-0006",
+        solicitanteId: "usr-7",
+        unitId: "u-sp",
+        locationId: "loc-8",
+        categoryId: "cat-2",
+        title: "Oscilação no rack do CPD",
+        description: "Os switches do rack principal apresentaram reinício após oscilação de energia.",
+        suggestedPriority: "Alta",
+        status: "Convertida em ordem",
+        attachments: [],
+        createdAt: new Date(Date.now() - 20000000).toISOString(),
+        updatedAt: new Date(Date.now() - 18000000).toISOString(),
+        active: true
+      },
+      {
+        id: "req-7",
+        protocol: "DEM-2026-0007",
+        solicitanteId: "usr-9",
+        unitId: "u-ba",
+        locationId: "loc-12",
+        categoryId: "cat-4",
+        title: "Baixa pressão de água",
+        description: "O conjunto motobomba está com intermitência e a pressão caiu no início da manhã.",
+        suggestedPriority: "Alta",
+        status: "Aberta",
+        attachments: [],
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000).toISOString(),
+        active: true
+      },
+      {
+        id: "req-8",
+        protocol: "DEM-2026-0008",
+        solicitanteId: "usr-1",
+        unitId: "u-df",
+        locationId: "loc-2",
+        categoryId: "cat-1",
+        title: "Vazamento na casa de máquinas",
+        description: "Há vazamento próximo ao Chiller A e a área técnica precisa de inspeção imediata.",
+        suggestedPriority: "Urgente",
+        status: "Em triagem",
+        attachments: [],
+        createdAt: new Date(Date.now() - 2800000).toISOString(),
+        updatedAt: new Date(Date.now() - 1400000).toISOString(),
+        active: true
+      },
+      {
+        id: "req-9",
+        protocol: "DEM-2026-0009",
+        solicitanteId: "usr-8",
+        unitId: "u-rj",
+        locationId: "loc-3",
+        categoryId: "cat-5",
+        title: "Poltronas danificadas no auditório",
+        description: "Três poltronas estão com braços soltos e espuma aparente.",
+        suggestedPriority: "Baixa",
+        status: "Aberta",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        active: true
       }
     ];
+    requests.push(
+      { id: "req-10", protocol: "DEM-2026-0010", solicitanteId: "usr-7", unitId: "u-sp", locationId: "loc-9", categoryId: "cat-1", title: "Ar não refrigera na sala de treinamento", description: "O split da sala de treinamento está ligado, mas não reduz a temperatura.", suggestedPriority: "Alta", status: "Aberta", attachments: [], createdAt: isoFromNow(-3, 10), updatedAt: isoFromNow(-3, 11), active: true },
+      { id: "req-11", protocol: "DEM-2026-0011", solicitanteId: "usr-1", unitId: "u-df", locationId: "loc-2", categoryId: "cat-4", title: "Nível baixo no reservatório superior", description: "A boia não está acionando corretamente e o reservatório não completa o enchimento.", suggestedPriority: "Alta", status: "Aprovada", attachments: [], createdAt: isoFromNow(-2, 8), updatedAt: isoFromNow(-2, 9), active: true },
+      { id: "req-12", protocol: "DEM-2026-0012", solicitanteId: "usr-8", unitId: "u-rj", locationId: "loc-3", categoryId: "cat-1", title: "Auditório com temperatura alta", description: "Mesmo com o sistema ligado, a climatização do auditório não atinge conforto térmico.", suggestedPriority: "Média", status: "Convertida em ordem", attachments: [], createdAt: isoFromNow(-8, 14), updatedAt: isoFromNow(-8, 15), active: true },
+      { id: "req-13", protocol: "DEM-2026-0013", solicitanteId: "usr-9", unitId: "u-ba", locationId: "loc-11", categoryId: "cat-1", title: "Condensadora com ruído anormal", description: "O equipamento externo da recepção Salvador apresentou ruído acima do padrão.", suggestedPriority: "Média", status: "Em triagem", attachments: [], createdAt: isoFromNow(-1, 16), updatedAt: isoFromNow(-1, 17), active: true },
+      { id: "req-14", protocol: "DEM-2026-0014", solicitanteId: "usr-10", unitId: "u-sp", locationId: "loc-8", categoryId: "cat-2", title: "Rack sem autonomia após queda", description: "O rack principal perdeu alimentação sem sustentação mínima após queda curta.", suggestedPriority: "Urgente", status: "Aberta", attachments: [], createdAt: isoFromNow(-1, 9), updatedAt: isoFromNow(-1, 9, ), active: true },
+      { id: "req-15", protocol: "DEM-2026-0015", solicitanteId: "usr-13", unitId: "u-mg", locationId: "loc-14", categoryId: "cat-3", title: "Porta do elevador desalinhada", description: "A porta do elevador social apresenta fechamento irregular no térreo.", suggestedPriority: "Alta", status: "Aprovada", attachments: [], createdAt: isoFromNow(-6, 13), updatedAt: isoFromNow(-6, 14), active: true },
+      { id: "req-16", protocol: "DEM-2026-0016", solicitanteId: "usr-1", unitId: "u-df", locationId: "loc-1", categoryId: "cat-5", title: "Poltrona rasgada na recepção", description: "Uma poltrona da recepção principal está com rasgo no assento.", suggestedPriority: "Baixa", status: "Aberta", attachments: [], createdAt: isoFromNow(-12, 10), updatedAt: isoFromNow(-12, 11), active: true },
+      { id: "req-17", protocol: "DEM-2026-0017", solicitanteId: "usr-8", unitId: "u-rj", locationId: "loc-6", categoryId: "cat-1", title: "Split diretoria sem drenagem", description: "O split da diretoria apresentou gotejamento interno.", suggestedPriority: "Média", status: "Convertida em ordem", attachments: [], createdAt: isoFromNow(-4, 15), updatedAt: isoFromNow(-4, 16), active: true },
+      { id: "req-18", protocol: "DEM-2026-0018", solicitanteId: "usr-9", unitId: "u-ba", locationId: "loc-12", categoryId: "cat-4", title: "Bomba opera com aquecimento", description: "O corpo da motobomba está aquecendo acima do normal em operação contínua.", suggestedPriority: "Alta", status: "Aguardando informação", attachments: [], createdAt: isoFromNow(-7, 9), updatedAt: isoFromNow(-7, 11), active: true },
+      { id: "req-19", protocol: "DEM-2026-0019", solicitanteId: "usr-10", unitId: "u-sp", locationId: "loc-7", categoryId: "cat-5", title: "Cadeiras faltando rodízio", description: "Diversas cadeiras do coworking estão com desgaste de rodízio.", suggestedPriority: "Baixa", status: "Aberta", attachments: [], createdAt: isoFromNow(-15, 10), updatedAt: isoFromNow(-15, 11), active: true },
+      { id: "req-20", protocol: "DEM-2026-0020", solicitanteId: "usr-13", unitId: "u-mg", locationId: "loc-13", categoryId: "cat-1", title: "Split escritório com alarme", description: "A evaporadora do escritório administrativo exibe alarme recorrente.", suggestedPriority: "Média", status: "Aprovada", attachments: [], createdAt: isoFromNow(-5, 8), updatedAt: isoFromNow(-5, 9), active: true },
+    );
     this.set("gsi_requests", requests);
 
     const materials = [
@@ -263,7 +403,23 @@ export const storageService = {
           { id: "mat-4", code: "MAT-004", name: "Fita Isolante 3M", description: "Fita isolante preta antichama 20m", category: "Elétrica", unit: "RL", unitId: "u-df", locationId: "loc-2", physicalBalance: 12, reservedBalance: 0, availableBalance: 12, minStock: 10, idealStock: 25, unitPrice: 16.5, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
           { id: "mat-5", code: "MAT-005", name: "Torneira Pia Cozinha Bica Móvel", description: "Torneira de bancada cromada bica alta", category: "Hidráulica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 2, reservedBalance: 0, availableBalance: 2, minStock: 3, idealStock: 5, unitPrice: 185, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
           { id: "mat-6", code: "MAT-006", name: "Tubo PVC Esgoto 50mm", description: "Tubo PVC esgoto barra 6m", category: "Hidráulica", unit: "BR", unitId: "u-df", locationId: "loc-2", physicalBalance: 20, reservedBalance: 0, availableBalance: 20, minStock: 5, idealStock: 20, unitPrice: 68, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-7", code: "MAT-007", name: "Disjuntor Tripolar 100A", description: "Disjuntor caixa moldada 100A", category: "Elétrica", unit: "UN", unitId: "u-rj", locationId: "loc-10", physicalBalance: 3, reservedBalance: 1, availableBalance: 2, minStock: 2, idealStock: 6, unitPrice: 420, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-8", code: "MAT-008", name: "Contator 32A", description: "Contator tripolar 32A 220V", category: "Elétrica", unit: "UN", unitId: "u-sp", locationId: "loc-8", physicalBalance: 1, reservedBalance: 0, availableBalance: 1, minStock: 2, idealStock: 5, unitPrice: 210, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-9", code: "MAT-009", name: "Rolamento Ventilador 6203", description: "Rolamento blindado para motor ventilador", category: "Climatização", unit: "UN", unitId: "u-rj", locationId: "loc-3", physicalBalance: 6, reservedBalance: 0, availableBalance: 6, minStock: 2, idealStock: 8, unitPrice: 38, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-10", code: "MAT-010", name: "Boia elétrica 220V", description: "Boia para reservatório superior", category: "Hidráulica", unit: "UN", unitId: "u-df", locationId: "loc-2", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 2, idealStock: 4, unitPrice: 95, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-11", code: "MAT-011", name: "Poltrona auditório reclinável", description: "Conjunto para substituição de assento", category: "Mobiliário", unit: "UN", unitId: "u-rj", locationId: "loc-3", physicalBalance: 1, reservedBalance: 0, availableBalance: 1, minStock: 2, idealStock: 5, unitPrice: 890, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          { id: "mat-12", code: "MAT-012", name: "Filtro secador linha liquida", description: "Filtro secador 3/8 para climatização", category: "Climatização", unit: "UN", unitId: "u-ba", locationId: "loc-12", physicalBalance: 9, reservedBalance: 1, availableBalance: 8, minStock: 3, idealStock: 10, unitPrice: 57, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ];
+    materials.push(
+      { id: "mat-13", code: "MAT-013", name: "Sensor de temperatura NTC", description: "Sensor NTC para evaporadora", category: "Climatização", unit: "UN", unitId: "u-sp", locationId: "loc-9", physicalBalance: 14, reservedBalance: 2, availableBalance: 12, minStock: 4, idealStock: 15, unitPrice: 24, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-14", code: "MAT-014", name: "Capacitor 35+5 uF", description: "Capacitor duplo condensadora", category: "Climatização", unit: "UN", unitId: "u-rj", locationId: "loc-6", physicalBalance: 4, reservedBalance: 0, availableBalance: 4, minStock: 3, idealStock: 8, unitPrice: 42, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-15", code: "MAT-015", name: "Rodízio cadeira 50 mm", description: "Kit de rodízio para cadeira escritório", category: "Mobiliário", unit: "UN", unitId: "u-sp", locationId: "loc-7", physicalBalance: 40, reservedBalance: 6, availableBalance: 34, minStock: 12, idealStock: 50, unitPrice: 8.5, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-16", code: "MAT-016", name: "Braço poltrona recepção", description: "Reposição braço poltrona recepção", category: "Mobiliário", unit: "UN", unitId: "u-df", locationId: "loc-1", physicalBalance: 3, reservedBalance: 0, availableBalance: 3, minStock: 2, idealStock: 6, unitPrice: 120, status: "Atenção", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-17", code: "MAT-017", name: "Cabos UTP Cat6", description: "Caixa cabo UTP Cat6", category: "Elétrica", unit: "CX", unitId: "u-sp", locationId: "loc-8", physicalBalance: 7, reservedBalance: 1, availableBalance: 6, minStock: 3, idealStock: 10, unitPrice: 690, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-18", code: "MAT-018", name: "Flange reservatório 60 mm", description: "Flange PVC reservatório", category: "Hidráulica", unit: "UN", unitId: "u-ba", locationId: "loc-12", physicalBalance: 1, reservedBalance: 0, availableBalance: 1, minStock: 2, idealStock: 5, unitPrice: 65, status: "Crítico", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-19", code: "MAT-019", name: "Lubrificante guia elevador", description: "Lubrificante técnico para guias", category: "Civil", unit: "LT", unitId: "u-mg", locationId: "loc-14", physicalBalance: 5, reservedBalance: 1, availableBalance: 4, minStock: 2, idealStock: 6, unitPrice: 74, status: "Normal", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: "mat-20", code: "MAT-020", name: "Fecho porta elevador", description: "Fecho mecânico para porta pavimento", category: "Civil", unit: "UN", unitId: "u-mg", locationId: "loc-14", physicalBalance: 0, reservedBalance: 0, availableBalance: 0, minStock: 1, idealStock: 3, unitPrice: 540, status: "Sem saldo", active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    );
     this.set("gsi_stock_materials", materials as any);
 
     const stockMovements: StockMovement[] = [
@@ -303,8 +459,73 @@ export const storageService = {
         status: "Aguardando análise",
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         updatedAt: new Date(Date.now() - 86400000).toISOString()
+      },
+      {
+        id: "sreq-3",
+        workOrderId: "os-7",
+        materialId: "mat-7",
+        isUnregistered: false,
+        quantity: 2,
+        priority: "Alta",
+        requesterId: "usr-6",
+        assetId: "ast-6",
+        locationId: "loc-10",
+        status: "Aguardando recebimento",
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: "sreq-4",
+        workOrderId: "os-8",
+        materialId: "mat-8",
+        isUnregistered: false,
+        quantity: 1,
+        priority: "Urgente",
+        requesterId: "usr-11",
+        assetId: "ast-8",
+        locationId: "loc-8",
+        status: "Aguardando análise",
+        createdAt: new Date(Date.now() - 5400000).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000).toISOString()
+      },
+      {
+        id: "sreq-5",
+        workOrderId: "os-9",
+        materialId: "mat-10",
+        isUnregistered: false,
+        quantity: 1,
+        priority: "Alta",
+        requesterId: "usr-4",
+        assetId: "ast-14",
+        locationId: "loc-2",
+        status: "Aguardando análise",
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString()
+      },
+      {
+        id: "sreq-6",
+        workOrderId: "os-10",
+        isUnregistered: true,
+        suggestedDescription: "Braço de poltrona auditório linha premium",
+        quantity: 3,
+        estimatedUnit: "UN",
+        justification: "Modelo específico do auditório principal sem equivalente cadastrado.",
+        priority: "Média",
+        requesterId: "usr-6",
+        locationId: "loc-3",
+        status: "Associado a existente",
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 4).toISOString()
       }
     ];
+    stockRequests.push(
+      { id: "sreq-7", workOrderId: "os-15", materialId: "mat-13", isUnregistered: false, quantity: 2, priority: "Média", requesterId: "usr-11", assetId: "ast-17", locationId: "loc-9", status: "Aguardando análise", createdAt: isoFromNow(-3, 11), updatedAt: isoFromNow(-3, 12) },
+      { id: "sreq-8", workOrderId: "os-16", materialId: "mat-18", isUnregistered: false, quantity: 2, priority: "Alta", requesterId: "usr-12", assetId: "ast-22", locationId: "loc-12", status: "Aguardando análise", createdAt: isoFromNow(-6, 10), updatedAt: isoFromNow(-6, 10) },
+      { id: "sreq-9", workOrderId: "os-17", materialId: "mat-20", isUnregistered: false, quantity: 1, priority: "Alta", requesterId: "usr-13", assetId: "ast-23", locationId: "loc-14", status: "Aguardando recebimento", createdAt: isoFromNow(-7, 9), updatedAt: isoFromNow(-5, 16) },
+      { id: "sreq-10", workOrderId: "os-18", isUnregistered: true, suggestedDescription: "Placa de comando elevador torre A", quantity: 1, estimatedUnit: "UN", justification: "Componente específico sem cadastro prévio.", priority: "Urgente", requesterId: "usr-13", locationId: "loc-14", status: "Aprovado para novo cadastro", createdAt: isoFromNow(-9, 15), updatedAt: isoFromNow(-8, 8) },
+      { id: "sreq-11", workOrderId: "os-19", materialId: "mat-16", isUnregistered: false, quantity: 1, priority: "Baixa", requesterId: "usr-4", assetId: "ast-25", locationId: "loc-1", status: "Associado a existente", createdAt: isoFromNow(-10, 13), updatedAt: isoFromNow(-9, 9) },
+      { id: "sreq-12", workOrderId: "os-20", materialId: "mat-14", isUnregistered: false, quantity: 2, priority: "Média", requesterId: "usr-6", assetId: "ast-15", locationId: "loc-6", status: "Aguardando análise", createdAt: isoFromNow(-4, 9), updatedAt: isoFromNow(-4, 9) },
+    );
     this.set("gsi_stock_requests", stockRequests as any);
 
     const orders: WorkOrder[] = [
@@ -480,8 +701,199 @@ export const storageService = {
         createdAt: new Date(Date.now() - 864000000).toISOString(),
         updatedAt: new Date(Date.now() - 600000000).toISOString(),
         active: true
+      },
+      {
+        id: "os-7",
+        number: "OS-2026-0007",
+        requestId: "req-5",
+        unitId: "u-rj",
+        locationId: "loc-10",
+        assetId: "ast-6",
+        assetIds: ["ast-6"],
+        type: "Corretiva",
+        categoryId: "cat-2",
+        priority: "Urgente",
+        technicalDescription: "Inspecionar aquecimento e odor no quadro de distribuição da diretoria.",
+        status: "Aguardando material",
+        operationalSituation: "Planejamento",
+        responsibleId: "usr-6",
+        checklist: [],
+        materials: [{ id: "omat-7", materialId: "mat-7", description: "Disjuntor Tripolar 100A", type: "UN", quantity: 2, classification: "Obrigatório", availability: "Parcialmente disponível", isUnregistered: false }] as any,
+        observations: "Necessário substituir dois disjuntores após inspeção termográfica preliminar.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        active: true
+      },
+      {
+        id: "os-8",
+        number: "OS-2026-0008",
+        requestId: "req-6",
+        unitId: "u-sp",
+        locationId: "loc-8",
+        assetId: "ast-8",
+        assetIds: ["ast-8"],
+        type: "Corretiva",
+        categoryId: "cat-2",
+        priority: "Alta",
+        technicalDescription: "Estabilizar rack do CPD e substituir componentes de proteção.",
+        status: "Aguardando material",
+        operationalSituation: "Planejamento",
+        responsibleId: "usr-11",
+        checklist: [],
+        materials: [{ id: "omat-8", materialId: "mat-8", description: "Contator 32A", type: "UN", quantity: 1, classification: "Obrigatório", availability: "Indisponível", isUnregistered: false }] as any,
+        observations: "A oscilação foi percebida após pico de energia no início da tarde.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "os-9",
+        number: "OS-2026-0009",
+        unitId: "u-df",
+        locationId: "loc-2",
+        assetId: "ast-14",
+        assetIds: ["ast-14", "ast-4"],
+        type: "Corretiva",
+        categoryId: "cat-4",
+        priority: "Alta",
+        technicalDescription: "Normalizar boia do reservatório superior e revisar conjunto de recalque.",
+        status: "Aguardando material",
+        operationalSituation: "Planejamento",
+        responsibleId: "usr-4",
+        checklist: [],
+        materials: [{ id: "omat-9", materialId: "mat-10", description: "Boia elétrica 220V", type: "UN", quantity: 1, classification: "Obrigatório", availability: "Indisponível", isUnregistered: false }] as any,
+        observations: "Ocorrência intermitente com risco de desabastecimento parcial nos sanitários.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "os-10",
+        number: "OS-2026-0010",
+        requestId: "req-9",
+        unitId: "u-rj",
+        locationId: "loc-3",
+        type: "Corretiva",
+        categoryId: "cat-5",
+        priority: "Média",
+        technicalDescription: "Reparar poltronas danificadas do auditório principal.",
+        status: "Aguardando estoque",
+        operationalSituation: "Planejamento",
+        responsibleId: "usr-6",
+        checklist: [],
+        materials: [{ id: "omat-10", description: "Braço de poltrona auditório linha premium", quantity: 3, classification: "Obrigatório", availability: "Aguardando validação", isUnregistered: true, justification: "Modelo específico do auditório principal." }] as any,
+        observations: "Atendimento planejado para antes do próximo evento institucional.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+        active: true
+      },
+      {
+        id: "os-11",
+        number: "OS-2026-0011",
+        requestId: "req-7",
+        unitId: "u-ba",
+        locationId: "loc-12",
+        assetId: "ast-10",
+        assetIds: ["ast-10", "ast-11"],
+        type: "Corretiva",
+        categoryId: "cat-4",
+        priority: "Alta",
+        technicalDescription: "Avaliar baixa pressão do sistema hidráulico e revisar motobomba de pressurização.",
+        status: "Programada",
+        operationalSituation: "Programada",
+        responsibleId: "usr-12",
+        checklist: [],
+        materials: [{ id: "omat-11", materialId: "mat-12", description: "Filtro secador linha liquida", type: "UN", quantity: 1, classification: "Recomendado", availability: "Disponível", isUnregistered: false }] as any,
+        observations: "Visita técnica já aprovada para o próximo turno da manhã.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "os-12",
+        number: "OS-2026-0012",
+        unitId: "u-sp",
+        locationId: "loc-9",
+        assetId: "ast-9",
+        assetIds: ["ast-9"],
+        type: "Corretiva",
+        categoryId: "cat-5",
+        priority: "Baixa",
+        technicalDescription: "Reaperto e substituição de rodízios em cadeiras da sala de treinamento.",
+        status: "Nova",
+        operationalSituation: "Nova",
+        checklist: [],
+        materials: [],
+        observations: "Ordem gerada para acomodar agenda de treinamento do próximo mês.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        active: true
+      },
+      {
+        id: "os-13",
+        number: "OS-2026-0013",
+        unitId: "u-mg",
+        locationId: "loc-14",
+        assetId: "ast-13",
+        assetIds: ["ast-13"],
+        type: "Preventiva",
+        categoryId: "cat-3",
+        priority: "Média",
+        technicalDescription: "Inspeção contratual do elevador social da Torre A.",
+        status: "Em validação",
+        operationalSituation: "Validação",
+        providerId: "prov-2",
+        checklist: [],
+        materials: [],
+        observations: "Aguardando envio do laudo e fotos pela empresa contratada.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 8).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+        active: true
+      },
+      {
+        id: "os-14",
+        number: "OS-2026-0014",
+        unitId: "u-ba",
+        locationId: "loc-11",
+        assetId: "ast-11",
+        assetIds: ["ast-11"],
+        type: "Preventiva",
+        categoryId: "cat-1",
+        priority: "Média",
+        technicalDescription: "Higienização e revisão do split da recepção Salvador.",
+        status: "Material liberado",
+        operationalSituation: "Planejamento",
+        responsibleId: "usr-12",
+        checklist: [],
+        materials: [{ id: "omat-12", materialId: "mat-12", description: "Filtro secador linha liquida", type: "UN", quantity: 1, classification: "Recomendado", availability: "Liberado", isUnregistered: false }] as any,
+        observations: "Material já reservado para execução no próximo ciclo.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 86400000 * 9).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        active: true
       }
     ];
+    orders.push(
+      { id: "os-15", number: "OS-2026-0015", requestId: "req-10", unitId: "u-sp", locationId: "loc-9", assetId: "ast-17", assetIds: ["ast-17"], type: "Corretiva", categoryId: "cat-1", priority: "Alta", technicalDescription: "Diagnosticar falha de refrigeração do split da sala de treinamento.", status: "Aguardando material", operationalSituation: "Planejamento", responsibleId: "usr-11", checklist: [], materials: [{ id: "omat-15", materialId: "mat-13", description: "Sensor de temperatura NTC", type: "UN", quantity: 2, classification: "Obrigatório", availability: "Parcialmente disponível", isUnregistered: false }] as any, observations: "Sala com agenda intensa de capacitações na próxima semana.", attachments: [], createdAt: isoFromNow(-3, 10), updatedAt: isoFromNow(-3, 12), active: true },
+      { id: "os-16", number: "OS-2026-0016", requestId: "req-11", unitId: "u-df", locationId: "loc-2", assetId: "ast-14", assetIds: ["ast-14"], type: "Corretiva", categoryId: "cat-4", priority: "Alta", technicalDescription: "Substituir componentes de vedação e flange do reservatório superior.", status: "Aguardando material", operationalSituation: "Planejamento", responsibleId: "usr-4", checklist: [], materials: [{ id: "omat-16", materialId: "mat-18", description: "Flange reservatório 60 mm", type: "UN", quantity: 2, classification: "Obrigatório", availability: "Indisponível", isUnregistered: false }] as any, observations: "Risco de perda de pressão e extravasamento intermitente.", attachments: [], createdAt: isoFromNow(-6, 9), updatedAt: isoFromNow(-6, 10), active: true },
+      { id: "os-17", number: "OS-2026-0017", requestId: "req-15", unitId: "u-mg", locationId: "loc-14", assetId: "ast-23", assetIds: ["ast-23"], type: "Corretiva", categoryId: "cat-3", priority: "Alta", technicalDescription: "Substituir fecho mecânico da porta do elevador de serviço.", status: "Aguardando material", operationalSituation: "Planejamento", providerId: "prov-2", checklist: [], materials: [{ id: "omat-17", materialId: "mat-20", description: "Fecho porta elevador", type: "UN", quantity: 1, classification: "Obrigatório", availability: "Indisponível", isUnregistered: false }] as any, observations: "Atendimento depende da entrega do componente original.", attachments: [], createdAt: isoFromNow(-7, 8), updatedAt: isoFromNow(-5, 16), active: true },
+      { id: "os-18", number: "OS-2026-0018", unitId: "u-mg", locationId: "loc-14", assetId: "ast-13", assetIds: ["ast-13"], type: "Corretiva", categoryId: "cat-3", priority: "Urgente", technicalDescription: "Avaliar falha intermitente da placa de comando do elevador social.", status: "Aguardando estoque", operationalSituation: "Planejamento", providerId: "prov-2", checklist: [], materials: [{ id: "omat-18", description: "Placa de comando elevador torre A", quantity: 1, classification: "Obrigatório", availability: "Aguardando validação", isUnregistered: true, justification: "Componente dedicado do fabricante." }] as any, observations: "Elevador com falha de chamada em horários de pico.", attachments: [], createdAt: isoFromNow(-9, 14), updatedAt: isoFromNow(-8, 8), active: true },
+      { id: "os-19", number: "OS-2026-0019", requestId: "req-16", unitId: "u-df", locationId: "loc-1", assetId: "ast-25", assetIds: ["ast-25"], type: "Corretiva", categoryId: "cat-5", priority: "Baixa", technicalDescription: "Trocar braço de poltrona danificada da recepção principal.", status: "Material liberado", operationalSituation: "Planejamento", responsibleId: "usr-4", checklist: [], materials: [{ id: "omat-19", materialId: "mat-16", description: "Braço poltrona recepção", type: "UN", quantity: 1, classification: "Obrigatório", availability: "Liberado", isUnregistered: false }] as any, observations: "Item reservado aguardando encaixe na agenda da equipe de apoio.", attachments: [], createdAt: isoFromNow(-10, 12), updatedAt: isoFromNow(-9, 9), active: true },
+      { id: "os-20", number: "OS-2026-0020", requestId: "req-17", unitId: "u-rj", locationId: "loc-6", assetId: "ast-15", assetIds: ["ast-15"], type: "Corretiva", categoryId: "cat-1", priority: "Média", technicalDescription: "Corrigir drenagem e revisar componentes elétricos do split da diretoria.", status: "Aguardando material", operationalSituation: "Planejamento", responsibleId: "usr-6", checklist: [], materials: [{ id: "omat-20", materialId: "mat-14", description: "Capacitor 35+5 uF", type: "UN", quantity: 2, classification: "Recomendado", availability: "Parcialmente disponível", isUnregistered: false }] as any, observations: "Ocorrência intermitente após expediente da diretoria.", attachments: [], createdAt: isoFromNow(-4, 8), updatedAt: isoFromNow(-4, 9), active: true },
+      { id: "os-21", number: "OS-2026-0021", unitId: "u-ba", locationId: "loc-11", assetId: "ast-11", assetIds: ["ast-11"], type: "Preventiva", categoryId: "cat-1", priority: "Baixa", technicalDescription: "Limpeza leve do evaporador da recepção e inspeção visual.", status: "Concluída", operationalSituation: "Concluída", responsibleId: "usr-12", checklist: [], materials: [], observations: "Atendimento concluído sem necessidade de peças adicionais.", attachments: [], createdAt: isoFromNow(-20, 8), updatedAt: isoFromNow(-19, 11), completedAt: isoFromNow(-19, 11), active: true },
+      { id: "os-22", number: "OS-2026-0022", unitId: "u-sp", locationId: "loc-8", assetId: "ast-8", assetIds: ["ast-8"], type: "Corretiva", categoryId: "cat-2", priority: "Urgente", technicalDescription: "Restabelecer estabilidade elétrica do rack principal após oscilação.", status: "Em execução", operationalSituation: "Em execução", responsibleId: "usr-11", checklist: [], materials: [], observations: "Equipe em atendimento conjunto com TI local.", attachments: [], createdAt: isoFromNow(-1, 8), updatedAt: isoFromNow(0, 9), plannedStart: isoFromNow(0, 8), plannedEnd: isoFromNow(0, 12), estimatedDurationMinutes: 240, scheduleStatus: "Programada", active: true },
+      { id: "os-23", number: "OS-2026-0023", unitId: "u-df", locationId: "loc-1", assetId: "ast-20", assetIds: ["ast-20"], type: "Preditiva", categoryId: "cat-3", priority: "Média", technicalDescription: "Inspeção estrutural complementar da marquise da recepção.", status: "Programada", operationalSituation: "Programada", providerId: "prov-9", checklist: [], materials: [], observations: "Vinculada ao laudo estrutural vencido para atualização do cenário.", attachments: [], createdAt: isoFromNow(-3, 13), updatedAt: isoFromNow(-2, 9), plannedStart: isoFromNow(4, 10), plannedEnd: isoFromNow(4, 15), estimatedDurationMinutes: 300, scheduleStatus: "Programada", active: true },
+      { id: "os-24", number: "OS-2026-0024", unitId: "u-mg", locationId: "loc-13", assetId: "ast-24", assetIds: ["ast-24"], type: "Corretiva", categoryId: "cat-1", priority: "Média", technicalDescription: "Atender alarme recorrente do split do escritório administrativo.", status: "Planejada", operationalSituation: "Planejamento", responsibleId: "usr-11", checklist: [], materials: [], observations: "Aguardar janela fora do horário comercial.", attachments: [], createdAt: isoFromNow(-5, 8), updatedAt: isoFromNow(-5, 10), active: true },
+      { id: "os-25", number: "OS-2026-0025", unitId: "u-rj", locationId: "loc-10", assetId: "ast-21", assetIds: ["ast-21"], type: "Preventiva", categoryId: "cat-2", priority: "Alta", technicalDescription: "Termografia no painel das bombas de incêndio.", status: "Nova", operationalSituation: "Nova", checklist: [], materials: [], observations: "Geração automática por plano preventivo do mês.", attachments: [], createdAt: isoFromNow(-2, 15), updatedAt: isoFromNow(-2, 15), active: true },
+      { id: "os-26", number: "OS-2026-0026", unitId: "u-sp", locationId: "loc-7", assetId: "ast-18", assetIds: ["ast-18"], type: "Corretiva", categoryId: "cat-4", priority: "Baixa", technicalDescription: "Revisar bebedouro pressurizado e eliminar gotejamento na torneira.", status: "Planejada", operationalSituation: "Planejamento", responsibleId: "usr-11", checklist: [], materials: [], observations: "Sem impacto operacional relevante, mas com recorrência de abertura.", attachments: [], createdAt: isoFromNow(-11, 10), updatedAt: isoFromNow(-10, 14), active: true },
+    );
     this.set("gsi_work_orders", orders);
 
     const docs: Document[] = [
@@ -557,6 +969,21 @@ export const storageService = {
     ];
     docs.push({ id: "doc-4", type: "Contrato", title: "Contrato de Manutenção de Elevadores", unitId: "u-df", issuer: "Elevadores Capital S/A", regulatoryBody: "Gestão de Contratos CNC", number: "CTR-ELV-2026", issueDate: new Date(Date.now() - 86400000 * 60).toISOString(), expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(), periodicity: "Anual", scope: "Periódico", responsibleId: "usr-3", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, status: "Vigente", value: 28800, attachments: [{ id: "att-doc-4", name: "contrato-elevadores-2026.pdf", type: "application/pdf", size: 726016, uploadedAt: new Date(Date.now() - 86400000 * 60).toISOString(), url: "https://exemplo.cnc.br/documentos/contrato-elevadores-2026.pdf" }], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
     docs.push({ id: "doc-5", type: "Conta recorrente", title: "Renovação mensal de licença de descarte", unitId: "u-rj", issuer: "Prefeitura Municipal", regulatoryBody: "Controle Ambiental", number: "REC-AMB-RJ", periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 5, responsibleId: "usr-2", requiresART: false, alertDaysAttention: 10, alertDaysCritical: 3, status: "Vigente", value: 480, attachments: [{ id: "att-doc-5", name: "licenca-descarte-competencia-atual.pdf", type: "application/pdf", size: 132096, uploadedAt: new Date(Date.now() - 86400000 * 12).toISOString(), url: "https://exemplo.cnc.br/documentos/licenca-descarte-rj.pdf" }], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-6", type: "cat-6", title: "Licença Sanitária - SP", unitId: "u-sp", issuer: "Vigilância Sanitária", regulatoryBody: "Prefeitura de São Paulo", responsibleId: "usr-13", issueDate: new Date(Date.now() - 86400000 * 120).toISOString(), periodicity: "Anual", scope: "Periódico", requiresART: false, alertDaysAttention: 45, alertDaysCritical: 15, number: "LIC-SAN-SP-2026", status: "Vigente", value: 930, expirationDate: new Date(Date.now() + 86400000 * 180).toISOString(), attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-7", type: "cat-7", title: "Laudo de SPDA - DF", unitId: "u-df", issuer: "Engenharia Confiável", regulatoryBody: "CREA-DF", responsibleId: "usr-3", issueDate: new Date(Date.now() - 86400000 * 340).toISOString(), periodicity: "Anual", scope: "Periódico", requiresART: true, alertDaysAttention: 30, alertDaysCritical: 10, number: "LAU-SPDA-DF-002", status: "Atenção", value: 2950, expirationDate: new Date(Date.now() + 86400000 * 18).toISOString(), attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-8", type: "cat-7", title: "ART de manutenção do Chiller A", unitId: "u-df", issuer: "Clima Técnica Brasília Ltda", regulatoryBody: "CREA-DF", responsibleId: "usr-2", issueDate: new Date(Date.now() - 86400000 * 20).toISOString(), periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 25, requiresART: true, alertDaysAttention: 7, alertDaysCritical: 2, number: "ART-CHILLER-072026", status: "Vigente", value: 620, attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-9", type: "cat-6", title: "Licença Ambiental Operacional - BA", unitId: "u-ba", issuer: "INEMA", regulatoryBody: "INEMA", responsibleId: "usr-13", issueDate: new Date(Date.now() - 86400000 * 500).toISOString(), periodicity: "Bienal", scope: "Periódico", requiresART: false, alertDaysAttention: 60, alertDaysCritical: 20, number: "LAO-BA-00991", status: "Crítico", value: 4120, expirationDate: new Date(Date.now() + 86400000 * 5).toISOString(), attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-10", type: "cat-7", title: "Laudo de Elevadores - MG", unitId: "u-mg", issuer: "Elevadores Capital S/A", regulatoryBody: "CREA-MG", responsibleId: "usr-13", issueDate: new Date(Date.now() - 86400000 * 180).toISOString(), periodicity: "Semestral", scope: "Periódico", requiresART: true, alertDaysAttention: 20, alertDaysCritical: 7, number: "LAU-ELV-MG-2026-1", status: "Vigente", value: 2100, expirationDate: new Date(Date.now() + 86400000 * 75).toISOString(), attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-11", type: "cat-6", title: "Habite-se Torre Administrativa MG", unitId: "u-mg", issuer: "Prefeitura Municipal", regulatoryBody: "Prefeitura de Belo Horizonte", responsibleId: "usr-13", issueDate: new Date(Date.now() - 86400000 * 1200).toISOString(), periodicity: "Único", scope: "Único", requiresART: false, alertDaysAttention: 0, alertDaysCritical: 0, number: "HAB-MG-771", status: "Sem validade definida", value: 0, attachments: [{ id: "att-doc-11", name: "habite-se-mg.pdf", type: "application/pdf", size: 210432, uploadedAt: new Date(Date.now() - 86400000 * 1200).toISOString(), url: "https://exemplo.cnc.br/documentos/habite-se-mg.pdf" }], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push({ id: "doc-12", type: "cat-7", title: "Laudo estrutural marquise recepção DF", unitId: "u-df", issuer: "Engenharia Alfa", regulatoryBody: "CREA-DF", responsibleId: "usr-3", issueDate: new Date(Date.now() - 86400000 * 700).toISOString(), periodicity: "Anual", scope: "Periódico", requiresART: true, alertDaysAttention: 20, alertDaysCritical: 7, number: "EST-DF-044", status: "Vencido", value: 3890, expirationDate: new Date(Date.now() - 86400000 * 30).toISOString(), attachments: [], versions: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true });
+    docs.push(
+      { id: "doc-13", type: "cat-6", title: "Licença de Operação do Gerador DF", unitId: "u-df", issuer: "IBRAM", regulatoryBody: "IBRAM", responsibleId: "usr-3", issueDate: isoFromNow(-420), periodicity: "Anual", scope: "Periódico", requiresART: false, alertDaysAttention: 30, alertDaysCritical: 10, number: "IBR-GER-DF-01", status: "Vigente", value: 1510, expirationDate: isoFromNow(40), attachments: [], versions: [], createdAt: isoFromNow(-400), updatedAt: isoFromNow(-2), active: true },
+      { id: "doc-14", type: "cat-7", title: "Laudo de estanqueidade reservatório BA", unitId: "u-ba", issuer: "Bombas Nordeste Servicos", regulatoryBody: "CREA-BA", responsibleId: "usr-13", issueDate: isoFromNow(-190), periodicity: "Semestral", scope: "Periódico", requiresART: true, alertDaysAttention: 20, alertDaysCritical: 7, number: "LAU-EST-BA-01", status: "Atenção", value: 1740, expirationDate: isoFromNow(12), attachments: [], versions: [], createdAt: isoFromNow(-180), updatedAt: isoFromNow(-1), active: true },
+      { id: "doc-15", type: "cat-6", title: "AVCB - MG", unitId: "u-mg", issuer: "CBMMG", regulatoryBody: "Corpo de Bombeiros Militar de Minas Gerais", responsibleId: "usr-13", issueDate: isoFromNow(-250), periodicity: "Anual", scope: "Periódico", requiresART: true, alertDaysAttention: 45, alertDaysCritical: 15, number: "AVCB-MG-2026", status: "Vigente", value: 2860, expirationDate: isoFromNow(95), attachments: [], versions: [], createdAt: isoFromNow(-245), updatedAt: isoFromNow(-2), active: true },
+      { id: "doc-16", type: "cat-7", title: "Laudo de climatização coworking SP", unitId: "u-sp", issuer: "Frio Paulista Operacoes", regulatoryBody: "CREA-SP", responsibleId: "usr-10", issueDate: isoFromNow(-50), periodicity: "Trimestral", scope: "Periódico", requiresART: true, alertDaysAttention: 10, alertDaysCritical: 3, number: "PMOC-SP-COW-03", status: "Vigente", value: 890, expirationDate: isoFromNow(28), attachments: [], versions: [], createdAt: isoFromNow(-49), updatedAt: isoFromNow(-1), active: true },
+      { id: "doc-17", type: "cat-6", title: "Cadastro de tanque auxiliar DF", unitId: "u-df", issuer: "Agência Reguladora", regulatoryBody: "Fiscalização Predial", responsibleId: "usr-2", issueDate: isoFromNow(-800), periodicity: "Único", scope: "Único", requiresART: false, alertDaysAttention: 0, alertDaysCritical: 0, number: "CAD-TQ-DF-09", status: "Sem validade definida", value: 0, attachments: [], versions: [], createdAt: isoFromNow(-790), updatedAt: isoFromNow(-10), active: true },
+      { id: "doc-18", type: "cat-7", title: "ART painel CPD SP", unitId: "u-sp", issuer: "Tecno Predial MG", regulatoryBody: "CREA-SP", responsibleId: "usr-10", issueDate: isoFromNow(-15), periodicity: "Mensal", scope: "Recorrente", recurrenceDay: 20, requiresART: true, alertDaysAttention: 5, alertDaysCritical: 2, number: "ART-CPD-SP-072026", status: "Vigente", value: 540, attachments: [], versions: [], createdAt: isoFromNow(-14), updatedAt: isoFromNow(-1), active: true },
+    );
     this.set("gsi_documents", docs);
 
     const plans: PreventivePlan[] = [
@@ -637,8 +1064,121 @@ export const storageService = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         active: true
+      },
+      {
+        id: "plan-4",
+        code: "PM-EL-02",
+        unitId: "u-rj",
+        assetId: "ast-6",
+        assetIds: ["ast-6"],
+        categoryId: "cat-2",
+        type: "Preventiva",
+        description: "Inspeção bimestral do QDL da diretoria",
+        periodicity: "bimestral",
+        startDate: new Date(Date.now() - 86400000 * 140).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 65).toISOString(),
+        locationId: "loc-10",
+        responsibleId: "usr-6",
+        estimatedValue: 620,
+        expectedWorkOrders: 6,
+        alertDaysAttention: 12,
+        alertDaysCritical: 4,
+        scheduleStatus: "Próxima",
+        nextExecution: new Date(Date.now() + 86400000 * 8).toISOString(),
+        checklist: checklistTemplates[1].items.map(i => ({ ...i })),
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "plan-5",
+        code: "PM-AC-03",
+        unitId: "u-sp",
+        assetId: "ast-7",
+        assetIds: ["ast-7"],
+        categoryId: "cat-1",
+        type: "Preventiva",
+        description: "PMOC mensal do VRF do coworking",
+        periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 90).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 28).toISOString(),
+        locationId: "loc-7",
+        responsibleId: "usr-11",
+        providerId: "prov-6",
+        estimatedValue: 1150,
+        expectedWorkOrders: 12,
+        alertDaysAttention: 10,
+        alertDaysCritical: 3,
+        scheduleStatus: "Próxima",
+        nextExecution: new Date(Date.now() + 86400000 * 3).toISOString(),
+        checklist: checklistTemplates[0].items.map(i => ({ ...i })),
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "plan-6",
+        code: "PM-HD-01",
+        unitId: "u-ba",
+        assetId: "ast-10",
+        assetIds: ["ast-10"],
+        categoryId: "cat-4",
+        type: "Preventiva",
+        description: "Inspeção trimestral do conjunto motobomba",
+        periodicity: "trimestral",
+        startDate: new Date(Date.now() - 86400000 * 220).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 100).toISOString(),
+        locationId: "loc-12",
+        responsibleId: "usr-12",
+        providerId: "prov-7",
+        estimatedValue: 980,
+        expectedWorkOrders: 4,
+        alertDaysAttention: 20,
+        alertDaysCritical: 7,
+        scheduleStatus: "Atrasada",
+        nextExecution: new Date(Date.now() - 86400000 * 4).toISOString(),
+        checklist: [],
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "plan-7",
+        code: "PM-ELV-01",
+        unitId: "u-mg",
+        assetId: "ast-13",
+        assetIds: ["ast-13"],
+        categoryId: "cat-3",
+        type: "Preventiva",
+        description: "Manutenção contratual mensal do elevador social",
+        periodicity: "mensal",
+        startDate: new Date(Date.now() - 86400000 * 365).toISOString(),
+        lastExecution: new Date(Date.now() - 86400000 * 31).toISOString(),
+        locationId: "loc-14",
+        providerId: "prov-2",
+        estimatedValue: 2400,
+        expectedWorkOrders: 12,
+        alertDaysAttention: 7,
+        alertDaysCritical: 2,
+        scheduleStatus: "Próxima",
+        nextExecution: new Date(Date.now() + 86400000 * 1).toISOString(),
+        checklist: [],
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
       }
     ];
+    plans.push(
+      { id: "plan-8", code: "PM-AC-04", unitId: "u-rj", assetId: "ast-15", assetIds: ["ast-15"], categoryId: "cat-1", type: "Preventiva", description: "PMOC mensal do split da diretoria RJ", periodicity: "mensal", startDate: isoFromNow(-180), lastExecution: isoFromNow(-35), nextExecution: isoFromNow(2), responsibleId: "usr-6", estimatedValue: 430, expectedWorkOrders: 12, alertDaysAttention: 7, alertDaysCritical: 2, scheduleStatus: "Próxima", checklist: checklistTemplates[0].items.map(i => ({ ...i })), status: "Ativo", createdAt: isoFromNow(-180), updatedAt: isoFromNow(-2), active: true },
+      { id: "plan-9", code: "PM-EL-03", unitId: "u-sp", assetId: "ast-16", assetIds: ["ast-16"], categoryId: "cat-2", type: "Preventiva", description: "Inspeção trimestral do QDL da sala de treinamento", periodicity: "trimestral", startDate: isoFromNow(-220), lastExecution: isoFromNow(-70), nextExecution: isoFromNow(18), responsibleId: "usr-11", estimatedValue: 520, expectedWorkOrders: 4, alertDaysAttention: 15, alertDaysCritical: 5, scheduleStatus: "Próxima", checklist: checklistTemplates[1].items.map(i => ({ ...i })), status: "Ativo", createdAt: isoFromNow(-220), updatedAt: isoFromNow(-3), active: true },
+      { id: "plan-10", code: "PM-HD-02", unitId: "u-df", assetId: "ast-14", assetIds: ["ast-14"], categoryId: "cat-4", type: "Preventiva", description: "Verificação mensal do reservatório superior", periodicity: "mensal", startDate: isoFromNow(-300), lastExecution: isoFromNow(-45), nextExecution: isoFromNow(-1), responsibleId: "usr-4", estimatedValue: 380, expectedWorkOrders: 12, alertDaysAttention: 7, alertDaysCritical: 2, scheduleStatus: "Atrasada", checklist: [], status: "Ativo", createdAt: isoFromNow(-300), updatedAt: isoFromNow(-1), active: true },
+      { id: "plan-11", code: "PM-CIV-01", unitId: "u-df", assetId: "ast-20", assetIds: ["ast-20"], categoryId: "cat-3", type: "Preditiva", description: "Inspeção semestral da marquise e fachada de acesso", periodicity: "semestral", startDate: isoFromNow(-420), lastExecution: isoFromNow(-205), nextExecution: isoFromNow(12), providerId: "prov-9", estimatedValue: 2200, expectedWorkOrders: 2, alertDaysAttention: 20, alertDaysCritical: 7, scheduleStatus: "Próxima", checklist: [], status: "Ativo", createdAt: isoFromNow(-420), updatedAt: isoFromNow(-6), active: true },
+      { id: "plan-12", code: "PM-MOB-01", unitId: "u-sp", assetId: "ast-9", assetIds: ["ast-9"], categoryId: "cat-5", type: "Preventiva", description: "Rodízio trimestral de inspeção do mobiliário de treinamento", periodicity: "trimestral", startDate: isoFromNow(-180), lastExecution: isoFromNow(-92), nextExecution: isoFromNow(1), responsibleId: "usr-11", estimatedValue: 180, expectedWorkOrders: 4, alertDaysAttention: 10, alertDaysCritical: 3, scheduleStatus: "Próxima", checklist: [], status: "Ativo", createdAt: isoFromNow(-180), updatedAt: isoFromNow(-4), active: true },
+    );
     this.set("gsi_preventive_plans", plans);
 
     const maintenanceExecutions: MaintenanceExecution[] = [
@@ -711,8 +1251,80 @@ export const storageService = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         active: true
+      },
+      {
+        id: "prov-6",
+        name: "Frio Paulista Operacoes",
+        contactName: "Camila Ferreira",
+        phone: "(11) 94444-1111",
+        email: "contato@friopaulista.com.br",
+        specialty: "Climatização",
+        unitId: "u-sp",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-7",
+        name: "Bombas Nordeste Servicos",
+        contactName: "Ricardo Vieira",
+        phone: "(71) 93333-2222",
+        email: "operacao@bombasnordeste.com.br",
+        specialty: "Hidráulica",
+        unitId: "u-ba",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-8",
+        name: "Tecno Predial MG",
+        contactName: "Gustavo Linhares",
+        phone: "(31) 92222-3333",
+        email: "contato@tecnopredialmg.com.br",
+        specialty: "Elétrica",
+        unitId: "u-mg",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-9",
+        name: "Estrutural Engenharia Alfa",
+        contactName: "Renata Moura",
+        phone: "(61) 91111-4444",
+        email: "engenharia@estruturalalfa.com.br",
+        specialty: "Civil",
+        unitId: "u-df",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
+      },
+      {
+        id: "prov-10",
+        name: "Prime Facilities Integradas",
+        contactName: "Eduardo Matos",
+        phone: "(21) 98800-5555",
+        email: "comercial@primefacilities.com.br",
+        specialty: "Manutenção geral",
+        unitId: "u-rj",
+        status: "Ativo",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        active: true
       }
     ];
+    providers.push(
+      { id: "prov-11", name: "Otis Minas Operações", contactName: "Sergio Andrade", phone: "(31) 94455-6666", email: "mg@otis.com.br", specialty: "Elevadores", unitId: "u-mg", status: "Ativo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true },
+      { id: "prov-12", name: "Clima Bahia Engenharia", contactName: "Vanessa Reis", phone: "(71) 95566-7777", email: "contato@climabahia.com.br", specialty: "Climatização", unitId: "u-ba", status: "Ativo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true },
+      { id: "prov-13", name: "Infra Predial DF", contactName: "Marcelo Cunha", phone: "(61) 96677-8888", email: "marcelo@infrapredialdf.com.br", specialty: "Hidráulica", unitId: "u-df", status: "Ativo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true },
+      { id: "prov-14", name: "Painéis Seguros RJ", contactName: "Tatiana Lopes", phone: "(21) 97788-9999", email: "contato@paineisrj.com.br", specialty: "Elétrica / Eng. Elétrica", unitId: "u-rj", status: "Ativo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true },
+      { id: "prov-15", name: "Mobiliário Corporativo SP", contactName: "Julio Barreto", phone: "(11) 98899-0001", email: "vendas@mobiliariocorp.com.br", specialty: "Mobiliário", unitId: "u-sp", status: "Ativo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true },
+    );
     this.set("gsi_providers", providers);
     // === INÍCIO MOCK AGENDA E EQUIPE (VISÒO SEMANAL) ===
     const now = new Date();
