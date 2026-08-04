@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { ArrowRightLeft, PackageOpen, Plus, Search, ShoppingCart } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ArrowRightLeft, Boxes, PackageOpen, Plus, Search, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MetricButton } from "../components/ui/OperationalPage";
 import { storageService } from "../services/storageService";
 import { StockMaterial, StockRequest } from "../types";
 import { getPendingStockRequests, reconcileMaterial } from "../utils/stock";
+
+type ActionMetric = {
+  label: string;
+  value: number;
+  description: string;
+  href: string;
+  variant: "danger" | "warning" | "attention" | "info" | "neutral";
+  icon: React.ElementType;
+};
 
 export const Estoque = () => {
   const navigate = useNavigate();
@@ -20,12 +28,43 @@ export const Estoque = () => {
     setRequests(storageService.get("gsi_stock_requests") || []);
   }, []);
 
-  const metrics = {
-    reposicaoNecessaria: materials.filter((material) => (material.physicalBalance - material.reservedBalance) <= material.minStock).length,
-    abaixoMinimo: materials.filter((material) => material.physicalBalance < material.minStock).length,
-    reservaMaior: materials.filter((material) => material.reservedBalance > material.physicalBalance).length,
-    solicitacoesPendentes: getPendingStockRequests(requests).length,
-  };
+  const metrics = useMemo<ActionMetric[]>(
+    () => [
+      {
+        label: "Reposição necessária",
+        value: materials.filter((material) => material.physicalBalance - material.reservedBalance <= material.minStock).length,
+        description: "Itens que já pedem abastecimento para evitar ruptura.",
+        href: "/estoque/verificar?status=Reposição",
+        variant: "attention",
+        icon: ShoppingCart,
+      },
+      {
+        label: "Abaixo do mínimo",
+        value: materials.filter((material) => material.physicalBalance < material.minStock).length,
+        description: "Materiais com saldo físico abaixo do nível mínimo.",
+        href: "/estoque/verificar?status=Abaixo%20do%20mínimo",
+        variant: "danger",
+        icon: AlertTriangle,
+      },
+      {
+        label: "Reserva maior que saldo",
+        value: materials.filter((material) => material.reservedBalance > material.physicalBalance).length,
+        description: "Reservas acima do disponível exigem ajuste imediato.",
+        href: "/estoque/verificar?status=Reserva%20maior",
+        variant: "warning",
+        icon: Boxes,
+      },
+      {
+        label: "Solicitações pendentes",
+        value: getPendingStockRequests(requests).length,
+        description: "Demandas aguardando análise ou atendimento do estoque.",
+        href: "/estoque/fila",
+        variant: "info",
+        icon: PackageOpen,
+      },
+    ],
+    [materials, requests],
+  );
 
   const quickActions = [
     {
@@ -85,30 +124,28 @@ export const Estoque = () => {
 
       <section aria-label="Pendencias do estoque">
         <h2 className="service-dashboard__section-title">O que precisa de ação</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricButton
-            label="Reposição Necessária"
-            value={metrics.reposicaoNecessaria}
-            valueClassName="text-orange-700"
-            onClick={() => navigate("/estoque/verificar?status=Reposição")}
-          />
-          <MetricButton
-            label="Abaixo do Mínimo"
-            value={metrics.abaixoMinimo}
-            valueClassName="text-red-700"
-            onClick={() => navigate("/estoque/verificar?status=Abaixo%20do%20mínimo")}
-          />
-          <MetricButton
-            label="Reserva Maior que Saldo"
-            value={metrics.reservaMaior}
-            valueClassName="text-amber-700"
-            onClick={() => navigate("/estoque/verificar?status=Reserva%20maior")}
-          />
-          <MetricButton
-            label="Solicitações Pendentes"
-            value={metrics.solicitacoesPendentes}
-            onClick={() => navigate("/estoque/fila")}
-          />
+        <div className="service-metrics">
+          {metrics.map((metric) => {
+            const Icon = metric.icon;
+
+            return (
+              <button
+                type="button"
+                key={metric.label}
+                onClick={() => navigate(metric.href)}
+                className={`service-metric service-metric--${metric.variant}`}
+              >
+                <span className="service-metric__top">
+                  <span className="service-metric__icon">
+                    <Icon size={20} />
+                  </span>
+                  <strong>{metric.value}</strong>
+                </span>
+                <span className="service-metric__label">{metric.label}</span>
+                <span className="service-metric__description">{metric.description}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
