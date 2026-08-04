@@ -138,20 +138,6 @@ export const Servicos = () => {
         }
       />
 
-      <section className="rounded-xl border-2 border-slate-300 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Acoes rapidas</p>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" className="gap-2" onClick={() => navigate("/agenda")}>
-              Ver Agenda
-            </Button>
-            <Button type="button" className="gap-2" onClick={() => navigate("/servicos/nova")}>
-              Nova Corretiva
-            </Button>
-          </div>
-        </div>
-      </section>
-
       <section className="rounded-xl border-2 border-slate-300 bg-white shadow-sm">
         <div className="grid grid-cols-1 gap-4 border-b border-slate-200 p-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)_auto]">
           <Input
