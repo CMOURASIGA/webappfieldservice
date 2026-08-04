@@ -39,6 +39,7 @@ import { Ordens } from "./pages/Ordens";
 import { Preventivas } from "./pages/Preventivas";
 import { Servicos } from "./pages/Servicos";
 import { Tecnicos as Prestadores } from "./pages/Prestadores";
+import { VitrineComponentes } from "./pages/VitrineComponentes";
 
 export default function App() {
   const DetalhePrestador = Object.values(DetalhePrestadorPage)[0] as React.ComponentType;
@@ -94,6 +95,7 @@ export default function App() {
 
             <Route path="admin" element={<Admin />} />
             <Route path="auditoria" element={<Auditoria />} />
+            <Route path="vitrine-componentes" element={<VitrineComponentes />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
